@@ -95,17 +95,20 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                     <button id="rename-condo-btn" class="bg-slate-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-slate-600 transition-colors w-full sm:w-auto flex-grow">
-                        Renomear Condomínio
-                    </button>
-                    <button id="bulk-add-btn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-teal-700 transition-colors w-full sm:w-auto flex-grow">
-                        + Adicionar em Lote
+                    <button id="period-analysis-btn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full sm:w-auto flex-grow">
+                        Análise por Período
                     </button>
                     <button id="add-task-btn" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700 transition-colors w-full sm:w-auto flex-grow">
                         + Adicionar Análise
                     </button>
                 </div>
             </div>
+             <div class="flex flex-wrap gap-2 w-full sm:w-auto mt-4 justify-end">
+                     <button id="backup-btn" class="bg-green-600 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-green-700 transition-colors">Fazer Backup</button>
+                    <button id="restore-btn" class="bg-orange-500 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-orange-600 transition-colors">Restaurar Backup</button>
+                     <button id="rename-condo-btn" class="bg-slate-500 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-slate-600 transition-colors">Renomear Condomínio</button>
+                    <button id="bulk-add-btn" class="bg-teal-600 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-teal-700 transition-colors">+ Adicionar em Lote</button>
+                </div>
         </section>
 
         <!-- Lista de Tarefas -->
@@ -115,7 +118,7 @@
         
         <!-- Seção de Gráficos -->
         <section class="mt-12">
-            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800">Análise de Ocorrências</h2>
+            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800">Análise de Ocorrências (Geral)</h2>
             <div class="flex justify-center">
                 <div class="bg-white p-4 rounded-lg shadow-md w-full lg:w-1/2">
                      <h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio</h3>
@@ -125,6 +128,51 @@
                 </div>
             </div>
         </section>
+    </div>
+    
+    <input type="file" id="restore-input" class="hidden" accept=".json">
+
+    <!-- Modal para Análise por Período -->
+    <div id="period-analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Análise por Período</h2>
+                <button id="period-analysis-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4 mb-4">
+                <div>
+                    <label for="period-start-date" class="block text-sm font-medium text-slate-700">Data de Início</label>
+                    <input type="date" id="period-start-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <div>
+                    <label for="period-end-date" class="block text-sm font-medium text-slate-700">Data de Fim</label>
+                    <input type="date" id="period-end-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <div class="flex items-end">
+                    <button id="generate-report-btn" class="bg-indigo-600 text-white font-semibold w-full px-4 py-2 rounded-md hover:bg-indigo-700">Gerar Relatório</button>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button data-period="this-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300">Esta Semana</button>
+                <button data-period="last-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300">Semana Passada</button>
+                <button data-period="this-month" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300">Este Mês</button>
+                <button data-period="last-month" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300">Mês Passado</button>
+            </div>
+
+            <div id="period-results-content" class="flex-grow overflow-y-auto hidden">
+                <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Total Análises</h3><p id="period-total" class="text-2xl font-bold text-sky-600 mt-1">0</p></div>
+                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Backups Pend.</h3><p id="period-backups" class="text-2xl font-bold text-amber-500 mt-1">0</p></div>
+                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Análises Pend.</h3><p id="period-analises" class="text-2xl font-bold text-red-500 mt-1">0</p></div>
+                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Ocorrências</h3><p id="period-ocorrencias" class="text-2xl font-bold text-slate-700 mt-1">0</p></div>
+                </section>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-4 rounded-lg"><h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio no Período</h3><div class="chart-container"><canvas id="periodChart"></canvas></div></div>
+                    <div><h3 class="font-semibold mb-2 text-center lg:text-left">Lista de Análises no Período</h3><ul id="period-task-list" class="space-y-2 max-h-80 overflow-y-auto pr-2"></ul></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal para Adicionar Tarefa -->
@@ -228,6 +276,27 @@
             </form>
         </div>
     </div>
+    
+    <!-- Modal para Confirmação de Restauração -->
+    <div id="restore-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-20">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-4 text-orange-600">Atenção!</h2>
+            <p class="text-slate-600">Restaurar um backup irá <strong>substituir todos os dados atuais</strong>. Esta ação não pode ser desfeita. Deseja continuar?</p>
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" id="restore-confirm-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
+                <button type="button" id="restore-confirm-proceed-btn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-600">Sim, Restaurar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Notificação Genérica -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-30">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm text-center">
+            <p id="notification-message" class="text-slate-700 text-lg"></p>
+            <button id="notification-close-btn" class="mt-6 bg-sky-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-sky-700">OK</button>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -272,12 +341,43 @@
 
             const expandAllBtn = document.getElementById('expand-all-btn');
             const collapseAllBtn = document.getElementById('collapse-all-btn');
+            
+            const backupBtn = document.getElementById('backup-btn');
+            const restoreBtn = document.getElementById('restore-btn');
+            const restoreInput = document.getElementById('restore-input');
+            const restoreConfirmModal = document.getElementById('restore-confirm-modal');
+            const restoreConfirmCancelBtn = document.getElementById('restore-confirm-cancel-btn');
+            const restoreConfirmProceedBtn = document.getElementById('restore-confirm-proceed-btn');
+            let fileToRestore = null;
+
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationMessage = document.getElementById('notification-message');
+            const notificationCloseBtn = document.getElementById('notification-close-btn');
+
+            const periodAnalysisBtn = document.getElementById('period-analysis-btn');
+            const periodAnalysisModal = document.getElementById('period-analysis-modal');
+            const periodAnalysisCloseBtn = document.getElementById('period-analysis-close-btn');
+            const periodStartDateInput = document.getElementById('period-start-date');
+            const periodEndDateInput = document.getElementById('period-end-date');
+            const generateReportBtn = document.getElementById('generate-report-btn');
+            const periodResultsContent = document.getElementById('period-results-content');
+            const periodTaskList = document.getElementById('period-task-list');
 
             let ocorrenciasChart;
+            let periodChart;
 
             const saveTasks = () => {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
             };
+            
+            const showNotification = (message) => {
+                notificationMessage.textContent = message;
+                notificationModal.classList.remove('hidden');
+            };
+
+            notificationCloseBtn.addEventListener('click', () => {
+                notificationModal.classList.add('hidden');
+            });
             
             const statusClasses = {
                 Pendente: 'bg-amber-100 text-amber-800', 'Em Andamento': 'bg-sky-100 text-sky-800', Concluído: 'bg-emerald-100 text-emerald-800',
@@ -285,10 +385,14 @@
                 'Não visualizar': 'bg-slate-200 text-slate-700',
             };
 
-            const formatDate = (dateString) => {
+            const formatDate = (dateString, options = {}) => {
                 if (!dateString) return 'N/A';
                 const date = new Date(dateString + 'T00:00:00');
-                return date.toLocaleDateString('pt-BR');
+                return date.toLocaleDateString('pt-BR', options);
+            };
+            
+            const formatDateForInput = (date) => {
+                 return date.toISOString().split('T')[0];
             };
 
             const renderTasks = () => {
@@ -412,6 +516,11 @@
                     type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] },
                     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
                 });
+                const periodCtx = document.getElementById('periodChart').getContext('2d');
+                periodChart = new Chart(periodCtx, {
+                    type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(79, 70, 229, 0.6)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 1 }] },
+                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                });
             };
 
             const refreshUI = () => {
@@ -500,7 +609,7 @@
                     bulkAddModal.classList.add('hidden');
                     refreshUI();
                 } else {
-                    alert("Nenhuma tarefa válida foi encontrada. Verifique o formato: NOME DO CONDOMÍNIO DD/MM/AAAA");
+                    showNotification("Nenhuma tarefa válida foi encontrada. Verifique o formato: NOME DO CONDOMÍNIO DD/MM/AAAA");
                 }
             });
 
@@ -673,9 +782,159 @@
                 refreshUI();
             });
 
+            backupBtn.addEventListener('click', () => {
+                try {
+                    const dataStr = localStorage.getItem('monitoramentoTasks');
+                    if (!dataStr || JSON.parse(dataStr).length === 0) {
+                        showNotification('Não há dados para fazer backup.');
+                        return;
+                    }
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    const today = new Date().toISOString().split('T')[0];
+                    link.download = `backup_monitoramento_${today}.json`;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('Erro ao criar backup:', error);
+                    showNotification('Ocorreu um erro ao tentar criar o backup.');
+                }
+            });
+
+            restoreBtn.addEventListener('click', () => {
+                restoreInput.click();
+            });
+
+            restoreInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) {
+                    return;
+                }
+                fileToRestore = file;
+                restoreConfirmModal.classList.remove('hidden');
+                restoreInput.value = ''; 
+            });
+
+            restoreConfirmCancelBtn.addEventListener('click', () => {
+                fileToRestore = null;
+                restoreConfirmModal.classList.add('hidden');
+            });
+
+            restoreConfirmProceedBtn.addEventListener('click', () => {
+                if (!fileToRestore) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const restoredTasks = JSON.parse(e.target.result);
+                        if (Array.isArray(restoredTasks)) {
+                            tasks = restoredTasks;
+                            refreshUI();
+                            showNotification('Backup restaurado com sucesso!');
+                        } else {
+                            throw new Error('Formato de arquivo inválido.');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao restaurar backup:', error);
+                        showNotification('Erro ao ler o arquivo de backup. Verifique se o arquivo é válido.');
+                    } finally {
+                        fileToRestore = null;
+                        restoreConfirmModal.classList.add('hidden');
+                    }
+                };
+                reader.onerror = () => {
+                    showNotification('Não foi possível ler o arquivo selecionado.');
+                    fileToRestore = null;
+                    restoreConfirmModal.classList.add('hidden');
+                };
+                reader.readAsText(fileToRestore);
+            });
+            
+            periodAnalysisBtn.addEventListener('click', () => periodAnalysisModal.classList.remove('hidden'));
+            periodAnalysisCloseBtn.addEventListener('click', () => periodAnalysisModal.classList.add('hidden'));
+
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const period = e.target.dataset.period;
+                    const today = new Date();
+                    let startDate, endDate;
+
+                    if (period === 'this-week') {
+                        const dayOfWeek = today.getDay();
+                        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
+                        startDate = new Date(today.setDate(diff));
+                        endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 6);
+                    } else if (period === 'last-week') {
+                        const beforeOneWeek = new Date();
+                        beforeOneWeek.setDate(today.getDate() - 7);
+                        const dayOfWeek = beforeOneWeek.getDay();
+                        const diff = beforeOneWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                        startDate = new Date(beforeOneWeek.setDate(diff));
+                        endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 6);
+                    } else if (period === 'this-month') {
+                        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    } else if (period === 'last-month') {
+                        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    }
+                    periodStartDateInput.value = formatDateForInput(startDate);
+                    periodEndDateInput.value = formatDateForInput(endDate);
+                });
+            });
+
+            generateReportBtn.addEventListener('click', () => {
+                const startDate = periodStartDateInput.value;
+                const endDate = periodEndDateInput.value;
+                if (!startDate || !endDate) {
+                    showNotification("Por favor, selecione as datas de início e fim.");
+                    return;
+                }
+                const filteredTasks = tasks.filter(task => task.dataAnalise >= startDate && task.dataAnalise <= endDate);
+                
+                document.getElementById('period-total').textContent = filteredTasks.length;
+                document.getElementById('period-backups').textContent = filteredTasks.filter(t => t.statusBackup === 'Pendente').length;
+                document.getElementById('period-analises').textContent = filteredTasks.filter(t => t.statusAnalise === 'Pendente').length;
+                const totalOcorrencias = filteredTasks.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
+                document.getElementById('period-ocorrencias').textContent = totalOcorrencias;
+                
+                const dataByCondo = filteredTasks.reduce((acc, task) => {
+                    if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
+                    if (task.ocorrencia === 'Sim' && task.ocorrencias) acc[task.condominio].ocorrencias += task.ocorrencias.length;
+                    return acc;
+                }, {});
+
+                periodChart.data.labels = Object.keys(dataByCondo);
+                periodChart.data.datasets[0].data = Object.values(dataByCondo).map(d => d.ocorrencias);
+                periodChart.update();
+                
+                periodTaskList.innerHTML = '';
+                if(filteredTasks.length > 0){
+                    filteredTasks.forEach(task => {
+                        const li = document.createElement('li');
+                        li.className = 'text-sm p-2 bg-slate-100 rounded-md flex justify-between items-center';
+                        li.innerHTML = `
+                           <span><strong>${task.condominio}</strong> - ${formatDate(task.dataAnalise)}</span>
+                           <span class="font-bold ${task.ocorrencias && task.ocorrencias.length > 0 ? 'text-red-600' : 'text-emerald-600'}">${task.ocorrencias ? task.ocorrencias.length : 0} ocorr.</span>
+                        `;
+                        periodTaskList.appendChild(li);
+                    });
+                } else {
+                    periodTaskList.innerHTML = '<li class="text-sm text-slate-500 text-center">Nenhuma análise encontrada para o período.</li>';
+                }
+
+                periodResultsContent.classList.remove('hidden');
+            });
+
+
             setupCharts();
             refreshUI();
         });
     </script>
 </body>
 </html>
+
