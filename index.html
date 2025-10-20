@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Monitoramento de Minimercados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A single-page dashboard designed for operational efficiency. The structure prioritizes immediate insight with key metrics (stat cards) at the top. Below, an interactive task management section allows for filtering and direct status updates on individual 'task cards', which is more modern and usable than a spreadsheet table. A modal is used for structured data entry of new tasks. Finally, two dynamic charts are placed at the bottom to provide analytical insights into incident patterns and financial impact across locations. This structure was chosen to mirror a typical workflow: 1) See the overall status, 2) Identify and work on specific tasks, 3) Analyze trends. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Dashboard Metrics -> Goal: Inform (at a glance) -> Viz/Method: Stat Cards (HTML/CSS) -> Interaction: None, auto-updates -> Justification: Provides immediate, high-level summary of the workload and results.
+        - Report Info: Main control table (all columns) -> Goal: Organize & Manage -> Viz/Method: Interactive Task Cards (HTML/CSS) -> Interaction: Filtering by status/condo, direct status updates via dropdowns -> Justification: A card-based layout is more responsive and less overwhelming than a wide table. Direct interaction reduces clicks and speeds up the workflow.
+        - Report Info: Occurrences & Loss Value -> Goal: Compare & Analyze -> Viz/Method: Bar Charts (Chart.js/Canvas) -> Interaction: Tooltips on hover, updates based on filters -> Justification: Visualizing this data helps identify problematic locations quickly, a task that is difficult with a simple table.
+        - Report Info: New Task Entry -> Goal: Standardize Input -> Viz/Method: Modal Form (HTML/CSS) -> Interaction: Form submission -> Justification: A dedicated form reduces data entry errors compared to typing directly into a spreadsheet row. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+        
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Painel de Monitoramento</h1>
+            <p class="text-slate-600 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
+        </header>
+
+        <!-- Dashboard Resumo -->
+        <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow-md text-center">
+                <h3 class="text-sm font-semibold text-slate-500">Total de Solicitações</h3>
+                <p id="total-solicitacoes" class="text-3xl font-bold text-sky-600 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md text-center">
+                <h3 class="text-sm font-semibold text-slate-500">Backups Pendentes</h3>
+                <p id="backups-pendentes" class="text-3xl font-bold text-amber-500 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md text-center">
+                <h3 class="text-sm font-semibold text-slate-500">Análises Pendentes</h3>
+                <p id="analises-pendentes" class="text-3xl font-bold text-red-500 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md text-center">
+                <h3 class="text-sm font-semibold text-slate-500">Total de Ocorrências</h3>
+                <p id="total-ocorrencias" class="text-3xl font-bold text-slate-700 mt-1">0</p>
+            </div>
+        </section>
+
+        <!-- Controles e Filtros -->
+        <section class="bg-white p-4 rounded-lg shadow-md mb-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-4 flex-grow">
+                    <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 flex-grow md:flex-grow-0">
+                    <input type="date" id="filtro-data" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <select id="filtro-backup" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <option value="">Status do Backup (Todos)</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluído">Concluído</option>
+                        <option value="Não visualizar">Não visualizar</option>
+                    </select>
+                    <select id="filtro-analise" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <option value="">Status da Análise (Todos)</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Análise">Em Análise</option>
+                        <option value="Concluída">Concluída</option>
+                        <option value="Não visualizar">Não visualizar</option>
+                    </select>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                     <button id="rename-condo-btn" class="bg-slate-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-slate-600 transition-colors w-full sm:w-auto flex-grow">
+                        Renomear Condomínio
+                    </button>
+                    <button id="bulk-add-btn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-teal-700 transition-colors w-full sm:w-auto flex-grow">
+                        + Adicionar em Lote
+                    </button>
+                    <button id="add-task-btn" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700 transition-colors w-full sm:w-auto flex-grow">
+                        + Adicionar Análise
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lista de Tarefas -->
+        <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Cards de tarefas serão inseridos aqui -->
+        </main>
+        
+        <!-- Seção de Gráficos -->
+        <section class="mt-12">
+            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800">Análise de Ocorrências</h2>
+            <div class="flex justify-center">
+                <div class="bg-white p-4 rounded-lg shadow-md w-full lg:w-1/2">
+                     <h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio</h3>
+                     <div class="chart-container">
+                        <canvas id="ocorrenciasChart"></canvas>
+                     </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal para Adicionar Tarefa -->
+    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-4">Adicionar Nova Análise</h2>
+            <form id="task-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="form-condominio" class="block text-sm font-medium text-slate-700">Condomínio</label>
+                        <div class="relative">
+                            <input type="text" id="form-condominio" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required autocomplete="off">
+                            <div id="autocomplete-list" class="absolute z-10 w-full bg-white border border-slate-300 rounded-md mt-1 hidden max-h-40 overflow-y-auto shadow-lg"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="form-data-analise" class="block text-sm font-medium text-slate-700">Data para Análise</label>
+                        <input type="date" id="form-data-analise" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
+                    </div>
+                </div>
+                 <div class="mt-4">
+                    <label for="form-observacoes" class="block text-sm font-medium text-slate-700">Observações</label>
+                    <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
+                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- NOVO: Modal para Adicionar em Lote -->
+    <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-4">Adicionar Análises em Lote</h2>
+            <form id="bulk-add-form">
+                <p class="text-sm text-slate-600 mb-2">Cole a lista abaixo. Use o formato: <br><code class="bg-slate-100 p-1 rounded">NOME DO CONDOMÍNIO DD/MM/AAAA</code></p>
+                <p class="text-xs text-slate-500 mb-4">Cada linha será convertida em uma nova análise.</p>
+                <textarea id="bulk-input-area" rows="10" class="w-full border border-slate-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-sky-500 focus:border-sky-500" placeholder="Alphaview 12/10/2025&#10;Flex Imigrantes 15/10/2025&#10;Urban Barra Funda 13/10/2025"></textarea>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="bulk-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
+                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar Lote</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Detalhes da Ocorrência -->
+    <div id="ocorrencia-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <h2 class="text-2xl font-bold mb-4">Registrar Detalhes da Ocorrência</h2>
+            <form id="ocorrencia-form" class="flex-grow flex flex-col min-h-0">
+                <input type="hidden" id="ocorrencia-task-id">
+                <div id="ocorrencia-list" class="flex-grow overflow-y-auto pr-2 -mr-2 mb-4 space-y-3"></div>
+                <div class="flex-shrink-0 pt-4 border-t">
+                    <h3 class="font-semibold mb-2">Adicionar Nova Ocorrência</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                           <label for="add-ocorrencia-desc" class="block text-sm font-medium text-slate-700">Descrição</label>
+                           <textarea id="add-ocorrencia-desc" rows="2" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
+                        </div>
+                        <div>
+                            <label for="add-horario-inicial" class="block text-sm font-medium text-slate-700">Horário Inicial</label>
+                            <input type="time" id="add-horario-inicial" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                        </div>
+                        <div>
+                            <label for="add-horario-final" class="block text-sm font-medium text-slate-700">Horário Final</label>
+                            <input type="time" id="add-horario-final" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                        </div>
+                    </div>
+                     <button type="button" id="add-ocorrencia-btn" class="mt-3 w-full bg-sky-100 text-sky-800 font-semibold px-4 py-2 rounded-md hover:bg-sky-200">+ Adicionar à Lista</button>
+                </div>
+                <div class="mt-6 flex justify-end gap-3 flex-shrink-0">
+                    <button type="button" id="ocorrencia-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
+                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar Ocorrências</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Renomear Condomínio -->
+    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-4">Renomear Condomínio</h2>
+            <form id="rename-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="form-old-name" class="block text-sm font-medium text-slate-700">Nome Antigo do Condomínio</label>
+                        <select id="form-old-name" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required></select>
+                    </div>
+                    <div>
+                        <label for="form-new-name" class="block text-sm font-medium text-slate-700">Novo Nome do Condomínio</label>
+                        <input type="text" id="form-new-name" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="rename-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
+                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar Alteração</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
+
+            const taskList = document.getElementById('task-list');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const taskModal = document.getElementById('task-modal');
+            const taskForm = document.getElementById('task-form');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const formCondominioInput = document.getElementById('form-condominio');
+            const autocompleteList = document.getElementById('autocomplete-list');
+            
+            const bulkAddBtn = document.getElementById('bulk-add-btn');
+            const bulkAddModal = document.getElementById('bulk-add-modal');
+            const bulkAddForm = document.getElementById('bulk-add-form');
+            const bulkCancelBtn = document.getElementById('bulk-cancel-btn');
+            const bulkInputArea = document.getElementById('bulk-input-area');
+
+            const ocorrenciaModal = document.getElementById('ocorrencia-modal');
+            const ocorrenciaForm = document.getElementById('ocorrencia-form');
+            const ocorrenciaCancelBtn = document.getElementById('ocorrencia-cancel-btn');
+            const ocorrenciaListDiv = document.getElementById('ocorrencia-list');
+            const addOcorrenciaBtn = document.getElementById('add-ocorrencia-btn');
+
+            const renameCondoBtn = document.getElementById('rename-condo-btn');
+            const renameModal = document.getElementById('rename-modal');
+            const renameForm = document.getElementById('rename-form');
+            const renameCancelBtn = document.getElementById('rename-cancel-btn');
+            const oldNameSelect = document.getElementById('form-old-name');
+            const newNameInput = document.getElementById('form-new-name');
+
+            const filtroCondominio = document.getElementById('filtro-condominio');
+            const filtroData = document.getElementById('filtro-data');
+            const filtroBackup = document.getElementById('filtro-backup');
+            const filtroAnalise = document.getElementById('filtro-analise');
+
+            let ocorrenciasChart;
+
+            const saveTasks = () => {
+                localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
+            };
+            
+            const statusClasses = {
+                Pendente: 'bg-amber-100 text-amber-800', 'Em Andamento': 'bg-sky-100 text-sky-800', Concluído: 'bg-emerald-100 text-emerald-800',
+                'Em Análise': 'bg-sky-100 text-sky-800', Concluída: 'bg-emerald-100 text-emerald-800',
+                'Não visualizar': 'bg-slate-200 text-slate-700',
+            };
+
+            const formatDate = (dateString) => {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString + 'T00:00:00');
+                return date.toLocaleDateString('pt-BR');
+            };
+
+            const renderTasks = () => {
+                const filteredTasks = tasks.filter(task => {
+                    const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
+                    const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
+                    const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
+                    const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
+                    return matchCondominio && matchData && matchBackup && matchAnalise;
+                });
+
+                taskList.innerHTML = '';
+                if(filteredTasks.length === 0) {
+                    taskList.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`;
+                } else {
+                    filteredTasks.forEach(task => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white p-4 rounded-lg shadow-md border-l-4';
+                        card.style.borderColor = task.statusAnalise === 'Pendente' ? '#f59e0b' : (task.statusAnalise === 'Em Análise' ? '#0ea5e9' : '#10b981');
+                        
+                        let ocorrenciaDetailsHTML = '';
+                        if (task.ocorrencia === 'Sim' && task.ocorrencias && task.ocorrencias.length > 0) {
+                           ocorrenciaDetailsHTML += `<div class="mt-4 pt-3 border-t border-slate-200 space-y-2">`;
+                           task.ocorrencias.forEach(ocor => {
+                               ocorrenciaDetailsHTML += `
+                                <div class="p-2 bg-red-50 rounded-md">
+                                    <p class="text-sm text-red-700"><strong>Ocorrência:</strong> ${ocor.desc}</p>
+                                    ${ocor.horarioInicial ? `<p class="text-xs text-red-600 mt-1"><strong>Horário:</strong> ${ocor.horarioInicial} - ${ocor.horarioFinal}</p>` : ''}
+                                </div>
+                               `;
+                           });
+                           ocorrenciaDetailsHTML += `</div>`;
+                        }
+                        
+                        let detailsButtonHTML = '';
+                        if (task.statusAnalise === 'Concluída') {
+                             detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full text-sm bg-slate-200 text-slate-700 font-semibold py-2 rounded-md hover:bg-slate-300 transition-colors">Detalhes da Ocorrência</button>`;
+                        }
+
+                        let occurrenceCountHTML = '';
+                        if (task.statusAnalise === 'Concluída') {
+                            const count = task.ocorrencias ? task.ocorrencias.length : 0;
+                            occurrenceCountHTML = `<div class="mt-2 text-sm font-bold ${count > 0 ? 'text-red-600' : 'text-emerald-600'}">Ocorrências: ${count}</div>`
+                        }
+
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-lg text-slate-800 flex-1 pr-2">${task.condominio}</h3>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span class="text-xs font-semibold px-2 py-1 rounded-full ${task.ocorrencia === 'Sim' ? 'bg-red-100 text-red-800' : (task.ocorrencia === 'Não' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500')}">${task.ocorrencia || 'Pendente'}</span>
+                                    <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-xl leading-none flex-shrink-0">&times;</button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-500 mb-2">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
+                            ${occurrenceCountHTML}
+                            
+                            <div class="space-y-3 text-sm mt-4">
+                                <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Backup:</span><select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option><option value="Não visualizar" ${task.statusBackup === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
+                                <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Análise:</span><select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option><option value="Não visualizar" ${task.statusAnalise === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
+                            </div>
+                            ${ocorrenciaDetailsHTML}
+                            ${detailsButtonHTML}
+                        `;
+                        taskList.appendChild(card);
+                    });
+                }
+            };
+            
+            const updateDashboard = () => {
+                const filteredTasks = tasks.filter(task => {
+                    const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
+                    const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
+                    const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
+                    const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
+                    return matchCondominio && matchData && matchBackup && matchAnalise;
+                });
+                
+                document.getElementById('total-solicitacoes').textContent = filteredTasks.length;
+                document.getElementById('backups-pendentes').textContent = filteredTasks.filter(t => t.statusBackup === 'Pendente').length;
+                document.getElementById('analises-pendentes').textContent = filteredTasks.filter(t => t.statusAnalise === 'Pendente').length;
+                const totalOcorrencias = filteredTasks.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
+                document.getElementById('total-ocorrencias').textContent = totalOcorrencias;
+            };
+            
+            const updateCharts = () => {
+                const filteredTasks = tasks.filter(task => {
+                    const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
+                    const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
+                    const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
+                    const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
+                    return matchCondominio && matchData && matchBackup && matchAnalise;
+                });
+
+                const dataByCondo = filteredTasks.reduce((acc, task) => {
+                    if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
+                    if (task.ocorrencia === 'Sim' && task.ocorrencias) acc[task.condominio].ocorrencias += task.ocorrencias.length;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(dataByCondo);
+                const ocorrenciasData = labels.map(label => dataByCondo[label].ocorrencias);
+                if (ocorrenciasChart) {
+                    ocorrenciasChart.data.labels = labels;
+                    ocorrenciasChart.data.datasets[0].data = ocorrenciasData;
+                    ocorrenciasChart.update();
+                }
+            };
+
+            const setupCharts = () => {
+                const ocorrenciasCtx = document.getElementById('ocorrenciasChart').getContext('2d');
+                ocorrenciasChart = new Chart(ocorrenciasCtx, {
+                    type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] },
+                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                });
+            };
+
+            const refreshUI = () => {
+                saveTasks();
+                renderTasks();
+                updateDashboard();
+                updateCharts();
+            };
+            
+            [filtroCondominio, filtroData, filtroBackup, filtroAnalise].forEach(el => el.addEventListener('input', refreshUI));
+
+            addTaskBtn.addEventListener('click', () => taskModal.classList.remove('hidden'));
+            cancelBtn.addEventListener('click', () => {
+                taskModal.classList.add('hidden');
+                autocompleteList.classList.add('hidden');
+            });
+            ocorrenciaCancelBtn.addEventListener('click', () => ocorrenciaModal.classList.add('hidden'));
+
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const today = new Date().toISOString().split('T')[0];
+                const newTask = {
+                    id: Date.now(), dataSolicitacao: today, condominio: document.getElementById('form-condominio').value,
+                    dataAnalise: document.getElementById('form-data-analise').value, statusBackup: 'Pendente', dataBackup: '',
+                    statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '',
+                    obs: document.getElementById('form-observacoes').value
+                };
+                tasks.push(newTask);
+                taskForm.reset();
+                taskModal.classList.add('hidden');
+                autocompleteList.classList.add('hidden');
+                refreshUI();
+            });
+
+            bulkAddBtn.addEventListener('click', () => {
+                bulkInputArea.value = '';
+                bulkAddModal.classList.remove('hidden');
+            });
+
+            bulkCancelBtn.addEventListener('click', () => {
+                bulkAddModal.classList.add('hidden');
+            });
+
+            bulkAddForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const inputText = bulkInputArea.value.trim();
+                if (!inputText) return;
+
+                const lines = inputText.split('\n');
+                const today = new Date().toISOString().split('T')[0];
+                let newTasksCount = 0;
+
+                lines.forEach((line, index) => {
+                    line = line.trim();
+                    if (!line) return;
+
+                    const lastSpaceIndex = line.lastIndexOf(' ');
+                    if (lastSpaceIndex === -1 || lastSpaceIndex === line.length - 1) {
+                        console.warn(`Linha ignorada (formato inválido): "${line}"`);
+                        return;
+                    }
+
+                    const condominio = line.substring(0, lastSpaceIndex).trim();
+                    const dateStr = line.substring(lastSpaceIndex + 1).trim();
+
+                    const dateParts = dateStr.split('/');
+                    if (dateParts.length !== 3 || dateParts[2].length !== 4) {
+                        console.warn(`Linha ignorada (formato de data inválido): "${line}"`);
+                        return;
+                    }
+
+                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+                    const newTask = {
+                        id: Date.now() + index, dataSolicitacao: today, condominio: condominio,
+                        dataAnalise: formattedDate, statusBackup: 'Pendente', dataBackup: '',
+                        statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '', obs: ''
+                    };
+                    tasks.push(newTask);
+                    newTasksCount++;
+                });
+
+                if (newTasksCount > 0) {
+                    bulkAddModal.classList.add('hidden');
+                    refreshUI();
+                } else {
+                    alert("Nenhuma tarefa válida foi encontrada. Verifique o formato: NOME DO CONDOMÍNIO DD/MM/AAAA");
+                }
+            });
+
+            ocorrenciaForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const taskId = parseInt(document.getElementById('ocorrencia-task-id').value);
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    const newOcorrencias = Array.from(ocorrenciaListDiv.querySelectorAll('.ocorrencia-item')).map(item => ({
+                        id: item.dataset.id,
+                        desc: item.querySelector('.desc-text').textContent,
+                        horarioInicial: item.querySelector('.time-text').dataset.start,
+                        horarioFinal: item.querySelector('.time-text').dataset.end,
+                    }));
+                    task.ocorrencias = newOcorrencias;
+                    task.ocorrencia = newOcorrencias.length > 0 ? 'Sim' : 'Não';
+                }
+                ocorrenciaModal.classList.add('hidden');
+                refreshUI();
+            });
+            
+            taskList.addEventListener('change', (e) => {
+                if (e.target.classList.contains('status-select')) {
+                    const taskId = parseInt(e.target.dataset.id);
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        if (e.target.dataset.type === 'backup') task.statusBackup = e.target.value;
+                        if (e.target.dataset.type === 'analise') task.statusAnalise = e.target.value;
+                        refreshUI();
+                    }
+                }
+            });
+
+            const renderOcorrenciaItemInModal = (ocor) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'ocorrencia-item flex items-start justify-between p-3 bg-slate-100 rounded-md';
+                itemDiv.dataset.id = ocor.id;
+                itemDiv.innerHTML = `
+                    <div class="flex-grow">
+                        <p class="desc-text font-medium text-slate-800">${ocor.desc}</p>
+                        <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                    </div>
+                    <button type="button" class="remove-ocorrencia-btn ml-4 text-red-500 hover:text-red-700 font-bold text-xl leading-none">&times;</button>
+                `;
+                ocorrenciaListDiv.appendChild(itemDiv);
+            }
+
+            addOcorrenciaBtn.addEventListener('click', () => {
+                const descInput = document.getElementById('add-ocorrencia-desc');
+                const startInput = document.getElementById('add-horario-inicial');
+                const endInput = document.getElementById('add-horario-final');
+                if (!descInput.value.trim()) {
+                    descInput.classList.add('border-red-500');
+                    setTimeout(() => descInput.classList.remove('border-red-500'), 2000);
+                    return;
+                }
+                renderOcorrenciaItemInModal({
+                    id: Date.now(), desc: descInput.value, horarioInicial: startInput.value, horarioFinal: endInput.value
+                });
+                descInput.value = ''; startInput.value = ''; endInput.value = '';
+            });
+            
+            ocorrenciaListDiv.addEventListener('click', (e) => {
+                if(e.target.classList.contains('remove-ocorrencia-btn')){
+                    e.target.closest('.ocorrencia-item').remove();
+                }
+            });
+
+            taskList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-ocorrencia-btn')) {
+                    const taskId = parseInt(e.target.dataset.id);
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        document.getElementById('ocorrencia-task-id').value = task.id;
+                        ocorrenciaListDiv.innerHTML = '';
+                        if (task.ocorrencias) task.ocorrencias.forEach(renderOcorrenciaItemInModal);
+                        ocorrenciaModal.classList.remove('hidden');
+                    }
+                }
+                const deleteBtn = e.target.closest('.delete-task-btn');
+                if (deleteBtn) {
+                    const taskId = parseInt(deleteBtn.dataset.id);
+                    tasks = tasks.filter(t => t.id !== taskId);
+                    refreshUI();
+                }
+            });
+
+            formCondominioInput.addEventListener('input', () => {
+                const inputValue = formCondominioInput.value.toLowerCase();
+                autocompleteList.innerHTML = '';
+                if (inputValue.length === 0) {
+                    autocompleteList.classList.add('hidden');
+                    return;
+                }
+                const uniqueCondominios = [...new Set(tasks.map(task => task.condominio))];
+                const suggestions = uniqueCondominios.filter(condo => condo.toLowerCase().startsWith(inputValue));
+                if (suggestions.length > 0) {
+                    suggestions.forEach(suggestion => {
+                        const item = document.createElement('div');
+                        item.className = 'p-2 hover:bg-sky-100 cursor-pointer text-sm';
+                        item.textContent = suggestion;
+                        item.addEventListener('click', () => {
+                            formCondominioInput.value = suggestion;
+                            autocompleteList.classList.add('hidden');
+                        });
+                        autocompleteList.appendChild(item);
+                    });
+                    autocompleteList.classList.remove('hidden');
+                } else {
+                    autocompleteList.classList.add('hidden');
+                }
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!formCondominioInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+                    autocompleteList.classList.add('hidden');
+                }
+            });
+
+            renameCondoBtn.addEventListener('click', () => {
+                const uniqueCondominios = [...new Set(tasks.map(task => task.condominio))].sort();
+                oldNameSelect.innerHTML = '<option value="">Selecione um condomínio</option>';
+                uniqueCondominios.forEach(condo => {
+                    const option = document.createElement('option');
+                    option.value = condo;
+                    option.textContent = condo;
+                    oldNameSelect.appendChild(option);
+                });
+                newNameInput.value = '';
+                renameModal.classList.remove('hidden');
+            });
+
+            renameCancelBtn.addEventListener('click', () => renameModal.classList.add('hidden'));
+
+            renameForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const oldName = oldNameSelect.value;
+                const newName = newNameInput.value.trim();
+                if (!oldName || !newName || oldName === newName) {
+                    renameModal.classList.add('hidden');
+                    return;
+                }
+                tasks.forEach(task => {
+                    if (task.condominio === oldName) {
+                        task.condominio = newName;
+                    }
+                });
+                renameModal.classList.add('hidden');
+                refreshUI();
+            });
+
+            setupCharts();
+            refreshUI();
+        });
+    </script>
+</body>
+</html>
+
