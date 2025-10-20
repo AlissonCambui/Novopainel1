@@ -29,6 +29,15 @@
                 height: 350px;
             }
         }
+        .details-content.hidden {
+            display: none;
+        }
+        .toggle-details-btn svg {
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-details-btn.collapsed svg {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -80,6 +89,10 @@
                         <option value="Concluída">Concluída</option>
                         <option value="Não visualizar">Não visualizar</option>
                     </select>
+                    <div class="flex gap-2">
+                        <button id="expand-all-btn" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-md hover:bg-slate-300">Expandir Todos</button>
+                        <button id="collapse-all-btn" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-md hover:bg-slate-300">Recolher Todos</button>
+                    </div>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                      <button id="rename-condo-btn" class="bg-slate-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-slate-600 transition-colors w-full sm:w-auto flex-grow">
@@ -144,7 +157,7 @@
         </div>
     </div>
     
-    <!-- NOVO: Modal para Adicionar em Lote -->
+    <!-- Modal para Adicionar em Lote -->
     <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
             <h2 class="text-2xl font-bold mb-4">Adicionar Análises em Lote</h2>
@@ -219,6 +232,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
+            tasks.forEach(t => {
+                if (t.isExpanded === undefined) {
+                    t.isExpanded = true;
+                }
+            });
 
             const taskList = document.getElementById('task-list');
             const addTaskBtn = document.getElementById('add-task-btn');
@@ -251,6 +269,9 @@
             const filtroData = document.getElementById('filtro-data');
             const filtroBackup = document.getElementById('filtro-backup');
             const filtroAnalise = document.getElementById('filtro-analise');
+
+            const expandAllBtn = document.getElementById('expand-all-btn');
+            const collapseAllBtn = document.getElementById('collapse-all-btn');
 
             let ocorrenciasChart;
 
@@ -288,6 +309,8 @@
                         card.className = 'bg-white p-4 rounded-lg shadow-md border-l-4';
                         card.style.borderColor = task.statusAnalise === 'Pendente' ? '#f59e0b' : (task.statusAnalise === 'Em Análise' ? '#0ea5e9' : '#10b981');
                         
+                        const isCollapsed = !task.isExpanded;
+
                         let ocorrenciaDetailsHTML = '';
                         if (task.ocorrencia === 'Sim' && task.ocorrencias && task.ocorrencias.length > 0) {
                            ocorrenciaDetailsHTML += `<div class="mt-4 pt-3 border-t border-slate-200 space-y-2">`;
@@ -321,15 +344,22 @@
                                     <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-xl leading-none flex-shrink-0">&times;</button>
                                 </div>
                             </div>
-                            <p class="text-sm text-slate-500 mb-2">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
-                            ${occurrenceCountHTML}
-                            
-                            <div class="space-y-3 text-sm mt-4">
-                                <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Backup:</span><select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option><option value="Não visualizar" ${task.statusBackup === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
-                                <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Análise:</span><select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option><option value="Não visualizar" ${task.statusAnalise === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
+                            <div class="flex justify-between items-center">
+                                <p class="text-sm text-slate-500 mb-2">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
+                                <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-full hover:bg-slate-200 ${isCollapsed ? 'collapsed' : ''}">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
                             </div>
-                            ${ocorrenciaDetailsHTML}
-                            ${detailsButtonHTML}
+                            <div class="details-content ${isCollapsed ? 'hidden' : ''}">
+                                ${occurrenceCountHTML}
+                                
+                                <div class="space-y-3 text-sm mt-4">
+                                    <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Backup:</span><select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option><option value="Não visualizar" ${task.statusBackup === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
+                                    <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Análise:</span><select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option><option value="Não visualizar" ${task.statusAnalise === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
+                                </div>
+                                ${ocorrenciaDetailsHTML}
+                                ${detailsButtonHTML}
+                            </div>
                         `;
                         taskList.appendChild(card);
                     });
@@ -407,7 +437,8 @@
                     id: Date.now(), dataSolicitacao: today, condominio: document.getElementById('form-condominio').value,
                     dataAnalise: document.getElementById('form-data-analise').value, statusBackup: 'Pendente', dataBackup: '',
                     statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '',
-                    obs: document.getElementById('form-observacoes').value
+                    obs: document.getElementById('form-observacoes').value,
+                    isExpanded: true
                 };
                 tasks.push(newTask);
                 taskForm.reset();
@@ -458,7 +489,8 @@
                     const newTask = {
                         id: Date.now() + index, dataSolicitacao: today, condominio: condominio,
                         dataAnalise: formattedDate, statusBackup: 'Pendente', dataBackup: '',
-                        statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '', obs: ''
+                        statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '', obs: '',
+                        isExpanded: true
                     };
                     tasks.push(newTask);
                     newTasksCount++;
@@ -538,8 +570,20 @@
             });
 
             taskList.addEventListener('click', (e) => {
-                if (e.target.classList.contains('edit-ocorrencia-btn')) {
-                    const taskId = parseInt(e.target.dataset.id);
+                const targetButton = e.target.closest('.toggle-details-btn, .edit-ocorrencia-btn, .delete-task-btn');
+                if (!targetButton) return;
+                
+                const taskId = parseInt(targetButton.dataset.id);
+
+                if (targetButton.classList.contains('toggle-details-btn')) {
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.isExpanded = !task.isExpanded;
+                        refreshUI();
+                    }
+                }
+                
+                if (targetButton.classList.contains('edit-ocorrencia-btn')) {
                     const task = tasks.find(t => t.id === taskId);
                     if (task) {
                         document.getElementById('ocorrencia-task-id').value = task.id;
@@ -548,9 +592,8 @@
                         ocorrenciaModal.classList.remove('hidden');
                     }
                 }
-                const deleteBtn = e.target.closest('.delete-task-btn');
-                if (deleteBtn) {
-                    const taskId = parseInt(deleteBtn.dataset.id);
+
+                if (targetButton.classList.contains('delete-task-btn')) {
                     tasks = tasks.filter(t => t.id !== taskId);
                     refreshUI();
                 }
@@ -619,6 +662,16 @@
                 renameModal.classList.add('hidden');
                 refreshUI();
             });
+            
+            expandAllBtn.addEventListener('click', () => {
+                tasks.forEach(t => t.isExpanded = true);
+                refreshUI();
+            });
+
+            collapseAllBtn.addEventListener('click', () => {
+                tasks.forEach(t => t.isExpanded = false);
+                refreshUI();
+            });
 
             setupCharts();
             refreshUI();
@@ -626,4 +679,3 @@
     </script>
 </body>
 </html>
-
