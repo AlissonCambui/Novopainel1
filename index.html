@@ -95,6 +95,9 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <button id="priority-btn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-purple-700 transition-colors w-full sm:w-auto flex-grow">
+                        Prioridades
+                    </button>
                     <button id="period-analysis-btn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full sm:w-auto flex-grow">
                         Análise por Período
                     </button>
@@ -104,11 +107,28 @@
                 </div>
             </div>
              <div class="flex flex-wrap gap-2 w-full sm:w-auto mt-4 justify-end">
-                     <button id="backup-btn" class="bg-green-600 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-green-700 transition-colors">Fazer Backup</button>
-                    <button id="restore-btn" class="bg-orange-500 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-orange-600 transition-colors">Restaurar Backup</button>
-                     <button id="rename-condo-btn" class="bg-slate-500 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-slate-600 transition-colors">Renomear Condomínio</button>
-                    <button id="bulk-add-btn" class="bg-teal-600 text-white font-semibold px-3 py-2 text-sm rounded-md hover:bg-teal-700 transition-colors">+ Adicionar em Lote</button>
+                <div class="relative inline-block text-left" id="actions-menu-container">
+                    <div>
+                        <button type="button" id="actions-menu-btn" class="inline-flex justify-center w-full rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 focus:ring-indigo-500" aria-haspopup="true" aria-expanded="true">
+                            Ações
+                            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+    
+                    <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="actions-menu-btn">
+                            <button id="bulk-add-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Importar da Planilha</button>
+                            <button id="rename-condo-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Renomear Condomínio</button>
+                            <button id="archive-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Arquivar Análises</button>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <button id="backup-btn" class="w-full text-left text-green-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Fazer Backup</button>
+                            <button id="restore-btn" class="w-full text-left text-orange-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Restaurar Backup</button>
+                        </div>
+                    </div>
                 </div>
+            </div>
         </section>
 
         <!-- Lista de Tarefas -->
@@ -132,6 +152,67 @@
     
     <input type="file" id="restore-input" class="hidden" accept=".json">
 
+    <!-- Modal de Prioridades -->
+    <div id="priority-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Por Onde Começar? (Prioridades)</h2>
+                <button id="priority-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+            </div>
+            <p class="text-slate-600 mb-6">Esta é uma lista sugerida de suas análises, priorizando condomínios com maior histórico de ocorrências e as datas mais antigas.</p>
+            <div class="flex-grow overflow-y-auto">
+                <ul id="priority-task-list" class="space-y-3">
+                    <!-- Itens da lista de prioridades serão inseridos aqui -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Arquivamento -->
+    <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-4">Arquivar Análises Concluídas</h2>
+            <form id="archive-form">
+                <p class="text-slate-600 mb-4">Selecione o período para arquivar análises concluídas. Isso irá removê-las da tela principal, mas elas não serão excluídas.</p>
+                <div class="space-y-2 mb-6">
+                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-sky-50 has-[:checked]:border-sky-300">
+                        <input type="radio" name="archive_period" value="7" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+                        <span class="ml-3 text-sm font-medium text-slate-700">Mais antigas que 1 semana</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-sky-50 has-[:checked]:border-sky-300">
+                        <input type="radio" name="archive_period" value="30" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" checked>
+                        <span class="ml-3 text-sm font-medium text-slate-700">Mais antigas que 1 mês</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-sky-50 has-[:checked]:border-sky-300">
+                        <input type="radio" name="archive_period" value="90" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+                        <span class="ml-3 text-sm font-medium text-slate-700">Mais antigas que 3 meses</span>
+                    </label>
+                </div>
+                <div class="flex justify-between items-center gap-3">
+                    <button type="button" id="view-archive-btn" class="bg-slate-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-slate-600">Ver Arquivadas</button>
+                    <div class="flex gap-3">
+                        <button type="button" id="archive-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
+                        <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Arquivar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para Visualizar Arquivadas -->
+    <div id="view-archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-20">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Análises Arquivadas</h2>
+                <button id="view-archive-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="view-archive-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md">
+                <p class="text-center text-slate-500">Nenhuma análise arquivada.</p>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Modal para Análise por Período -->
     <div id="period-analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-4xl max-h-[90vh] flex flex-col">
@@ -153,6 +234,21 @@
                     <button id="generate-report-btn" class="bg-indigo-600 text-white font-semibold w-full px-4 py-2 rounded-md hover:bg-indigo-700">Gerar Relatório</button>
                 </div>
             </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Analisar por:</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="analysis_type" value="dataAnalise" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" checked>
+                        <span class="ml-2 text-sm text-slate-700">Data da Análise</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="analysis_type" value="dataConclusao" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+                        <span class="ml-2 text-sm text-slate-700">Data da Conclusão</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="flex flex-wrap gap-2 mb-4">
                 <button data-period="this-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300">Esta Semana</button>
                 <button data-period="last-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300">Semana Passada</button>
@@ -161,11 +257,19 @@
             </div>
 
             <div id="period-results-content" class="flex-grow overflow-y-auto hidden">
-                <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Total Análises</h3><p id="period-total" class="text-2xl font-bold text-sky-600 mt-1">0</p></div>
-                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Backups Pend.</h3><p id="period-backups" class="text-2xl font-bold text-amber-500 mt-1">0</p></div>
-                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Análises Pend.</h3><p id="period-analises" class="text-2xl font-bold text-red-500 mt-1">0</p></div>
-                    <div class="bg-slate-100 p-3 rounded-lg text-center"><h3 class="text-sm font-semibold text-slate-500">Ocorrências</h3><p id="period-ocorrencias" class="text-2xl font-bold text-slate-700 mt-1">0</p></div>
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-slate-100 p-4 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-slate-500">Dias (Análises)</h3>
+                        <p id="period-dias" class="text-3xl font-bold text-sky-600 mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-slate-500">PDV (Condomínios)</h3>
+                        <p id="period-pdv" class="text-3xl font-bold text-indigo-600 mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-slate-500">OC (Ocorrências)</h3>
+                        <p id="period-oc" class="text-3xl font-bold text-red-600 mt-1">0</p>
+                    </div>
                 </section>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-slate-50 p-4 rounded-lg"><h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio no Período</h3><div class="chart-container"><canvas id="periodChart"></canvas></div></div>
@@ -174,7 +278,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Modal para Adicionar Tarefa -->
     <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
@@ -206,16 +310,25 @@
     </div>
     
     <!-- Modal para Adicionar em Lote -->
-    <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
-            <h2 class="text-2xl font-bold mb-4">Adicionar Análises em Lote</h2>
+            <h2 class="text-2xl font-bold mb-4">Importar Análises da Planilha</h2>
             <form id="bulk-add-form">
-                <p class="text-sm text-slate-600 mb-2">Cole a lista abaixo. Use o formato: <br><code class="bg-slate-100 p-1 rounded">NOME DO CONDOMÍNIO DD/MM/AAAA</code></p>
-                <p class="text-xs text-slate-500 mb-4">Cada linha será convertida em uma nova análise.</p>
-                <textarea id="bulk-input-area" rows="10" class="w-full border border-slate-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-sky-500 focus:border-sky-500" placeholder="Alphaview 12/10/2025&#10;Flex Imigrantes 15/10/2025&#10;Urban Barra Funda 13/10/2025"></textarea>
+                <div class="text-sm text-slate-600 space-y-3 mb-6">
+                     <p>Copie os dados da sua planilha online e cole no campo abaixo para adicionar tarefas em massa.</p>
+                     <ol class="list-decimal list-inside space-y-2 pl-4">
+                         <li>Na planilha, selecione e copie (Ctrl+C) as linhas que contêm as tarefas. Certifique-se de incluir as colunas com a <strong>data</strong> e o <strong>nome da unidade</strong>.</li>
+                         <li>Cole os dados (Ctrl+V) na área de texto abaixo e clique em "Importar".</li>
+                     </ol>
+                     <p class="text-xs text-slate-500 mt-2"><strong>Obs:</strong> Tarefas com a mesma data e condomínio que já existem no painel serão ignoradas para evitar duplicatas.</p>
+                </div>
+                <div>
+                    <label for="bulk-input-area" class="block text-sm font-medium text-slate-700">Cole os dados da planilha aqui:</label>
+                    <textarea id="bulk-input-area" rows="10" class="mt-1 w-full border border-slate-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
+                </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" id="bulk-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
-                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar Lote</button>
+                    <button type="submit" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-teal-700">Importar</button>
                 </div>
             </form>
         </div>
@@ -301,6 +414,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
+            let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
+
             tasks.forEach(t => {
                 if (t.isExpanded === undefined) {
                     t.isExpanded = true;
@@ -349,7 +464,7 @@
             const restoreConfirmCancelBtn = document.getElementById('restore-confirm-cancel-btn');
             const restoreConfirmProceedBtn = document.getElementById('restore-confirm-proceed-btn');
             let fileToRestore = null;
-
+            
             const notificationModal = document.getElementById('notification-modal');
             const notificationMessage = document.getElementById('notification-message');
             const notificationCloseBtn = document.getElementById('notification-close-btn');
@@ -362,12 +477,32 @@
             const generateReportBtn = document.getElementById('generate-report-btn');
             const periodResultsContent = document.getElementById('period-results-content');
             const periodTaskList = document.getElementById('period-task-list');
+            
+            const priorityBtn = document.getElementById('priority-btn');
+            const priorityModal = document.getElementById('priority-modal');
+            const priorityCloseBtn = document.getElementById('priority-close-btn');
+            const priorityTaskList = document.getElementById('priority-task-list');
+            
+            const archiveBtn = document.getElementById('archive-btn');
+            const archiveModal = document.getElementById('archive-modal');
+            const archiveForm = document.getElementById('archive-form');
+            const archiveCancelBtn = document.getElementById('archive-cancel-btn');
+            const viewArchiveBtn = document.getElementById('view-archive-btn');
+            const viewArchiveModal = document.getElementById('view-archive-modal');
+            const viewArchiveCloseBtn = document.getElementById('view-archive-close-btn');
+            const viewArchiveListContainer = document.getElementById('view-archive-list-container');
+
+
+            const actionsMenuContainer = document.getElementById('actions-menu-container');
+            const actionsMenuBtn = document.getElementById('actions-menu-btn');
+            const actionsMenu = document.getElementById('actions-menu');
 
             let ocorrenciasChart;
             let periodChart;
 
             const saveTasks = () => {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
+                localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
             };
             
             const showNotification = (message) => {
@@ -430,15 +565,20 @@
                         }
                         
                         let detailsButtonHTML = '';
-                        if (task.statusAnalise === 'Concluída') {
-                             detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full text-sm bg-slate-200 text-slate-700 font-semibold py-2 rounded-md hover:bg-slate-300 transition-colors">Detalhes da Ocorrência</button>`;
+                        if (task.statusAnalise === 'Em Análise') {
+                             detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full text-sm bg-slate-200 text-slate-700 font-semibold py-2 rounded-md hover:bg-slate-300 transition-colors">Registrar Ocorrências</button>`;
                         }
 
                         let occurrenceCountHTML = '';
+                        let completionDateHTML = '';
                         if (task.statusAnalise === 'Concluída') {
                             const count = task.ocorrencias ? task.ocorrencias.length : 0;
-                            occurrenceCountHTML = `<div class="mt-2 text-sm font-bold ${count > 0 ? 'text-red-600' : 'text-emerald-600'}">Ocorrências: ${count}</div>`
+                            occurrenceCountHTML = `<div class="mt-2 text-sm font-bold ${count > 0 ? 'text-red-600' : 'text-emerald-600'}">Ocorrências: ${count}</div>`;
+                            if (task.dataConclusao) {
+                                completionDateHTML = `<div class="text-xs text-emerald-600 font-medium mt-1">Concluído em: ${formatDate(task.dataConclusao)}</div>`;
+                            }
                         }
+
 
                         card.innerHTML = `
                             <div class="flex justify-between items-start">
@@ -456,6 +596,7 @@
                             </div>
                             <div class="details-content ${isCollapsed ? 'hidden' : ''}">
                                 ${occurrenceCountHTML}
+                                ${completionDateHTML}
                                 
                                 <div class="space-y-3 text-sm mt-4">
                                     <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Backup:</span><select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option><option value="Não visualizar" ${task.statusBackup === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
@@ -482,20 +623,13 @@
                 document.getElementById('total-solicitacoes').textContent = filteredTasks.length;
                 document.getElementById('backups-pendentes').textContent = filteredTasks.filter(t => t.statusBackup === 'Pendente').length;
                 document.getElementById('analises-pendentes').textContent = filteredTasks.filter(t => t.statusAnalise === 'Pendente').length;
-                const totalOcorrencias = filteredTasks.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
+                const totalOcorrencias = [...tasks, ...archivedTasks].reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
                 document.getElementById('total-ocorrencias').textContent = totalOcorrencias;
             };
             
             const updateCharts = () => {
-                const filteredTasks = tasks.filter(task => {
-                    const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
-                    const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
-                    const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
-                    const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
-                    return matchCondominio && matchData && matchBackup && matchAnalise;
-                });
-
-                const dataByCondo = filteredTasks.reduce((acc, task) => {
+                const allTasks = [...tasks, ...archivedTasks];
+                const dataByCondo = allTasks.reduce((acc, task) => {
                     if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
                     if (task.ocorrencia === 'Sim' && task.ocorrencias) acc[task.condominio].ocorrencias += task.ocorrencias.length;
                     return acc;
@@ -547,7 +681,8 @@
                     dataAnalise: document.getElementById('form-data-analise').value, statusBackup: 'Pendente', dataBackup: '',
                     statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '',
                     obs: document.getElementById('form-observacoes').value,
-                    isExpanded: true
+                    isExpanded: true,
+                    dataConclusao: null,
                 };
                 tasks.push(newTask);
                 taskForm.reset();
@@ -557,7 +692,6 @@
             });
 
             bulkAddBtn.addEventListener('click', () => {
-                bulkInputArea.value = '';
                 bulkAddModal.classList.remove('hidden');
             });
 
@@ -568,48 +702,79 @@
             bulkAddForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const inputText = bulkInputArea.value.trim();
-                if (!inputText) return;
+
+                if (!inputText) {
+                     showNotification("Por favor, cole os dados da planilha.");
+                    return;
+                }
 
                 const lines = inputText.split('\n');
                 const today = new Date().toISOString().split('T')[0];
                 let newTasksCount = 0;
+                let skippedCount = 0;
 
                 lines.forEach((line, index) => {
-                    line = line.trim();
-                    if (!line) return;
+                    const columns = line.split('\t'); // Split by tab for Excel copy-paste
+                    
+                    let dateStr = null;
+                    let condominio = null;
+                    const dateRegex = /\d{1,2}\/\d{1,2}\/\d{4}/;
 
-                    const lastSpaceIndex = line.lastIndexOf(' ');
-                    if (lastSpaceIndex === -1 || lastSpaceIndex === line.length - 1) {
-                        console.warn(`Linha ignorada (formato inválido): "${line}"`);
-                        return;
+                    const dateColumnIndex = columns.findIndex(col => dateRegex.test(col.trim()));
+
+                    if (dateColumnIndex !== -1) {
+                        dateStr = columns[dateColumnIndex].trim();
+                        // Look for the next column that is not empty
+                        for (let i = dateColumnIndex + 1; i < columns.length; i++) {
+                            if (columns[i].trim()) {
+                                condominio = columns[i].trim();
+                                break;
+                            }
+                        }
                     }
 
-                    const condominio = line.substring(0, lastSpaceIndex).trim();
-                    const dateStr = line.substring(lastSpaceIndex + 1).trim();
+                    if (!dateStr || !condominio) {
+                        console.warn(`Linha ignorada (não foi possível encontrar data e condomínio válidos): "${line}"`);
+                        return;
+                    }
 
                     const dateParts = dateStr.split('/');
-                    if (dateParts.length !== 3 || dateParts[2].length !== 4) {
-                        console.warn(`Linha ignorada (formato de data inválido): "${line}"`);
+                    const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
+                    
+                    const isDuplicate = tasks.some(task => task.condominio === condominio && task.dataAnalise === formattedDate);
+
+                    if (isDuplicate) {
+                        skippedCount++;
                         return;
                     }
 
-                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-
                     const newTask = {
-                        id: Date.now() + index, dataSolicitacao: today, condominio: condominio,
-                        dataAnalise: formattedDate, statusBackup: 'Pendente', dataBackup: '',
-                        statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '', obs: '',
-                        isExpanded: true
+                        id: Date.now() + index,
+                        dataSolicitacao: today,
+                        condominio: condominio,
+                        dataAnalise: formattedDate,
+                        statusBackup: 'Pendente',
+                        dataBackup: '',
+                        statusAnalise: 'Pendente',
+                        ocorrencia: null,
+                        ocorrencias: [],
+                        acao: '',
+                        obs: '',
+                        isExpanded: true,
+                        dataConclusao: null,
                     };
                     tasks.push(newTask);
                     newTasksCount++;
                 });
+                
+                bulkAddModal.classList.add('hidden');
+                bulkAddForm.reset();
 
-                if (newTasksCount > 0) {
-                    bulkAddModal.classList.add('hidden');
+                if (newTasksCount > 0 || skippedCount > 0) {
                     refreshUI();
+                    showNotification(`${newTasksCount} análises importadas. ${skippedCount} duplicadas foram ignoradas.`);
                 } else {
-                    showNotification("Nenhuma tarefa válida foi encontrada. Verifique o formato: NOME DO CONDOMÍNIO DD/MM/AAAA");
+                    showNotification('Nenhuma análise nova foi encontrada nos dados colados. Verifique o formato ou se as tarefas já existem.');
                 }
             });
 
@@ -636,8 +801,19 @@
                     const taskId = parseInt(e.target.dataset.id);
                     const task = tasks.find(t => t.id === taskId);
                     if (task) {
-                        if (e.target.dataset.type === 'backup') task.statusBackup = e.target.value;
-                        if (e.target.dataset.type === 'analise') task.statusAnalise = e.target.value;
+                        if (e.target.dataset.type === 'backup') {
+                            task.statusBackup = e.target.value;
+                        }
+                        if (e.target.dataset.type === 'analise') {
+                            const oldStatus = task.statusAnalise;
+                            task.statusAnalise = e.target.value;
+                            
+                            if (task.statusAnalise === 'Concluída' && oldStatus !== 'Concluída') {
+                                task.dataConclusao = new Date().toISOString().split('T')[0];
+                            } else if (task.statusAnalise !== 'Concluída') {
+                                task.dataConclusao = null;
+                            }
+                        }
                         refreshUI();
                     }
                 }
@@ -781,19 +957,51 @@
                 tasks.forEach(t => t.isExpanded = false);
                 refreshUI();
             });
+            
+            const performAutoBackup = () => {
+                const today = new Date().toISOString().split('T')[0];
+                const lastBackupDate = localStorage.getItem('lastBackupDate');
+
+                if (today !== lastBackupDate) {
+                     try {
+                        const allData = {
+                            tasks: JSON.parse(localStorage.getItem('monitoramentoTasks')) || [],
+                            archivedTasks: JSON.parse(localStorage.getItem('archivedTasks')) || []
+                        };
+                        if (allData.tasks.length === 0 && allData.archivedTasks.length === 0) return;
+                        
+                        const dataStr = JSON.stringify(allData, null, 2);
+                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(dataBlob);
+                        const link = document.createElement('a');
+                        link.download = `backup_automatico_${today}.json`;
+                        link.href = url;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                        localStorage.setItem('lastBackupDate', today);
+                        console.log('Backup automático realizado com sucesso.');
+                    } catch (error) {
+                        console.error('Falha no backup automático:', error);
+                    }
+                }
+            };
 
             backupBtn.addEventListener('click', () => {
                 try {
-                    const dataStr = localStorage.getItem('monitoramentoTasks');
-                    if (!dataStr || JSON.parse(dataStr).length === 0) {
+                    const allData = {
+                        tasks: tasks,
+                        archivedTasks: archivedTasks
+                    };
+                    if (allData.tasks.length === 0 && allData.archivedTasks.length === 0) {
                         showNotification('Não há dados para fazer backup.');
                         return;
                     }
+                     const dataStr = JSON.stringify(allData, null, 2);
                     const dataBlob = new Blob([dataStr], { type: 'application/json' });
                     const url = URL.createObjectURL(dataBlob);
                     const link = document.createElement('a');
                     const today = new Date().toISOString().split('T')[0];
-                    link.download = `backup_monitoramento_${today}.json`;
+                    link.download = `backup_manual_${today}.json`;
                     link.href = url;
                     link.click();
                     URL.revokeObjectURL(url);
@@ -828,14 +1036,18 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
-                        const restoredTasks = JSON.parse(e.target.result);
-                        if (Array.isArray(restoredTasks)) {
-                            tasks = restoredTasks;
-                            refreshUI();
-                            showNotification('Backup restaurado com sucesso!');
+                        const data = JSON.parse(e.target.result);
+                        if (data && Array.isArray(data.tasks) && Array.isArray(data.archivedTasks)) {
+                            tasks = data.tasks;
+                            archivedTasks = data.archivedTasks;
+                        } else if (Array.isArray(data)) { // For old backup format
+                            tasks = data;
+                            archivedTasks = [];
                         } else {
-                            throw new Error('Formato de arquivo inválido.');
+                             throw new Error('Formato de arquivo inválido.');
                         }
+                        refreshUI();
+                        showNotification('Backup restaurado com sucesso!');
                     } catch (error) {
                         console.error('Erro ao restaurar backup:', error);
                         showNotification('Erro ao ler o arquivo de backup. Verifique se o arquivo é válido.');
@@ -854,6 +1066,21 @@
             
             periodAnalysisBtn.addEventListener('click', () => periodAnalysisModal.classList.remove('hidden'));
             periodAnalysisCloseBtn.addEventListener('click', () => periodAnalysisModal.classList.add('hidden'));
+            
+            actionsMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                actionsMenu.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', (e) => {
+                if (!actionsMenu.classList.contains('hidden') && !actionsMenuContainer.contains(e.target)) {
+                    actionsMenu.classList.add('hidden');
+                }
+            });
+            
+            actionsMenu.addEventListener('click', () => {
+                actionsMenu.classList.add('hidden');
+            });
 
             document.querySelectorAll('.period-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -894,14 +1121,23 @@
                     showNotification("Por favor, selecione as datas de início e fim.");
                     return;
                 }
-                const filteredTasks = tasks.filter(task => task.dataAnalise >= startDate && task.dataAnalise <= endDate);
+                const analysisType = document.querySelector('input[name="analysis_type"]:checked').value;
+                const allTasksForReport = [...tasks, ...archivedTasks];
+
+                const filteredTasks = allTasksForReport.filter(task => {
+                    const dateToCompare = analysisType === 'dataConclusao' ? task.dataConclusao : task.dataAnalise;
+                    if (!dateToCompare) return false;
+                    return dateToCompare >= startDate && dateToCompare <= endDate;
+                });
                 
-                document.getElementById('period-total').textContent = filteredTasks.length;
-                document.getElementById('period-backups').textContent = filteredTasks.filter(t => t.statusBackup === 'Pendente').length;
-                document.getElementById('period-analises').textContent = filteredTasks.filter(t => t.statusAnalise === 'Pendente').length;
+                const totalDias = filteredTasks.length;
+                const uniquePdvs = new Set(filteredTasks.map(task => task.condominio)).size;
                 const totalOcorrencias = filteredTasks.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
-                document.getElementById('period-ocorrencias').textContent = totalOcorrencias;
-                
+
+                document.getElementById('period-dias').textContent = totalDias;
+                document.getElementById('period-pdv').textContent = uniquePdvs;
+                document.getElementById('period-oc').textContent = totalOcorrencias;
+
                 const dataByCondo = filteredTasks.reduce((acc, task) => {
                     if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
                     if (task.ocorrencia === 'Sim' && task.ocorrencias) acc[task.condominio].ocorrencias += task.ocorrencias.length;
@@ -914,6 +1150,7 @@
                 
                 periodTaskList.innerHTML = '';
                 if(filteredTasks.length > 0){
+                    filteredTasks.sort((a, b) => new Date(a.dataAnalise) - new Date(b.dataAnalise));
                     filteredTasks.forEach(task => {
                         const li = document.createElement('li');
                         li.className = 'text-sm p-2 bg-slate-100 rounded-md flex justify-between items-center';
@@ -930,9 +1167,136 @@
                 periodResultsContent.classList.remove('hidden');
             });
 
+            const renderPriorityView = () => {
+                const allTasks = [...tasks, ...archivedTasks];
+                const occurrenceMap = allTasks.reduce((acc, task) => {
+                    if (!acc[task.condominio]) {
+                        acc[task.condominio] = 0;
+                    }
+                    if (task.ocorrencias && task.ocorrencias.length > 0) {
+                        acc[task.condominio] += task.ocorrencias.length;
+                    }
+                    return acc;
+                }, {});
+
+                const pendingTasks = tasks.filter(task => task.statusBackup === 'Pendente' || task.statusAnalise === 'Pendente');
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                pendingTasks.forEach(task => {
+                    const taskDate = new Date(task.dataAnalise + 'T00:00:00');
+                    const timeDiff = today.getTime() - taskDate.getTime();
+                    task.daysOverdue = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                });
+
+                pendingTasks.sort((a, b) => {
+                    const scoreA = occurrenceMap[a.condominio] || 0;
+                    const scoreB = occurrenceMap[b.condominio] || 0;
+                    if (scoreB !== scoreA) {
+                        return scoreB - scoreA;
+                    }
+                    return new Date(a.dataAnalise) - new Date(b.dataAnalise);
+                });
+
+                priorityTaskList.innerHTML = '';
+
+                if (pendingTasks.length === 0) {
+                    priorityTaskList.innerHTML = '<li class="text-center text-slate-500 p-4 bg-emerald-50 rounded-md">Parabéns! Você está em dia com todas as análises.</li>';
+                    return;
+                }
+
+                pendingTasks.forEach(task => {
+                    let urgencyHTML = '';
+                    if (task.daysOverdue > 0) {
+                        urgencyHTML = `<span class="font-bold text-red-600">Atrasado ${task.daysOverdue} dia(s)</span>`;
+                    } else if (task.daysOverdue === 0) {
+                        urgencyHTML = `<span class="font-bold text-amber-600">Para Hoje</span>`;
+                    } else {
+                        urgencyHTML = `<span class="font-semibold text-sky-600">Futuro (${formatDate(task.dataAnalise)})</span>`;
+                    }
+                    
+                    const historyScore = occurrenceMap[task.condominio] || 0;
+
+                    const li = document.createElement('li');
+                    li.className = 'p-3 bg-slate-100 rounded-md flex justify-between items-center';
+                    li.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">${task.condominio}</p>
+                            <p class="text-xs text-slate-500">Histórico: <strong>${historyScore}</strong> ocorrências</p>
+                        </div>
+                        <div class="text-right">
+                            ${urgencyHTML}
+                        </div>
+                    `;
+                    priorityTaskList.appendChild(li);
+                });
+            };
+            
+            priorityBtn.addEventListener('click', () => {
+                renderPriorityView();
+                priorityModal.classList.remove('hidden');
+            });
+
+            priorityCloseBtn.addEventListener('click', () => {
+                priorityModal.classList.add('hidden');
+            });
+            
+            archiveBtn.addEventListener('click', () => archiveModal.classList.remove('hidden'));
+            archiveCancelBtn.addEventListener('click', () => archiveModal.classList.add('hidden'));
+
+            archiveForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const days = parseInt(document.querySelector('input[name="archive_period"]:checked').value);
+                const thresholdDate = new Date();
+                thresholdDate.setDate(thresholdDate.getDate() - days);
+
+                let tasksToArchive = [];
+                let remainingTasks = [];
+
+                tasks.forEach(task => {
+                    if (task.statusAnalise === 'Concluída' && task.dataConclusao && new Date(task.dataConclusao) < thresholdDate) {
+                        tasksToArchive.push(task);
+                    } else {
+                        remainingTasks.push(task);
+                    }
+                });
+
+                if (tasksToArchive.length > 0) {
+                    archivedTasks.push(...tasksToArchive);
+                    tasks = remainingTasks;
+                    refreshUI();
+                    showNotification(`${tasksToArchive.length} análises foram arquivadas.`);
+                } else {
+                    showNotification("Nenhuma análise concluída encontrada para o período selecionado.");
+                }
+                archiveModal.classList.add('hidden');
+            });
+
+            viewArchiveBtn.addEventListener('click', () => {
+                viewArchiveListContainer.innerHTML = '';
+                if (archivedTasks.length > 0) {
+                    const list = document.createElement('ul');
+                    list.className = 'space-y-2';
+                    archivedTasks.sort((a,b) => new Date(b.dataConclusao) - new Date(a.dataConclusao));
+                    archivedTasks.forEach(task => {
+                        const li = document.createElement('li');
+                        li.className = 'p-2 bg-white rounded-md text-sm flex justify-between';
+                        li.innerHTML = `<span><strong>${task.condominio}</strong> - Análise de ${formatDate(task.dataAnalise)}</span> <span class="text-slate-500">Concluído em: ${formatDate(task.dataConclusao)}</span>`;
+                        list.appendChild(li);
+                    });
+                    viewArchiveListContainer.appendChild(list);
+                } else {
+                     viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada.</p>';
+                }
+                viewArchiveModal.classList.remove('hidden');
+            });
+
+            viewArchiveCloseBtn.addEventListener('click', () => viewArchiveModal.classList.add('hidden'));
+
 
             setupCharts();
             refreshUI();
+            performAutoBackup();
         });
     </script>
 </body>
