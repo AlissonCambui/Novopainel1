@@ -38,6 +38,8 @@
         .toggle-details-btn.collapsed svg {
             transform: rotate(180deg);
         }
+        .ocorrencia-item.editing .view-mode { display: none; }
+        .ocorrencia-item:not(.editing) .edit-mode { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -75,6 +77,7 @@
                 <div class="flex flex-wrap items-center gap-4 flex-grow">
                     <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 flex-grow md:flex-grow-0">
                     <input type="date" id="filtro-data" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <input type="number" id="filtro-semana" placeholder="Semana de Análise (Ex: 43)" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-40">
                     <select id="filtro-backup" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <option value="">Status do Backup (Todos)</option>
                         <option value="Pendente">Pendente</option>
@@ -201,13 +204,16 @@
     
     <!-- Modal para Visualizar Arquivadas -->
     <div id="view-archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-20">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold">Análises Arquivadas</h2>
                 <button id="view-archive-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
             </div>
-            <div id="view-archive-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md">
+            <div id="view-archive-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md min-h-[200px]">
                 <p class="text-center text-slate-500">Nenhuma análise arquivada.</p>
+            </div>
+            <div class="mt-4 text-right">
+                 <button id="unarchive-selected-btn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Desarquivar Selecionadas</button>
             </div>
         </div>
     </div>
@@ -451,6 +457,7 @@
 
             const filtroCondominio = document.getElementById('filtro-condominio');
             const filtroData = document.getElementById('filtro-data');
+            const filtroSemana = document.getElementById('filtro-semana'); // Novo filtro
             const filtroBackup = document.getElementById('filtro-backup');
             const filtroAnalise = document.getElementById('filtro-analise');
 
@@ -491,6 +498,7 @@
             const viewArchiveModal = document.getElementById('view-archive-modal');
             const viewArchiveCloseBtn = document.getElementById('view-archive-close-btn');
             const viewArchiveListContainer = document.getElementById('view-archive-list-container');
+            const unarchiveSelectedBtn = document.getElementById('unarchive-selected-btn');
 
 
             const actionsMenuContainer = document.getElementById('actions-menu-container');
@@ -522,7 +530,7 @@
 
             const formatDate = (dateString, options = {}) => {
                 if (!dateString) return 'N/A';
-                const date = new Date(dateString + 'T00:00:00');
+                const date = new Date(dateString + 'T00:00:00'); // Ensure correct timezone interpretation
                 return date.toLocaleDateString('pt-BR', options);
             };
             
@@ -530,13 +538,34 @@
                  return date.toISOString().split('T')[0];
             };
 
+            // Function to get ISO week number (Monday as the first day)
+            const getWeekNumber = (d) => {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // Adjust to make Monday day 1
+                var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return weekNo;
+            };
+
             const renderTasks = () => {
+                 const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
                 const filteredTasks = tasks.filter(task => {
                     const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
                     const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
                     const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
                     const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
-                    return matchCondominio && matchData && matchBackup && matchAnalise;
+                    
+                    let matchSemana = true;
+                    if (currentWeekFilter && task.dataAnalise) {
+                        const taskDate = new Date(task.dataAnalise + 'T00:00:00');
+                        const taskWeek = getWeekNumber(taskDate);
+                        // Filter by the PREVIOUS week based on the input
+                        matchSemana = taskWeek === (currentWeekFilter - 1); 
+                    } else if (currentWeekFilter && !task.dataAnalise) {
+                        matchSemana = false; // Cannot match week if date is missing
+                    }
+
+                    return matchCondominio && matchData && matchBackup && matchAnalise && matchSemana;
                 });
 
                 taskList.innerHTML = '';
@@ -612,12 +641,21 @@
             };
             
             const updateDashboard = () => {
+                const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
                 const filteredTasks = tasks.filter(task => {
                     const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
                     const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
                     const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
                     const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
-                    return matchCondominio && matchData && matchBackup && matchAnalise;
+                    let matchSemana = true;
+                     if (currentWeekFilter && task.dataAnalise) {
+                        const taskDate = new Date(task.dataAnalise + 'T00:00:00');
+                        const taskWeek = getWeekNumber(taskDate);
+                         matchSemana = taskWeek === (currentWeekFilter -1);
+                    } else if (currentWeekFilter && !task.dataAnalise) {
+                         matchSemana = false;
+                    }
+                    return matchCondominio && matchData && matchBackup && matchAnalise && matchSemana;
                 });
                 
                 document.getElementById('total-solicitacoes').textContent = filteredTasks.length;
@@ -628,7 +666,7 @@
             };
             
             const updateCharts = () => {
-                const allTasks = [...tasks, ...archivedTasks];
+                const allTasks = [...tasks, ...archivedTasks]; // Use all tasks for overall chart
                 const dataByCondo = allTasks.reduce((acc, task) => {
                     if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
                     if (task.ocorrencia === 'Sim' && task.ocorrencias) acc[task.condominio].ocorrencias += task.ocorrencias.length;
@@ -664,7 +702,7 @@
                 updateCharts();
             };
             
-            [filtroCondominio, filtroData, filtroBackup, filtroAnalise].forEach(el => el.addEventListener('input', refreshUI));
+            [filtroCondominio, filtroData, filtroSemana, filtroBackup, filtroAnalise].forEach(el => el.addEventListener('input', refreshUI));
 
             addTaskBtn.addEventListener('click', () => taskModal.classList.remove('hidden'));
             cancelBtn.addEventListener('click', () => {
@@ -780,14 +818,21 @@
 
             ocorrenciaForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                 // Save edits if any item is in edit mode before submitting
+                const editingItem = ocorrenciaListDiv.querySelector('.ocorrencia-item.editing');
+                if (editingItem) {
+                    const saveBtn = editingItem.querySelector('.save-edit-ocorrencia-btn');
+                    if(saveBtn) saveBtn.click(); // Trigger save for the currently edited item
+                }
+
                 const taskId = parseInt(document.getElementById('ocorrencia-task-id').value);
                 const task = tasks.find(t => t.id === taskId);
                 if (task) {
                     const newOcorrencias = Array.from(ocorrenciaListDiv.querySelectorAll('.ocorrencia-item')).map(item => ({
                         id: item.dataset.id,
-                        desc: item.querySelector('.desc-text').textContent,
-                        horarioInicial: item.querySelector('.time-text').dataset.start,
-                        horarioFinal: item.querySelector('.time-text').dataset.end,
+                        desc: item.querySelector('.view-mode .desc-text').textContent,
+                        horarioInicial: item.querySelector('.view-mode .time-text').dataset.start,
+                        horarioFinal: item.querySelector('.view-mode .time-text').dataset.end,
                     }));
                     task.ocorrencias = newOcorrencias;
                     task.ocorrencia = newOcorrencias.length > 0 ? 'Sim' : 'Não';
@@ -821,17 +866,37 @@
 
             const renderOcorrenciaItemInModal = (ocor) => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'ocorrencia-item flex items-start justify-between p-3 bg-slate-100 rounded-md';
-                itemDiv.dataset.id = ocor.id;
+                itemDiv.className = 'ocorrencia-item p-3 bg-slate-100 rounded-md';
+                itemDiv.dataset.id = ocor.id || Date.now(); // Ensure ID exists
+
                 itemDiv.innerHTML = `
-                    <div class="flex-grow">
-                        <p class="desc-text font-medium text-slate-800">${ocor.desc}</p>
-                        <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                    <div class="view-mode">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-grow mr-2">
+                                <p class="desc-text font-medium text-slate-800">${ocor.desc}</p>
+                                <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                            </div>
+                             <div class="flex flex-col items-end flex-shrink-0 space-y-1">
+                                <button type="button" class="edit-ocorrencia-item-btn text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded hover:bg-blue-200">Editar</button>
+                                <button type="button" class="remove-ocorrencia-btn text-red-500 hover:text-red-700 font-bold text-xl leading-none">&times;</button>
+                             </div>
+                        </div>
                     </div>
-                    <button type="button" class="remove-ocorrencia-btn ml-4 text-red-500 hover:text-red-700 font-bold text-xl leading-none">&times;</button>
+                    <div class="edit-mode hidden">
+                        <textarea class="edit-desc w-full border border-slate-300 rounded-md p-1 mb-2 text-sm">${ocor.desc}</textarea>
+                        <div class="flex gap-2">
+                            <input type="time" step="1" class="edit-start border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioInicial || ''}">
+                            <input type="time" step="1" class="edit-end border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioFinal || ''}">
+                        </div>
+                        <div class="mt-2 text-right">
+                             <button type="button" class="cancel-edit-ocorrencia-btn text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded hover:bg-slate-300 mr-1">Cancelar</button>
+                            <button type="button" class="save-edit-ocorrencia-btn text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">Salvar Edição</button>
+                        </div>
+                    </div>
                 `;
                 ocorrenciaListDiv.appendChild(itemDiv);
             }
+
 
             addOcorrenciaBtn.addEventListener('click', () => {
                 const descInput = document.getElementById('add-ocorrencia-desc');
@@ -848,9 +913,51 @@
                 descInput.value = ''; startInput.value = ''; endInput.value = '';
             });
             
-            ocorrenciaListDiv.addEventListener('click', (e) => {
-                if(e.target.classList.contains('remove-ocorrencia-btn')){
-                    e.target.closest('.ocorrencia-item').remove();
+             ocorrenciaListDiv.addEventListener('click', (e) => {
+                const itemDiv = e.target.closest('.ocorrencia-item');
+                if (!itemDiv) return;
+
+                if (e.target.classList.contains('remove-ocorrencia-btn')) {
+                    itemDiv.remove();
+                } else if (e.target.classList.contains('edit-ocorrencia-item-btn')) {
+                     // Ensure only one item is editable at a time
+                    ocorrenciaListDiv.querySelectorAll('.ocorrencia-item.editing').forEach(el => {
+                        el.classList.remove('editing');
+                        el.querySelector('.view-mode').classList.remove('hidden');
+                        el.querySelector('.edit-mode').classList.add('hidden');
+                    });
+                    itemDiv.classList.add('editing');
+                    itemDiv.querySelector('.view-mode').classList.add('hidden');
+                    itemDiv.querySelector('.edit-mode').classList.remove('hidden');
+                } else if (e.target.classList.contains('save-edit-ocorrencia-btn')) {
+                    const newDesc = itemDiv.querySelector('.edit-desc').value;
+                    const newStart = itemDiv.querySelector('.edit-start').value;
+                    const newEnd = itemDiv.querySelector('.edit-end').value;
+
+                    // Update view mode elements
+                    const descText = itemDiv.querySelector('.view-mode .desc-text');
+                    const timeText = itemDiv.querySelector('.view-mode .time-text');
+                    descText.textContent = newDesc;
+                    timeText.dataset.start = newStart;
+                    timeText.dataset.end = newEnd;
+                    timeText.textContent = `Horário: ${newStart || 'N/A'} - ${newEnd || 'N/A'}`;
+
+                    // Switch back to view mode
+                    itemDiv.classList.remove('editing');
+                    itemDiv.querySelector('.view-mode').classList.remove('hidden');
+                    itemDiv.querySelector('.edit-mode').classList.add('hidden');
+                } else if (e.target.classList.contains('cancel-edit-ocorrencia-btn')) {
+                     // Reset input values to original before canceling (optional, but good UX)
+                    const descText = itemDiv.querySelector('.view-mode .desc-text').textContent;
+                    const timeText = itemDiv.querySelector('.view-mode .time-text');
+                    itemDiv.querySelector('.edit-desc').value = descText;
+                    itemDiv.querySelector('.edit-start').value = timeText.dataset.start;
+                    itemDiv.querySelector('.edit-end').value = timeText.dataset.end;
+
+                    // Switch back to view mode
+                    itemDiv.classList.remove('editing');
+                    itemDiv.querySelector('.view-mode').classList.remove('hidden');
+                    itemDiv.querySelector('.edit-mode').classList.add('hidden');
                 }
             });
 
@@ -872,8 +979,15 @@
                     const task = tasks.find(t => t.id === taskId);
                     if (task) {
                         document.getElementById('ocorrencia-task-id').value = task.id;
-                        ocorrenciaListDiv.innerHTML = '';
-                        if (task.ocorrencias) task.ocorrencias.forEach(renderOcorrenciaItemInModal);
+                        ocorrenciaListDiv.innerHTML = ''; // Clear previous items
+                        // Ensure all items are rendered correctly
+                         if (task.ocorrencias) {
+                            task.ocorrencias.forEach(ocor => renderOcorrenciaItemInModal(ocor));
+                        }
+                         // Reset add form
+                        document.getElementById('add-ocorrencia-desc').value = '';
+                        document.getElementById('add-horario-inicial').value = '';
+                        document.getElementById('add-horario-final').value = '';
                         ocorrenciaModal.classList.remove('hidden');
                     }
                 }
@@ -940,6 +1054,11 @@
                     return;
                 }
                 tasks.forEach(task => {
+                    if (task.condominio === oldName) {
+                        task.condominio = newName;
+                    }
+                });
+                 archivedTasks.forEach(task => { // Rename in archive too
                     if (task.condominio === oldName) {
                         task.condominio = newName;
                     }
@@ -1090,7 +1209,7 @@
 
                     if (period === 'this-week') {
                         const dayOfWeek = today.getDay();
-                        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
+                        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday being 0
                         startDate = new Date(today.setDate(diff));
                         endDate = new Date(startDate);
                         endDate.setDate(startDate.getDate() + 6);
@@ -1098,7 +1217,7 @@
                         const beforeOneWeek = new Date();
                         beforeOneWeek.setDate(today.getDate() - 7);
                         const dayOfWeek = beforeOneWeek.getDay();
-                        const diff = beforeOneWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                        const diff = beforeOneWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday being 0
                         startDate = new Date(beforeOneWeek.setDate(diff));
                         endDate = new Date(startDate);
                         endDate.setDate(startDate.getDate() + 6);
@@ -1273,18 +1392,35 @@
             });
 
             viewArchiveBtn.addEventListener('click', () => {
-                viewArchiveListContainer.innerHTML = '';
+                 viewArchiveListContainer.innerHTML = ''; // Clear previous content
+                 unarchiveSelectedBtn.disabled = true; // Disable button initially
+
                 if (archivedTasks.length > 0) {
                     const list = document.createElement('ul');
                     list.className = 'space-y-2';
-                    archivedTasks.sort((a,b) => new Date(b.dataConclusao) - new Date(a.dataConclusao));
+                    archivedTasks.sort((a,b) => new Date(b.dataConclusao || b.dataAnalise) - new Date(a.dataConclusao || a.dataAnalise));
                     archivedTasks.forEach(task => {
                         const li = document.createElement('li');
-                        li.className = 'p-2 bg-white rounded-md text-sm flex justify-between';
-                        li.innerHTML = `<span><strong>${task.condominio}</strong> - Análise de ${formatDate(task.dataAnalise)}</span> <span class="text-slate-500">Concluído em: ${formatDate(task.dataConclusao)}</span>`;
+                        li.className = 'p-2 bg-white rounded-md text-sm flex justify-between items-center';
+                        li.innerHTML = `
+                            <label class="flex items-center flex-grow mr-4">
+                                <input type="checkbox" value="${task.id}" class="h-4 w-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500 archive-checkbox mr-3">
+                                <span><strong>${task.condominio}</strong> - Análise de ${formatDate(task.dataAnalise)}</span>
+                            </label>
+                            <span class="text-slate-500 text-xs flex-shrink-0">Concluído em: ${formatDate(task.dataConclusao)}</span>
+                        `;
                         list.appendChild(li);
                     });
                     viewArchiveListContainer.appendChild(list);
+
+                    // Add event listener for checkboxes after rendering
+                    viewArchiveListContainer.querySelectorAll('.archive-checkbox').forEach(checkbox => {
+                        checkbox.addEventListener('change', () => {
+                            const anyChecked = viewArchiveListContainer.querySelector('.archive-checkbox:checked');
+                            unarchiveSelectedBtn.disabled = !anyChecked;
+                        });
+                    });
+
                 } else {
                      viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada.</p>';
                 }
@@ -1292,6 +1428,32 @@
             });
 
             viewArchiveCloseBtn.addEventListener('click', () => viewArchiveModal.classList.add('hidden'));
+
+            unarchiveSelectedBtn.addEventListener('click', () => {
+                const selectedIds = Array.from(viewArchiveListContainer.querySelectorAll('.archive-checkbox:checked'))
+                                         .map(cb => parseInt(cb.value));
+                
+                if (selectedIds.length === 0) return;
+
+                let tasksToUnarchive = [];
+                let remainingArchived = [];
+
+                archivedTasks.forEach(task => {
+                    if (selectedIds.includes(task.id)) {
+                        tasksToUnarchive.push(task);
+                    } else {
+                        remainingArchived.push(task);
+                    }
+                });
+
+                if (tasksToUnarchive.length > 0) {
+                    tasks.push(...tasksToUnarchive);
+                    archivedTasks = remainingArchived;
+                    refreshUI();
+                    viewArchiveModal.classList.add('hidden'); // Close modal after action
+                    showNotification(`${tasksToUnarchive.length} análises foram desarquivadas.`);
+                }
+            });
 
 
             setupCharts();
