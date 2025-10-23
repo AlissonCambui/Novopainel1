@@ -71,6 +71,16 @@
             </div>
         </section>
 
+        <!-- Produtividade Semanal -->
+        <section id="weekly-productivity" class="mb-8">
+             <div class="bg-white p-4 rounded-lg shadow-md text-center max-w-sm mx-auto">
+                <h3 class="text-sm font-semibold text-slate-500">Produtividade Semanal (Análises / Ocorrência)</h3>
+                <p id="produtividade-semanal" class="text-3xl font-bold text-emerald-600 mt-1">N/A</p>
+                <p class="text-xs text-slate-400 mt-1">Média da semana atual</p>
+            </div>
+        </section>
+
+
         <!-- Controles e Filtros -->
         <section class="bg-white p-4 rounded-lg shadow-md mb-8">
             <div class="flex flex-wrap items-center justify-between gap-4">
@@ -126,7 +136,7 @@
                             <button id="rename-condo-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Renomear Condomínio</button>
                             <button id="archive-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Arquivar Análises</button>
                             <div class="border-t border-slate-100 my-1"></div>
-                            <button id="backup-btn" class="w-full text-left text-green-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Fazer Backup</button>
+                            <!-- <button id="backup-btn" class="w-full text-left text-green-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Fazer Backup</button> -->
                             <button id="restore-btn" class="w-full text-left text-orange-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Restaurar Backup</button>
                         </div>
                     </div>
@@ -464,7 +474,7 @@
             const expandAllBtn = document.getElementById('expand-all-btn');
             const collapseAllBtn = document.getElementById('collapse-all-btn');
             
-            const backupBtn = document.getElementById('backup-btn');
+            const backupBtn = document.getElementById('backup-btn'); // Still needed for auto-backup logic association
             const restoreBtn = document.getElementById('restore-btn');
             const restoreInput = document.getElementById('restore-input');
             const restoreConfirmModal = document.getElementById('restore-confirm-modal');
@@ -663,6 +673,32 @@
                 document.getElementById('analises-pendentes').textContent = filteredTasks.filter(t => t.statusAnalise === 'Pendente').length;
                 const totalOcorrencias = [...tasks, ...archivedTasks].reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
                 document.getElementById('total-ocorrencias').textContent = totalOcorrencias;
+                
+                // Weekly Performance Update
+                const today = new Date();
+                const dayOfWeek = today.getDay() || 7; // Sunday = 0, make it 7
+                const monday = new Date(today);
+                monday.setDate(today.getDate() - dayOfWeek + 1);
+                monday.setHours(0, 0, 0, 0);
+                
+                const currentDay = new Date();
+                currentDay.setHours(23, 59, 59, 999);
+
+                const completedThisWeek = [...tasks, ...archivedTasks].filter(task => 
+                    task.dataConclusao && 
+                    new Date(task.dataConclusao + 'T00:00:00') >= monday &&
+                    new Date(task.dataConclusao + 'T00:00:00') <= currentDay
+                );
+
+                const totalCompleted = completedThisWeek.length;
+                // const daysWorked = dayOfWeek; // Monday=1, Tue=2... Sun=7 // Not needed for the new metric
+                const totalOccurrencesWeek = completedThisWeek.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
+
+                // const avgAnalysesPerDay = daysWorked > 0 ? (totalCompleted / daysWorked).toFixed(1) : '0.0'; // Removed
+                const productivityMetric = totalOccurrencesWeek > 0 ? (totalCompleted / totalOccurrencesWeek).toFixed(1) : 'N/A'; // New metric
+
+                // document.getElementById('media-analises-dia').textContent = avgAnalysesPerDay; // Removed
+                document.getElementById('produtividade-semanal').textContent = productivityMetric; // Update new element
             };
             
             const updateCharts = () => {
@@ -709,7 +745,16 @@
                 taskModal.classList.add('hidden');
                 autocompleteList.classList.add('hidden');
             });
-            ocorrenciaCancelBtn.addEventListener('click', () => ocorrenciaModal.classList.add('hidden'));
+            ocorrenciaCancelBtn.addEventListener('click', () => {
+                 // Ensure edits are cancelled if modal is closed without saving form
+                const editingItem = ocorrenciaListDiv.querySelector('.ocorrencia-item.editing');
+                if (editingItem) {
+                    const cancelBtn = editingItem.querySelector('.cancel-edit-ocorrencia-btn');
+                    if(cancelBtn) cancelBtn.click();
+                }
+                ocorrenciaModal.classList.add('hidden');
+            });
+
 
             taskForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -777,6 +822,10 @@
                     }
 
                     const dateParts = dateStr.split('/');
+                    if (dateParts.length !== 3 || dateParts[2].length < 4 || isNaN(parseInt(dateParts[0])) || isNaN(parseInt(dateParts[1])) || isNaN(parseInt(dateParts[2]))) {
+                       console.warn(`Linha ignorada (formato de data inválido): "${line}"`);
+                       return; // Skip if date format is wrong
+                    }
                     const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
                     
                     const isDuplicate = tasks.some(task => task.condominio === condominio && task.dataAnalise === formattedDate);
@@ -922,9 +971,8 @@
                 } else if (e.target.classList.contains('edit-ocorrencia-item-btn')) {
                      // Ensure only one item is editable at a time
                     ocorrenciaListDiv.querySelectorAll('.ocorrencia-item.editing').forEach(el => {
-                        el.classList.remove('editing');
-                        el.querySelector('.view-mode').classList.remove('hidden');
-                        el.querySelector('.edit-mode').classList.add('hidden');
+                         const cancelBtn = el.querySelector('.cancel-edit-ocorrencia-btn');
+                         if(cancelBtn) cancelBtn.click(); // Cancel existing edits
                     });
                     itemDiv.classList.add('editing');
                     itemDiv.querySelector('.view-mode').classList.add('hidden');
@@ -947,7 +995,7 @@
                     itemDiv.querySelector('.view-mode').classList.remove('hidden');
                     itemDiv.querySelector('.edit-mode').classList.add('hidden');
                 } else if (e.target.classList.contains('cancel-edit-ocorrencia-btn')) {
-                     // Reset input values to original before canceling (optional, but good UX)
+                     // Reset input values to original before canceling
                     const descText = itemDiv.querySelector('.view-mode .desc-text').textContent;
                     const timeText = itemDiv.querySelector('.view-mode .time-text');
                     itemDiv.querySelector('.edit-desc').value = descText;
@@ -1031,7 +1079,7 @@
             });
 
             renameCondoBtn.addEventListener('click', () => {
-                const uniqueCondominios = [...new Set(tasks.map(task => task.condominio))].sort();
+                const uniqueCondominios = [...new Set([...tasks, ...archivedTasks].map(task => task.condominio))].sort(); // Use all tasks
                 oldNameSelect.innerHTML = '<option value="">Selecione um condomínio</option>';
                 uniqueCondominios.forEach(condo => {
                     const option = document.createElement('option');
@@ -1042,6 +1090,7 @@
                 newNameInput.value = '';
                 renameModal.classList.remove('hidden');
             });
+
 
             renameCancelBtn.addEventListener('click', () => renameModal.classList.add('hidden'));
 
@@ -1105,30 +1154,10 @@
                 }
             };
 
-            backupBtn.addEventListener('click', () => {
-                try {
-                    const allData = {
-                        tasks: tasks,
-                        archivedTasks: archivedTasks
-                    };
-                    if (allData.tasks.length === 0 && allData.archivedTasks.length === 0) {
-                        showNotification('Não há dados para fazer backup.');
-                        return;
-                    }
-                     const dataStr = JSON.stringify(allData, null, 2);
-                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    const today = new Date().toISOString().split('T')[0];
-                    link.download = `backup_manual_${today}.json`;
-                    link.href = url;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                } catch (error) {
-                    console.error('Erro ao criar backup:', error);
-                    showNotification('Ocorreu um erro ao tentar criar o backup.');
-                }
-            });
+            // Remove manual backup button event listener if backupBtn element exists
+            // if (backupBtn) {
+            //     backupBtn.addEventListener('click', () => { ... }); // Original listener removed
+            // }
 
             restoreBtn.addEventListener('click', () => {
                 restoreInput.click();
@@ -1463,4 +1492,3 @@
     </script>
 </body>
 </html>
-
