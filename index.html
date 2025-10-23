@@ -74,7 +74,7 @@
         <!-- Produtividade Semanal -->
         <section id="weekly-productivity" class="mb-8">
              <div class="bg-white p-4 rounded-lg shadow-md text-center max-w-sm mx-auto">
-                <h3 class="text-sm font-semibold text-slate-500">Produtividade Semanal (Análises / Ocorrência)</h3>
+                <h3 class="text-sm font-semibold text-slate-500">Produtividade Semanal (Ocorrências / Análise)</h3>
                 <p id="produtividade-semanal" class="text-3xl font-bold text-emerald-600 mt-1">N/A</p>
                 <p class="text-xs text-slate-400 mt-1">Média da semana atual</p>
             </div>
@@ -691,14 +691,12 @@
                 );
 
                 const totalCompleted = completedThisWeek.length;
-                // const daysWorked = dayOfWeek; // Monday=1, Tue=2... Sun=7 // Not needed for the new metric
                 const totalOccurrencesWeek = completedThisWeek.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
 
-                // const avgAnalysesPerDay = daysWorked > 0 ? (totalCompleted / daysWorked).toFixed(1) : '0.0'; // Removed
-                const productivityMetric = totalOccurrencesWeek > 0 ? (totalCompleted / totalOccurrencesWeek).toFixed(1) : 'N/A'; // New metric
+                // Calculate Ocorrências / Análises
+                const productivityMetric = totalCompleted > 0 ? (totalOccurrencesWeek / totalCompleted).toFixed(1) : 'N/A'; 
 
-                // document.getElementById('media-analises-dia').textContent = avgAnalysesPerDay; // Removed
-                document.getElementById('produtividade-semanal').textContent = productivityMetric; // Update new element
+                document.getElementById('produtividade-semanal').textContent = productivityMetric; 
             };
             
             const updateCharts = () => {
