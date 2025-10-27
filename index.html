@@ -624,7 +624,8 @@
                                 <h3 class="font-bold text-lg text-slate-800 flex-1 pr-2">${task.condominio}</h3>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full ${task.ocorrencia === 'Sim' ? 'bg-red-100 text-red-800' : (task.ocorrencia === 'Não' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500')}">${task.ocorrencia || 'Pendente'}</span>
-                                    <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-xl leading-none flex-shrink-0">&times;</button>
+                                    <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-sky-600 font-bold text-lg leading-none flex-shrink-0" title="Arquivar esta análise">&#128450;</button>
+                                    <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-xl leading-none flex-shrink-0" title="Excluir esta análise">&times;</button>
                                 </div>
                             </div>
                             <div class="flex justify-between items-center">
@@ -1008,7 +1009,7 @@
             });
 
             taskList.addEventListener('click', (e) => {
-                const targetButton = e.target.closest('.toggle-details-btn, .edit-ocorrencia-btn, .delete-task-btn');
+                const targetButton = e.target.closest('.toggle-details-btn, .edit-ocorrencia-btn, .delete-task-btn, .archive-single-btn');
                 if (!targetButton) return;
                 
                 const taskId = parseInt(targetButton.dataset.id);
@@ -1035,6 +1036,19 @@
                         document.getElementById('add-horario-inicial').value = '';
                         document.getElementById('add-horario-final').value = '';
                         ocorrenciaModal.classList.remove('hidden');
+                    }
+                }
+
+                if (targetButton.classList.contains('archive-single-btn')) {
+                    const taskIndex = tasks.findIndex(t => t.id === taskId);
+                    
+                    if (taskIndex > -1) {
+                        const [taskToArchive] = tasks.splice(taskIndex, 1); // Remove from active tasks
+                        taskToArchive.archivedReason = 'manual'; // Add reason
+                        archivedTasks.push(taskToArchive); // Add to archived tasks
+                        
+                        refreshUI(); // Update the UI
+                        showNotification('Análise arquivada manualmente.');
                     }
                 }
 
@@ -1579,4 +1593,3 @@
     </script>
 </body>
 </html>
-
