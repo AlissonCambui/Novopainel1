@@ -683,7 +683,8 @@
                 const currentDay = new Date();
                 currentDay.setHours(23, 59, 59, 999);
 
-                const completedThisWeek = [...tasks, ...archivedTasks].filter(task => 
+                // Use ONLY active tasks for weekly stats
+                const completedThisWeek = tasks.filter(task => 
                     task.dataConclusao && 
                     new Date(task.dataConclusao + 'T00:00:00') >= monday &&
                     new Date(task.dataConclusao + 'T00:00:00') <= currentDay
@@ -1593,3 +1594,4 @@
     </script>
 </body>
 </html>
+
