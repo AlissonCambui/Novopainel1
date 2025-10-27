@@ -54,7 +54,7 @@
         <!-- Dashboard Resumo -->
         <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-lg shadow-md text-center">
-                <h3 class="text-sm font-semibold text-slate-500">Total de Solicitações</h3>
+                <h3 class="text-sm font-semibold text-slate-500">Solicitações Ativas</h3>
                 <p id="total-solicitacoes" class="text-3xl font-bold text-sky-600 mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-lg shadow-md text-center">
@@ -66,8 +66,8 @@
                 <p id="analises-pendentes" class="text-3xl font-bold text-red-500 mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-lg shadow-md text-center">
-                <h3 class="text-sm font-semibold text-slate-500">Total de Ocorrências</h3>
-                <p id="total-ocorrencias" class="text-3xl font-bold text-slate-700 mt-1">0</p>
+                <h3 class="text-sm font-semibold text-slate-500">Ocorrências (Semana)</h3>
+                <p id="total-ocorrencias-semana" class="text-3xl font-bold text-slate-700 mt-1">0</p>
             </div>
         </section>
 
@@ -151,7 +151,7 @@
         
         <!-- Seção de Gráficos -->
         <section class="mt-12">
-            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800">Análise de Ocorrências (Geral)</h2>
+            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800">Análise de Ocorrências (Geral - Histórico Completo)</h2>
             <div class="flex justify-center">
                 <div class="bg-white p-4 rounded-lg shadow-md w-full lg:w-1/2">
                      <h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio</h3>
@@ -671,10 +671,8 @@
                 document.getElementById('total-solicitacoes').textContent = filteredTasks.length;
                 document.getElementById('backups-pendentes').textContent = filteredTasks.filter(t => t.statusBackup === 'Pendente').length;
                 document.getElementById('analises-pendentes').textContent = filteredTasks.filter(t => t.statusAnalise === 'Pendente').length;
-                const totalOcorrencias = [...tasks, ...archivedTasks].reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
-                document.getElementById('total-ocorrencias').textContent = totalOcorrencias;
                 
-                // Weekly Performance Update
+                // Weekly Performance Update & Weekly Occurrence Count
                 const today = new Date();
                 const dayOfWeek = today.getDay() || 7; // Sunday = 0, make it 7
                 const monday = new Date(today);
@@ -693,9 +691,11 @@
                 const totalCompleted = completedThisWeek.length;
                 const totalOccurrencesWeek = completedThisWeek.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
 
-                // Calculate Ocorrências / Análises
-                const productivityMetric = totalCompleted > 0 ? (totalOccurrencesWeek / totalCompleted).toFixed(1) : '0.0'; 
+                // Update Weekly Occurrence Card
+                document.getElementById('total-ocorrencias-semana').textContent = totalOccurrencesWeek;
 
+                // Calculate Ocorrências / Análises for Weekly Productivity
+                const productivityMetric = totalCompleted > 0 ? (totalOccurrencesWeek / totalCompleted).toFixed(1) : '0.0'; 
                 document.getElementById('produtividade-semanal').textContent = productivityMetric; 
             };
             
@@ -1579,3 +1579,4 @@
     </script>
 </body>
 </html>
+
