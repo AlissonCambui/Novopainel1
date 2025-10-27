@@ -474,7 +474,7 @@
             const expandAllBtn = document.getElementById('expand-all-btn');
             const collapseAllBtn = document.getElementById('collapse-all-btn');
             
-            const backupBtn = document.getElementById('backup-btn'); // Still needed for auto-backup logic association
+            //const backupBtn = document.getElementById('backup-btn'); // No longer needed for manual action
             const restoreBtn = document.getElementById('restore-btn');
             const restoreInput = document.getElementById('restore-input');
             const restoreConfirmModal = document.getElementById('restore-confirm-modal');
@@ -694,7 +694,7 @@
                 const totalOccurrencesWeek = completedThisWeek.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
 
                 // Calculate Ocorrências / Análises
-                const productivityMetric = totalCompleted > 0 ? (totalOccurrencesWeek / totalCompleted).toFixed(1) : 'N/A'; 
+                const productivityMetric = totalCompleted > 0 ? (totalOccurrencesWeek / totalCompleted).toFixed(1) : '0.0'; 
 
                 document.getElementById('produtividade-semanal').textContent = productivityMetric; 
             };
@@ -1152,10 +1152,66 @@
                 }
             };
 
-            // Remove manual backup button event listener if backupBtn element exists
-            // if (backupBtn) {
-            //     backupBtn.addEventListener('click', () => { ... }); // Original listener removed
-            // }
+            const performWeeklyArchive = () => {
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                const lastResetStr = localStorage.getItem('lastResetDate');
+                let shouldReset = false;
+
+                if (!lastResetStr) {
+                    shouldReset = true; // First time running
+                } else {
+                    const lastResetDate = new Date(lastResetStr + 'T00:00:00');
+                    const nextResetDate = new Date(lastResetDate);
+                    nextResetDate.setDate(lastResetDate.getDate() + 7);
+                    
+                    if (today >= nextResetDate) {
+                        shouldReset = true;
+                    }
+                }
+
+                if (shouldReset) {
+                    console.log("Realizando arquivamento semanal automático...");
+                    const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday...
+                    const diffToMonday = today.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1); // Adjust to get Monday
+                    const mondayOfCurrentWeek = new Date(today.setDate(diffToMonday));
+                    mondayOfCurrentWeek.setHours(0, 0, 0, 0);
+
+                    let tasksToArchive = [];
+                    let remainingTasks = [];
+                    let count = 0;
+
+                    tasks.forEach(task => {
+                         // Check if dataAnalise is valid before creating Date object
+                         if (task.dataAnalise && !isNaN(new Date(task.dataAnalise + 'T00:00:00'))) {
+                            const taskDate = new Date(task.dataAnalise + 'T00:00:00');
+                            if (taskDate < mondayOfCurrentWeek) {
+                                task.archivedReason = 'auto-weekly'; // Add reason
+                                tasksToArchive.push(task);
+                                count++;
+                            } else {
+                                remainingTasks.push(task);
+                            }
+                        } else {
+                             remainingTasks.push(task); // Keep tasks with invalid or missing dates
+                             console.warn(`Tarefa ${task.id} mantida pois a data de análise é inválida ou ausente.`);
+                        }
+                    });
+
+                    if (count > 0) {
+                        archivedTasks.push(...tasksToArchive);
+                        tasks = remainingTasks;
+                        saveTasks(); // Save immediately after archiving
+                        showNotification(`${count} análises de semanas anteriores foram arquivadas automaticamente.`);
+                        refreshUI(); // Update UI after saving and notification
+                    } else {
+                         console.log("Nenhuma análise anterior à semana atual encontrada para arquivamento automático.");
+                    }
+
+                    localStorage.setItem('lastResetDate', todayStr);
+                }
+            };
+
 
             restoreBtn.addEventListener('click', () => {
                 restoreInput.click();
@@ -1435,6 +1491,7 @@
                                 <span><strong>${task.condominio}</strong> - Análise de ${formatDate(task.dataAnalise)}</span>
                             </label>
                             <span class="text-slate-500 text-xs flex-shrink-0">Concluído em: ${formatDate(task.dataConclusao)}</span>
+                             <button data-id="${task.id}" class="unarchive-single-btn ml-4 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded hover:bg-orange-200">Desarquivar</button>
                         `;
                         list.appendChild(li);
                     });
@@ -1455,6 +1512,37 @@
             });
 
             viewArchiveCloseBtn.addEventListener('click', () => viewArchiveModal.classList.add('hidden'));
+
+             // Event listener for single unarchive buttons
+             viewArchiveListContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('unarchive-single-btn')) {
+                    const taskId = parseInt(e.target.dataset.id);
+                    const taskIndex = archivedTasks.findIndex(t => t.id === taskId);
+                    if (taskIndex > -1) {
+                        const [taskToUnarchive] = archivedTasks.splice(taskIndex, 1);
+                        tasks.push(taskToUnarchive);
+                        
+                        // Re-render the archive list
+                        const listItems = viewArchiveListContainer.querySelectorAll('li');
+                        listItems.forEach(li => {
+                             const checkbox = li.querySelector('.archive-checkbox');
+                             if (checkbox && parseInt(checkbox.value) === taskId) {
+                                 li.remove();
+                             }
+                        });
+                        
+                        // Update UI if list becomes empty
+                        if (archivedTasks.length === 0) {
+                             viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada.</p>';
+                        }
+                         unarchiveSelectedBtn.disabled = !viewArchiveListContainer.querySelector('.archive-checkbox:checked'); // Re-check button state
+
+                        refreshUI(); // Refresh main UI
+                        showNotification(`Análise desarquivada.`);
+                    }
+                }
+            });
+
 
             unarchiveSelectedBtn.addEventListener('click', () => {
                 const selectedIds = Array.from(viewArchiveListContainer.querySelectorAll('.archive-checkbox:checked'))
@@ -1484,8 +1572,9 @@
 
 
             setupCharts();
-            refreshUI();
-            performAutoBackup();
+            performWeeklyArchive(); // Run weekly archive check on load
+            refreshUI(); // Initial render after potential archive
+            performAutoBackup(); // Perform auto-backup after initial setup and potential archive
         });
     </script>
 </body>
