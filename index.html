@@ -6,6 +6,7 @@
     <title>Painel de Monitoramento de Minimercados</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <!-- Chosen Palette: Slate & Sky -->
     <!-- Application Structure Plan: A single-page dashboard designed for operational efficiency. The structure prioritizes immediate insight with key metrics (stat cards) at the top. Below, an interactive task management section allows for filtering and direct status updates on individual 'task cards', which is more modern and usable than a spreadsheet table. A modal is used for structured data entry of new tasks. Finally, two dynamic charts are placed at the bottom to provide analytical insights into incident patterns and financial impact across locations. This structure was chosen to mirror a typical workflow: 1) See the overall status, 2) Identify and work on specific tasks, 3) Analyze trends. -->
     <!-- Visualization & Content Choices: 
@@ -87,7 +88,7 @@
                 <div class="flex flex-wrap items-center gap-4 flex-grow">
                     <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 flex-grow md:flex-grow-0">
                     <input type="date" id="filtro-data" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                    <input type="number" id="filtro-semana" placeholder="Semana de Análise (Ex: 43)" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-40">
+                    <input type="number" id="filtro-semana" placeholder="Semana de Trabalho (Ex: 43)" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-44">
                     <select id="filtro-backup" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <option value="">Status do Backup (Todos)</option>
                         <option value="Pendente">Pendente</option>
@@ -110,6 +111,9 @@
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                     <button id="priority-btn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-purple-700 transition-colors w-full sm:w-auto flex-grow">
                         Prioridades
+                    </button>
+                    <button id="pdv-dashboard-btn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-teal-700 transition-colors w-full sm:w-auto flex-grow">
+                        Painel do PDV
                     </button>
                     <button id="period-analysis-btn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full sm:w-auto flex-grow">
                         Análise por Período
@@ -134,6 +138,7 @@
                         <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="actions-menu-btn">
                             <button id="bulk-add-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Importar da Planilha</button>
                             <button id="rename-condo-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Renomear Condomínio</button>
+                            <button id="category-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Gerenciar Categorias</button>
                             <button id="archive-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Arquivar Análises</button>
                             <div class="border-t border-slate-100 my-1"></div>
                             <!-- <button id="backup-btn" class="w-full text-left text-green-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Fazer Backup</button> -->
@@ -177,6 +182,42 @@
                 <ul id="priority-task-list" class="space-y-3">
                     <!-- Itens da lista de prioridades serão inseridos aqui -->
                 </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Painel do PDV -->
+    <div id="pdv-dashboard-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Painel do PDV</h2>
+                <button id="pdv-dashboard-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="mb-4">
+                <label for="pdv-select" class="block text-sm font-medium text-slate-700">Selecione o Condomínio</label>
+                <select id="pdv-select" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></select>
+            </div>
+            <div id="pdv-content" class="flex-grow overflow-y-auto hidden space-y-6">
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-100 p-4 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-slate-500">Total Análises (Histórico)</h3>
+                        <p id="pdv-total-analises" class="text-3xl font-bold text-sky-600 mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-slate-500">Total Ocorrências (Histórico)</h3>
+                        <p id="pdv-total-ocorrencias" class="text-3xl font-bold text-red-600 mt-1">0</p>
+                    </div>
+                </section>
+                <section class="bg-slate-50 p-4 rounded-lg">
+                    <h3 class="text-center font-semibold mb-4">Tendência de Ocorrências (Últimos 12 Meses)</h3>
+                    <div class="chart-container" style="height: 250px; max-height: 250px;">
+                        <canvas id="pdvTrendChart"></canvas>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="font-semibold mb-2 text-lg">Histórico de Análises</h3>
+                    <ul id="pdv-task-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></ul>
+                </section>
             </div>
         </div>
     </div>
@@ -288,8 +329,27 @@
                     </div>
                 </section>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-slate-50 p-4 rounded-lg"><h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio no Período</h3><div class="chart-container"><canvas id="periodChart"></canvas></div></div>
-                    <div><h3 class="font-semibold mb-2 text-center lg:text-left">Lista de Análises no Período</h3><ul id="period-task-list" class="space-y-2 max-h-80 overflow-y-auto pr-2"></ul></div>
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <h3 class="text-center font-semibold mb-4">Ocorrências por Categoria</h3>
+                        <div class="chart-container" style="height: 250px; max-height: 250px;">
+                            <canvas id="periodCategoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-center font-semibold">Ocorrências por Condomínio</h3>
+                            <select id="period-category-filter" class="border border-slate-300 rounded-md px-2 py-1 text-xs focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                <option value="">Filtrar Categoria</option>
+                            </select>
+                        </div>
+                        <div class="chart-container" style="height: 250px; max-height: 250px;">
+                            <canvas id="periodChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                 <div class="mt-6">
+                    <h3 class="font-semibold mb-2 text-lg">Lista de Análises no Período</h3>
+                    <ul id="period-task-list" class="space-y-2 max-h-40 overflow-y-auto pr-2 bg-slate-50 p-2 rounded-md"></ul>
                 </div>
             </div>
         </div>
@@ -314,6 +374,10 @@
                     </div>
                 </div>
                  <div class="mt-4">
+                    <label for="form-semana-trabalho" class="block text-sm font-medium text-slate-700">Semana de Trabalho (Nº)</label>
+                    <input type="number" id="form-semana-trabalho" placeholder="Ex: 44" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                 <div class="mt-4">
                     <label for="form-observacoes" class="block text-sm font-medium text-slate-700">Observações</label>
                     <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
                 </div>
@@ -334,9 +398,14 @@
                      <p>Copie os dados da sua planilha online e cole no campo abaixo para adicionar tarefas em massa.</p>
                      <ol class="list-decimal list-inside space-y-2 pl-4">
                          <li>Na planilha, selecione e copie (Ctrl+C) as linhas que contêm as tarefas. Certifique-se de incluir as colunas com a <strong>data</strong> e o <strong>nome da unidade</strong>.</li>
+                         <li>Insira a **Semana de Trabalho** para este lote de análises.</li>
                          <li>Cole os dados (Ctrl+V) na área de texto abaixo e clique em "Importar".</li>
                      </ol>
                      <p class="text-xs text-slate-500 mt-2"><strong>Obs:</strong> Tarefas com a mesma data e condomínio que já existem no painel serão ignoradas para evitar duplicatas.</p>
+                </div>
+                 <div class="mb-4">
+                    <label for="bulk-week-number" class="block text-sm font-medium text-slate-700">Semana de Trabalho (Nº) para este lote:</label>
+                    <input type="number" id="bulk-week-number" placeholder="Ex: 44" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
                 </div>
                 <div>
                     <label for="bulk-input-area" class="block text-sm font-medium text-slate-700">Cole os dados da planilha aqui:</label>
@@ -360,7 +429,11 @@
                 <div class="flex-shrink-0 pt-4 border-t">
                     <h3 class="font-semibold mb-2">Adicionar Nova Ocorrência</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
+                         <div>
+                            <label for="add-ocorrencia-categoria" class="block text-sm font-medium text-slate-700">Categoria</label>
+                            <select id="add-ocorrencia-categoria" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></select>
+                        </div>
+                        <div class="md:col-span-1">
                            <label for="add-ocorrencia-desc" class="block text-sm font-medium text-slate-700">Descrição</label>
                            <textarea id="add-ocorrencia-desc" rows="2" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
                         </div>
@@ -382,6 +455,24 @@
             </form>
         </div>
     </div>
+    
+    <!-- Modal Gerenciar Categorias -->
+    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-20">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md max-h-[90vh] flex flex-col">
+            <h2 class="text-2xl font-bold mb-4">Gerenciar Categorias</h2>
+            <form id="add-category-form" class="flex gap-2 mb-4">
+                <input type="text" id="new-category-name" placeholder="Nova categoria..." class="flex-grow border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
+                <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Adicionar</button>
+            </form>
+            <div id="category-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md min-h-[150px]">
+                <!-- Lista de categorias será inserida aqui -->
+            </div>
+             <div class="mt-6 text-right">
+                <button type="button" id="category-close-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Fechar</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Modal para Renomear Condomínio -->
     <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
@@ -431,6 +522,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
             let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
+            let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
 
             tasks.forEach(t => {
                 if (t.isExpanded === undefined) {
@@ -457,6 +549,7 @@
             const ocorrenciaCancelBtn = document.getElementById('ocorrencia-cancel-btn');
             const ocorrenciaListDiv = document.getElementById('ocorrencia-list');
             const addOcorrenciaBtn = document.getElementById('add-ocorrencia-btn');
+            const addOcorrenciaCategoriaSelect = document.getElementById('add-ocorrencia-categoria');
 
             const renameCondoBtn = document.getElementById('rename-condo-btn');
             const renameModal = document.getElementById('rename-modal');
@@ -467,14 +560,13 @@
 
             const filtroCondominio = document.getElementById('filtro-condominio');
             const filtroData = document.getElementById('filtro-data');
-            const filtroSemana = document.getElementById('filtro-semana'); // Novo filtro
+            const filtroSemana = document.getElementById('filtro-semana');
             const filtroBackup = document.getElementById('filtro-backup');
             const filtroAnalise = document.getElementById('filtro-analise');
 
             const expandAllBtn = document.getElementById('expand-all-btn');
             const collapseAllBtn = document.getElementById('collapse-all-btn');
             
-            //const backupBtn = document.getElementById('backup-btn'); // No longer needed for manual action
             const restoreBtn = document.getElementById('restore-btn');
             const restoreInput = document.getElementById('restore-input');
             const restoreConfirmModal = document.getElementById('restore-confirm-modal');
@@ -494,11 +586,25 @@
             const generateReportBtn = document.getElementById('generate-report-btn');
             const periodResultsContent = document.getElementById('period-results-content');
             const periodTaskList = document.getElementById('period-task-list');
-            
+            const periodCategoryFilter = document.getElementById('period-category-filter');
+
             const priorityBtn = document.getElementById('priority-btn');
             const priorityModal = document.getElementById('priority-modal');
             const priorityCloseBtn = document.getElementById('priority-close-btn');
             const priorityTaskList = document.getElementById('priority-task-list');
+
+            const pdvDashboardBtn = document.getElementById('pdv-dashboard-btn');
+            const pdvDashboardModal = document.getElementById('pdv-dashboard-modal');
+            const pdvDashboardCloseBtn = document.getElementById('pdv-dashboard-close-btn');
+            const pdvSelect = document.getElementById('pdv-select');
+            const pdvContent = document.getElementById('pdv-content');
+            
+            const categoryBtn = document.getElementById('category-btn');
+            const categoryModal = document.getElementById('category-modal');
+            const categoryCloseBtn = document.getElementById('category-close-btn');
+            const addCategoryForm = document.getElementById('add-category-form');
+            const newCategoryNameInput = document.getElementById('new-category-name');
+            const categoryListContainer = document.getElementById('category-list-container');
             
             const archiveBtn = document.getElementById('archive-btn');
             const archiveModal = document.getElementById('archive-modal');
@@ -510,19 +616,24 @@
             const viewArchiveListContainer = document.getElementById('view-archive-list-container');
             const unarchiveSelectedBtn = document.getElementById('unarchive-selected-btn');
 
-
             const actionsMenuContainer = document.getElementById('actions-menu-container');
             const actionsMenuBtn = document.getElementById('actions-menu-btn');
             const actionsMenu = document.getElementById('actions-menu');
 
             let ocorrenciasChart;
             let periodChart;
+            let periodCategoryChart;
+            let pdvTrendChart;
 
             const saveTasks = () => {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
                 localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
             };
             
+            const saveCategories = () => {
+                localStorage.setItem('monitoramentoCategorias', JSON.stringify(categories));
+            };
+
             const showNotification = (message) => {
                 notificationMessage.textContent = message;
                 notificationModal.classList.remove('hidden');
@@ -558,21 +669,22 @@
             };
 
             const renderTasks = () => {
-                 const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
+                const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
                 const filteredTasks = tasks.filter(task => {
                     const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
                     const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
                     const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
                     const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
                     
-                    let matchSemana = true;
-                    if (currentWeekFilter && task.dataAnalise) {
-                        const taskDate = new Date(task.dataAnalise + 'T00:00:00');
-                        const taskWeek = getWeekNumber(taskDate);
-                        // Filter by the PREVIOUS week based on the input
-                        matchSemana = taskWeek === (currentWeekFilter - 1); 
-                    } else if (currentWeekFilter && !task.dataAnalise) {
-                        matchSemana = false; // Cannot match week if date is missing
+                    // Match by EITHER specific date OR week, not both
+                    let matchSemana = !currentWeekFilter; // True if no week filter
+                    if (currentWeekFilter && !filtroData.value) { // Only apply week filter if date filter is not set
+                        matchSemana = (task.semanaDeTrabalho === currentWeekFilter); 
+                    }
+                    
+                    // If date is set, it overrides week filter
+                    if (filtroData.value) {
+                        matchSemana = true; // Ignore week filter if date is set
                     }
 
                     return matchCondominio && matchData && matchBackup && matchAnalise && matchSemana;
@@ -595,7 +707,8 @@
                            task.ocorrencias.forEach(ocor => {
                                ocorrenciaDetailsHTML += `
                                 <div class="p-2 bg-red-50 rounded-md">
-                                    <p class="text-sm text-red-700"><strong>Ocorrência:</strong> ${ocor.desc}</p>
+                                    <p class="text-sm font-semibold text-red-800">${ocor.categoria || 'Sem Categoria'}</p>
+                                    <p class="text-sm text-red-700">${ocor.desc}</p>
                                     ${ocor.horarioInicial ? `<p class="text-xs text-red-600 mt-1"><strong>Horário:</strong> ${ocor.horarioInicial} - ${ocor.horarioFinal}</p>` : ''}
                                 </div>
                                `;
@@ -629,7 +742,10 @@
                                 </div>
                             </div>
                             <div class="flex justify-between items-center">
-                                <p class="text-sm text-slate-500 mb-2">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
+                                <div>
+                                    <p class="text-sm text-slate-500">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
+                                    ${task.semanaDeTrabalho ? `<p class="text-xs text-sky-600 font-medium">Semana de Trabalho: <strong>${task.semanaDeTrabalho}</strong></p>` : ''}
+                                </div>
                                 <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-full hover:bg-slate-200 ${isCollapsed ? 'collapsed' : ''}">
                                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -659,12 +775,11 @@
                     const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
                     const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
                     let matchSemana = true;
-                     if (currentWeekFilter && task.dataAnalise) {
-                        const taskDate = new Date(task.dataAnalise + 'T00:00:00');
-                        const taskWeek = getWeekNumber(taskDate);
-                         matchSemana = taskWeek === (currentWeekFilter -1);
-                    } else if (currentWeekFilter && !task.dataAnalise) {
-                         matchSemana = false;
+                     if (currentWeekFilter && !filtroData.value) {
+                        matchSemana = (task.semanaDeTrabalho === currentWeekFilter); 
+                    }
+                    if (filtroData.value) {
+                        matchSemana = true; 
                     }
                     return matchCondominio && matchData && matchBackup && matchAnalise && matchSemana;
                 });
@@ -683,7 +798,7 @@
                 const currentDay = new Date();
                 currentDay.setHours(23, 59, 59, 999);
 
-                // Use ONLY active tasks for weekly stats
+                // *** FIX: Only use active tasks (tasks array) for weekly stats ***
                 const completedThisWeek = tasks.filter(task => 
                     task.dataConclusao && 
                     new Date(task.dataConclusao + 'T00:00:00') >= monday &&
@@ -724,10 +839,24 @@
                     type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] },
                     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
                 });
+                
                 const periodCtx = document.getElementById('periodChart').getContext('2d');
                 periodChart = new Chart(periodCtx, {
                     type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(79, 70, 229, 0.6)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 1 }] },
                     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                });
+
+                const periodCategoryCtx = document.getElementById('periodCategoryChart').getContext('2d');
+                periodCategoryChart = new Chart(periodCategoryCtx, {
+                    type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'] }] },
+                    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+                
+                const pdvTrendCtx = document.getElementById('pdvTrendChart').getContext('2d');
+                pdvTrendChart = new Chart(pdvTrendCtx, {
+                    type: 'line',
+                    data: { labels: [], datasets: [{ label: 'Ocorrências por Mês', data: [], borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.1 }] },
+                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM/yy' } } } } }
                 });
             };
 
@@ -739,6 +868,26 @@
             };
             
             [filtroCondominio, filtroData, filtroSemana, filtroBackup, filtroAnalise].forEach(el => el.addEventListener('input', refreshUI));
+
+            // Desabilitar filtro de data se semana for preenchido
+            filtroSemana.addEventListener('input', () => {
+                if (filtroSemana.value) {
+                    filtroData.value = '';
+                    filtroData.disabled = true;
+                } else {
+                    filtroData.disabled = false;
+                }
+            });
+            // Desabilitar filtro de semana se data for preenchida
+            filtroData.addEventListener('input', () => {
+                 if (filtroData.value) {
+                    filtroSemana.value = '';
+                    filtroSemana.disabled = true;
+                } else {
+                    filtroSemana.disabled = false;
+                }
+            });
+
 
             addTaskBtn.addEventListener('click', () => taskModal.classList.remove('hidden'));
             cancelBtn.addEventListener('click', () => {
@@ -761,7 +910,9 @@
                 const today = new Date().toISOString().split('T')[0];
                 const newTask = {
                     id: Date.now(), dataSolicitacao: today, condominio: document.getElementById('form-condominio').value,
-                    dataAnalise: document.getElementById('form-data-analise').value, statusBackup: 'Pendente', dataBackup: '',
+                    dataAnalise: document.getElementById('form-data-analise').value,
+                    semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || null,
+                    statusBackup: 'Pendente', dataBackup: '',
                     statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '',
                     obs: document.getElementById('form-observacoes').value,
                     isExpanded: true,
@@ -785,7 +936,12 @@
             bulkAddForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const inputText = bulkInputArea.value.trim();
+                const semanaTrabalho = parseInt(document.getElementById('bulk-week-number').value) || null;
 
+                if (!semanaTrabalho) {
+                    showNotification("Por favor, insira a Semana de Trabalho para este lote.");
+                    return;
+                }
                 if (!inputText) {
                      showNotification("Por favor, cole os dados da planilha.");
                     return;
@@ -840,6 +996,7 @@
                         dataSolicitacao: today,
                         condominio: condominio,
                         dataAnalise: formattedDate,
+                        semanaDeTrabalho: semanaTrabalho,
                         statusBackup: 'Pendente',
                         dataBackup: '',
                         statusAnalise: 'Pendente',
@@ -879,6 +1036,7 @@
                 if (task) {
                     const newOcorrencias = Array.from(ocorrenciaListDiv.querySelectorAll('.ocorrencia-item')).map(item => ({
                         id: item.dataset.id,
+                        categoria: item.querySelector('.view-mode .desc-text').dataset.categoria,
                         desc: item.querySelector('.view-mode .desc-text').textContent,
                         horarioInicial: item.querySelector('.view-mode .time-text').dataset.start,
                         horarioFinal: item.querySelector('.view-mode .time-text').dataset.end,
@@ -902,16 +1060,34 @@
                             const oldStatus = task.statusAnalise;
                             task.statusAnalise = e.target.value;
                             
-                            if (task.statusAnalise === 'Concluída' && oldStatus !== 'Concluída') {
-                                task.dataConclusao = new Date().toISOString().split('T')[0];
+                            // *** CORREÇÃO: Atualiza dataConclusao sempre que for movido para 'Concluída' ***
+                            if (task.statusAnalise === 'Concluída') {
+                                task.dataConclusao = new Date().toISOString().split('T')[0]; // Sempre define/sobrescreve a data de conclusão
                             } else if (task.statusAnalise !== 'Concluída') {
-                                task.dataConclusao = null;
+                                // Não limpa a data de conclusão ao mover para "Em Análise"
+                                // Apenas limpa se for para "Pendente"
+                                if(task.statusAnalise === 'Pendente') {
+                                    task.dataConclusao = null;
+                                }
                             }
                         }
                         refreshUI();
                     }
                 }
             });
+
+            const populateCategorySelect = (selectElement, selectedValue = '') => {
+                selectElement.innerHTML = ''; // Clear existing
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    if (cat === selectedValue) {
+                        option.selected = true;
+                    }
+                    selectElement.appendChild(option);
+                });
+            };
 
             const renderOcorrenciaItemInModal = (ocor) => {
                 const itemDiv = document.createElement('div');
@@ -922,7 +1098,7 @@
                     <div class="view-mode">
                         <div class="flex items-start justify-between">
                             <div class="flex-grow mr-2">
-                                <p class="desc-text font-medium text-slate-800">${ocor.desc}</p>
+                                <p class="desc-text font-semibold text-slate-800" data-categoria="${ocor.categoria || 'Outros'}">${ocor.categoria || 'Outros'}: <span class="font-medium">${ocor.desc}</span></p>
                                 <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
                             </div>
                              <div class="flex flex-col items-end flex-shrink-0 space-y-1">
@@ -932,10 +1108,23 @@
                         </div>
                     </div>
                     <div class="edit-mode hidden">
-                        <textarea class="edit-desc w-full border border-slate-300 rounded-md p-1 mb-2 text-sm">${ocor.desc}</textarea>
+                        <div class="mb-2">
+                             <label class="block text-xs font-medium text-slate-600">Categoria</label>
+                             <select class="edit-categoria w-full border border-slate-300 rounded-md p-1 text-sm"></select>
+                        </div>
+                         <div class="mb-2">
+                             <label class="block text-xs font-medium text-slate-600">Descrição</label>
+                            <textarea class="edit-desc w-full border border-slate-300 rounded-md p-1 text-sm">${ocor.desc}</textarea>
+                        </div>
                         <div class="flex gap-2">
-                            <input type="time" step="1" class="edit-start border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioInicial || ''}">
-                            <input type="time" step="1" class="edit-end border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioFinal || ''}">
+                             <div class="w-full">
+                                <label class="block text-xs font-medium text-slate-600">Início</label>
+                                <input type="time" step="1" class="edit-start border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioInicial || ''}">
+                             </div>
+                             <div class="w-full">
+                                <label class="block text-xs font-medium text-slate-600">Fim</label>
+                                <input type="time" step="1" class="edit-end border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioFinal || ''}">
+                             </div>
                         </div>
                         <div class="mt-2 text-right">
                              <button type="button" class="cancel-edit-ocorrencia-btn text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded hover:bg-slate-300 mr-1">Cancelar</button>
@@ -944,6 +1133,10 @@
                     </div>
                 `;
                 ocorrenciaListDiv.appendChild(itemDiv);
+                
+                // Populate category select in edit mode
+                const editSelect = itemDiv.querySelector('.edit-categoria');
+                populateCategorySelect(editSelect, ocor.categoria || 'Outros');
             }
 
 
@@ -951,15 +1144,22 @@
                 const descInput = document.getElementById('add-ocorrencia-desc');
                 const startInput = document.getElementById('add-horario-inicial');
                 const endInput = document.getElementById('add-horario-final');
+                const categoriaSelect = document.getElementById('add-ocorrencia-categoria');
+                
                 if (!descInput.value.trim()) {
                     descInput.classList.add('border-red-500');
                     setTimeout(() => descInput.classList.remove('border-red-500'), 2000);
                     return;
                 }
                 renderOcorrenciaItemInModal({
-                    id: Date.now(), desc: descInput.value, horarioInicial: startInput.value, horarioFinal: endInput.value
+                    id: Date.now(), 
+                    categoria: categoriaSelect.value,
+                    desc: descInput.value, 
+                    horarioInicial: startInput.value, 
+                    horarioFinal: endInput.value
                 });
                 descInput.value = ''; startInput.value = ''; endInput.value = '';
+                categoriaSelect.value = categories[0] || 'Outros'; // Reset select
             });
             
              ocorrenciaListDiv.addEventListener('click', (e) => {
@@ -978,6 +1178,7 @@
                     itemDiv.querySelector('.view-mode').classList.add('hidden');
                     itemDiv.querySelector('.edit-mode').classList.remove('hidden');
                 } else if (e.target.classList.contains('save-edit-ocorrencia-btn')) {
+                    const newCategoria = itemDiv.querySelector('.edit-categoria').value;
                     const newDesc = itemDiv.querySelector('.edit-desc').value;
                     const newStart = itemDiv.querySelector('.edit-start').value;
                     const newEnd = itemDiv.querySelector('.edit-end').value;
@@ -985,7 +1186,8 @@
                     // Update view mode elements
                     const descText = itemDiv.querySelector('.view-mode .desc-text');
                     const timeText = itemDiv.querySelector('.view-mode .time-text');
-                    descText.textContent = newDesc;
+                    descText.innerHTML = `<span class="font-semibold text-slate-800">${newCategoria}:</span> <span class="font-medium">${newDesc}</span>`;
+                    descText.dataset.categoria = newCategoria;
                     timeText.dataset.start = newStart;
                     timeText.dataset.end = newEnd;
                     timeText.textContent = `Horário: ${newStart || 'N/A'} - ${newEnd || 'N/A'}`;
@@ -996,9 +1198,10 @@
                     itemDiv.querySelector('.edit-mode').classList.add('hidden');
                 } else if (e.target.classList.contains('cancel-edit-ocorrencia-btn')) {
                      // Reset input values to original before canceling
-                    const descText = itemDiv.querySelector('.view-mode .desc-text').textContent;
+                    const descText = itemDiv.querySelector('.view-mode .desc-text');
                     const timeText = itemDiv.querySelector('.view-mode .time-text');
-                    itemDiv.querySelector('.edit-desc').value = descText;
+                    itemDiv.querySelector('.edit-categoria').value = descText.dataset.categoria;
+                    itemDiv.querySelector('.edit-desc').value = descText.querySelector('span.font-medium').textContent;
                     itemDiv.querySelector('.edit-start').value = timeText.dataset.start;
                     itemDiv.querySelector('.edit-end').value = timeText.dataset.end;
 
@@ -1026,6 +1229,7 @@
                 if (targetButton.classList.contains('edit-ocorrencia-btn')) {
                     const task = tasks.find(t => t.id === taskId);
                     if (task) {
+                        populateCategorySelect(addOcorrenciaCategoriaSelect, categories[0] || 'Outros');
                         document.getElementById('ocorrencia-task-id').value = task.id;
                         ocorrenciaListDiv.innerHTML = ''; // Clear previous items
                         // Ensure all items are rendered correctly
@@ -1191,16 +1395,19 @@
                     const diffToMonday = today.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1); // Adjust to get Monday
                     const mondayOfCurrentWeek = new Date(today.setDate(diffToMonday));
                     mondayOfCurrentWeek.setHours(0, 0, 0, 0);
+                    const currentWeekNumber = getWeekNumber(mondayOfCurrentWeek);
 
                     let tasksToArchive = [];
                     let remainingTasks = [];
                     let count = 0;
 
                     tasks.forEach(task => {
-                         // Check if dataAnalise is valid before creating Date object
                          if (task.dataAnalise && !isNaN(new Date(task.dataAnalise + 'T00:00:00'))) {
                             const taskDate = new Date(task.dataAnalise + 'T00:00:00');
-                            if (taskDate < mondayOfCurrentWeek) {
+                            // Archive if EITHER dataAnalise is old AND no week number is set
+                            // OR if the registered week number is less than the current week number.
+                            const taskWeek = task.semanaDeTrabalho || 0;
+                            if (taskDate < mondayOfCurrentWeek && (taskWeek < currentWeekNumber || taskWeek === 0) ) {
                                 task.archivedReason = 'auto-weekly'; // Add reason
                                 tasksToArchive.push(task);
                                 count++;
@@ -1208,7 +1415,7 @@
                                 remainingTasks.push(task);
                             }
                         } else {
-                             remainingTasks.push(task); // Keep tasks with invalid or missing dates
+                             remainingTasks.push(task);
                              console.warn(`Tarefa ${task.id} mantida pois a data de análise é inválida ou ausente.`);
                         }
                     });
@@ -1263,6 +1470,13 @@
                         } else {
                              throw new Error('Formato de arquivo inválido.');
                         }
+                        
+                        // Restore categories if they exist in backup, otherwise keep current
+                        if (data && Array.isArray(data.categories)) {
+                            categories = data.categories;
+                            saveCategories();
+                        }
+
                         refreshUI();
                         showNotification('Backup restaurado com sucesso!');
                     } catch (error) {
@@ -1281,7 +1495,15 @@
                 reader.readAsText(fileToRestore);
             });
             
-            periodAnalysisBtn.addEventListener('click', () => periodAnalysisModal.classList.remove('hidden'));
+            periodAnalysisBtn.addEventListener('click', () => {
+                // Populate category filter on modal open
+                periodCategoryFilter.innerHTML = '<option value="">Todas Categorias</option>';
+                categories.forEach(cat => {
+                    periodCategoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+                periodResultsContent.classList.add('hidden'); // Hide old results
+                periodAnalysisModal.classList.remove('hidden');
+            });
             periodAnalysisCloseBtn.addEventListener('click', () => periodAnalysisModal.classList.add('hidden'));
             
             actionsMenuBtn.addEventListener('click', (e) => {
@@ -1306,19 +1528,19 @@
                     let startDate, endDate;
 
                     if (period === 'this-week') {
-                        const dayOfWeek = today.getDay();
-                        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday being 0
-                        startDate = new Date(today.setDate(diff));
+                        const dayOfWeek = today.getDay() || 7; // Mon=1 ... Sun=7
+                        const diff = today.getDate() - dayOfWeek + 1;
+                        startDate = new Date(today.getFullYear(), today.getMonth(), diff);
                         endDate = new Date(startDate);
-                        endDate.setDate(startDate.getDate() + 6);
+                        endDate.setDate(startDate.getDate() + 4); // Mon + 4 = Fri
                     } else if (period === 'last-week') {
-                        const beforeOneWeek = new Date();
-                        beforeOneWeek.setDate(today.getDate() - 7);
-                        const dayOfWeek = beforeOneWeek.getDay();
-                        const diff = beforeOneWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday being 0
-                        startDate = new Date(beforeOneWeek.setDate(diff));
+                        const todayCopy = new Date();
+                        todayCopy.setDate(todayCopy.getDate() - 7); // Go to last week
+                        const dayOfWeek = todayCopy.getDay() || 7;
+                        const diff = todayCopy.getDate() - dayOfWeek + 1;
+                        startDate = new Date(todayCopy.getFullYear(), todayCopy.getMonth(), diff);
                         endDate = new Date(startDate);
-                        endDate.setDate(startDate.getDate() + 6);
+                        endDate.setDate(startDate.getDate() + 4); // Mon + 4 = Fri
                     } else if (period === 'this-month') {
                         startDate = new Date(today.getFullYear(), today.getMonth(), 1);
                         endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -1331,6 +1553,41 @@
                 });
             });
 
+            const updatePeriodReportCharts = (baseFilteredTasks) => {
+                // 1. Update Category Pie Chart
+                const categoryData = baseFilteredTasks.reduce((acc, task) => {
+                    task.ocorrencias.forEach(ocor => {
+                        const cat = ocor.categoria || 'Outros';
+                        acc[cat] = (acc[cat] || 0) + 1;
+                    });
+                    return acc;
+                }, {});
+                periodCategoryChart.data.labels = Object.keys(categoryData);
+                periodCategoryChart.data.datasets[0].data = Object.values(categoryData);
+                periodCategoryChart.update();
+
+                // 2. Update Condo Bar Chart (respecting category filter)
+                const categoryFiltro = periodCategoryFilter.value;
+                const tasksForBarChart = !categoryFiltro ? baseFilteredTasks : baseFilteredTasks.filter(task => 
+                    task.ocorrencias.some(ocor => (ocor.categoria || 'Outros') === categoryFiltro)
+                );
+                
+                const dataByCondo = tasksForBarChart.reduce((acc, task) => {
+                    if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
+                    task.ocorrencias.forEach(ocor => {
+                         if (!categoryFiltro || (ocor.categoria || 'Outros') === categoryFiltro) {
+                            acc[task.condominio].ocorrencias += 1;
+                         }
+                    });
+                    return acc;
+                }, {});
+
+                periodChart.data.labels = Object.keys(dataByCondo);
+                periodChart.data.datasets[0].data = Object.values(dataByCondo).map(d => d.ocorrencias);
+                periodChart.update();
+            };
+
+
             generateReportBtn.addEventListener('click', () => {
                 const startDate = periodStartDateInput.value;
                 const endDate = periodEndDateInput.value;
@@ -1339,7 +1596,16 @@
                     return;
                 }
                 const analysisType = document.querySelector('input[name="analysis_type"]:checked').value;
-                const allTasksForReport = [...tasks, ...archivedTasks];
+                
+                // *** FIX: Determine which tasks to report on ***
+                let allTasksForReport;
+                if (analysisType === 'dataConclusao') {
+                    // Only report on active tasks when filtering by conclusion date
+                    allTasksForReport = [...tasks];
+                } else {
+                    // When filtering by analysis date, include archived tasks for historical data
+                    allTasksForReport = [...tasks, ...archivedTasks];
+                }
 
                 const filteredTasks = allTasksForReport.filter(task => {
                     const dateToCompare = analysisType === 'dataConclusao' ? task.dataConclusao : task.dataAnalise;
@@ -1354,16 +1620,6 @@
                 document.getElementById('period-dias').textContent = totalDias;
                 document.getElementById('period-pdv').textContent = uniquePdvs;
                 document.getElementById('period-oc').textContent = totalOcorrencias;
-
-                const dataByCondo = filteredTasks.reduce((acc, task) => {
-                    if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
-                    if (task.ocorrencia === 'Sim' && task.ocorrencias) acc[task.condominio].ocorrencias += task.ocorrencias.length;
-                    return acc;
-                }, {});
-
-                periodChart.data.labels = Object.keys(dataByCondo);
-                periodChart.data.datasets[0].data = Object.values(dataByCondo).map(d => d.ocorrencias);
-                periodChart.update();
                 
                 periodTaskList.innerHTML = '';
                 if(filteredTasks.length > 0){
@@ -1381,7 +1637,25 @@
                     periodTaskList.innerHTML = '<li class="text-sm text-slate-500 text-center">Nenhuma análise encontrada para o período.</li>';
                 }
 
+                // Update charts
+                updatePeriodReportCharts(filteredTasks);
                 periodResultsContent.classList.remove('hidden');
+            });
+            
+            // Re-run chart filtering when category filter changes
+            periodCategoryFilter.addEventListener('change', () => {
+                 const startDate = periodStartDateInput.value;
+                const endDate = periodEndDateInput.value;
+                if (!startDate || !endDate) return; // Don't do anything if no date is set
+                 const analysisType = document.querySelector('input[name="analysis_type"]:checked').value;
+                 let allTasksForReport = (analysisType === 'dataConclusao') ? [...tasks] : [...tasks, ...archivedTasks];
+                 const filteredTasks = allTasksForReport.filter(task => {
+                    const dateToCompare = analysisType === 'dataConclusao' ? task.dataConclusao : task.dataAnalise;
+                    if (!dateToCompare) return false;
+                    return dateToCompare >= startDate && dateToCompare <= endDate;
+                });
+                // Only update the charts, not the whole report
+                updatePeriodReportCharts(filteredTasks);
             });
 
             const renderPriorityView = () => {
@@ -1458,6 +1732,79 @@
                 priorityModal.classList.add('hidden');
             });
             
+            pdvDashboardBtn.addEventListener('click', () => {
+                const uniqueCondominios = [...new Set([...tasks, ...archivedTasks].map(task => task.condominio))].sort();
+                pdvSelect.innerHTML = '<option value="">Selecione um condomínio</option>';
+                uniqueCondominios.forEach(condo => {
+                    pdvSelect.innerHTML += `<option value="${condo}">${condo}</option>`;
+                });
+                pdvContent.classList.add('hidden');
+                pdvDashboardModal.classList.remove('hidden');
+            });
+
+            pdvDashboardCloseBtn.addEventListener('click', () => pdvDashboardModal.classList.add('hidden'));
+
+            pdvSelect.addEventListener('change', () => {
+                const selectedCondo = pdvSelect.value;
+                if (!selectedCondo) {
+                    pdvContent.classList.add('hidden');
+                    return;
+                }
+                
+                const allTasks = [...tasks, ...archivedTasks];
+                const condoTasks = allTasks.filter(t => t.condominio === selectedCondo);
+                
+                const totalAnalises = condoTasks.length;
+                const totalOcorrencias = condoTasks.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
+                
+                document.getElementById('pdv-total-analises').textContent = totalAnalises;
+                document.getElementById('pdv-total-ocorrencias').textContent = totalOcorrencias;
+                
+                // Trend Chart Data
+                const monthlyData = {};
+                for (let i = 11; i >= 0; i--) {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    const label = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                    monthlyData[label] = 0;
+                }
+                
+                condoTasks.forEach(task => {
+                    if (task.dataAnalise && task.ocorrencias && task.ocorrencias.length > 0) {
+                         const d = new Date(task.dataAnalise + 'T00:00:00');
+                         const label = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                         if(monthlyData.hasOwnProperty(label)) {
+                             monthlyData[label] += task.ocorrencias.length;
+                         }
+                    }
+                });
+
+                pdvTrendChart.data.labels = Object.keys(monthlyData).map(label => new Date(label + '-01T00:00:00'));
+                pdvTrendChart.data.datasets[0].data = Object.values(monthlyData);
+                pdvTrendChart.update();
+                
+                // Task List
+                const pdvTaskListUl = document.getElementById('pdv-task-list');
+                pdvTaskListUl.innerHTML = '';
+                if(condoTasks.length > 0) {
+                    condoTasks.sort((a,b) => new Date(b.dataAnalise) - new Date(a.dataAnalise)); // Sort descending
+                    condoTasks.forEach(task => {
+                        const li = document.createElement('li');
+                        li.className = 'text-sm p-2 bg-white rounded-md flex justify-between items-center';
+                        li.innerHTML = `
+                           <span><strong>${formatDate(task.dataAnalise)}</strong> (Semana ${task.semanaDeTrabalho || 'N/A'})</span>
+                           <span class="font-bold ${task.ocorrencias && task.ocorrencias.length > 0 ? 'text-red-600' : 'text-emerald-600'}">${task.ocorrencias ? task.ocorrencias.length : 0} ocorr.</span>
+                        `;
+                        pdvTaskListUl.appendChild(li);
+                    });
+                } else {
+                     pdvTaskListUl.innerHTML = '<li class="text-sm text-slate-500 text-center">Nenhuma análise encontrada.</li>';
+                }
+
+                pdvContent.classList.remove('hidden');
+            });
+
+
             archiveBtn.addEventListener('click', () => archiveModal.classList.remove('hidden'));
             archiveCancelBtn.addEventListener('click', () => archiveModal.classList.add('hidden'));
 
@@ -1489,9 +1836,9 @@
                 archiveModal.classList.add('hidden');
             });
 
-            viewArchiveBtn.addEventListener('click', () => {
-                 viewArchiveListContainer.innerHTML = ''; // Clear previous content
-                 unarchiveSelectedBtn.disabled = true; // Disable button initially
+            const renderArchiveList = () => {
+                viewArchiveListContainer.innerHTML = ''; // Clear previous content
+                unarchiveSelectedBtn.disabled = true; // Disable button initially
 
                 if (archivedTasks.length > 0) {
                     const list = document.createElement('ul');
@@ -1511,18 +1858,13 @@
                         list.appendChild(li);
                     });
                     viewArchiveListContainer.appendChild(list);
-
-                    // Add event listener for checkboxes after rendering
-                    viewArchiveListContainer.querySelectorAll('.archive-checkbox').forEach(checkbox => {
-                        checkbox.addEventListener('change', () => {
-                            const anyChecked = viewArchiveListContainer.querySelector('.archive-checkbox:checked');
-                            unarchiveSelectedBtn.disabled = !anyChecked;
-                        });
-                    });
-
                 } else {
                      viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada.</p>';
                 }
+            };
+
+            viewArchiveBtn.addEventListener('click', () => {
+                renderArchiveList(); // Render the list on open
                 viewArchiveModal.classList.remove('hidden');
             });
 
@@ -1530,6 +1872,11 @@
 
              // Event listener for single unarchive buttons
              viewArchiveListContainer.addEventListener('click', (e) => {
+                 if (e.target.classList.contains('archive-checkbox')) {
+                      const anyChecked = viewArchiveListContainer.querySelector('.archive-checkbox:checked');
+                      unarchiveSelectedBtn.disabled = !anyChecked;
+                 }
+                
                 if (e.target.classList.contains('unarchive-single-btn')) {
                     const taskId = parseInt(e.target.dataset.id);
                     const taskIndex = archivedTasks.findIndex(t => t.id === taskId);
@@ -1537,14 +1884,7 @@
                         const [taskToUnarchive] = archivedTasks.splice(taskIndex, 1);
                         tasks.push(taskToUnarchive);
                         
-                        // Re-render the archive list
-                        const listItems = viewArchiveListContainer.querySelectorAll('li');
-                        listItems.forEach(li => {
-                             const checkbox = li.querySelector('.archive-checkbox');
-                             if (checkbox && parseInt(checkbox.value) === taskId) {
-                                 li.remove();
-                             }
-                        });
+                        e.target.closest('li').remove(); // Remove item from list
                         
                         // Update UI if list becomes empty
                         if (archivedTasks.length === 0) {
@@ -1582,6 +1922,49 @@
                     refreshUI();
                     viewArchiveModal.classList.add('hidden'); // Close modal after action
                     showNotification(`${tasksToUnarchive.length} análises foram desarquivadas.`);
+                }
+            });
+            
+            const renderCategoryList = () => {
+                categoryListContainer.innerHTML = '';
+                if(categories.length === 0) {
+                     categoryListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma categoria cadastrada.</p>';
+                     return;
+                }
+                categories.forEach(cat => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center p-2 bg-white rounded-md';
+                    div.innerHTML = `
+                        <span class="text-sm">${cat}</span>
+                        <button data-category="${cat}" class="delete-category-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none">&times;</button>
+                    `;
+                    categoryListContainer.appendChild(div);
+                });
+            };
+
+            categoryBtn.addEventListener('click', () => {
+                renderCategoryList();
+                categoryModal.classList.remove('hidden');
+            });
+            categoryCloseBtn.addEventListener('click', () => categoryModal.classList.add('hidden'));
+
+            addCategoryForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newCat = newCategoryNameInput.value.trim();
+                if (newCat && !categories.includes(newCat)) {
+                    categories.push(newCat);
+                    saveCategories();
+                    renderCategoryList();
+                    newCategoryNameInput.value = '';
+                }
+            });
+
+            categoryListContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-category-btn')) {
+                    const catToDelete = e.target.dataset.category;
+                    categories = categories.filter(c => c !== catToDelete);
+                    saveCategories();
+                    renderCategoryList();
                 }
             });
 
