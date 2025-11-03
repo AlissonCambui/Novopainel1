@@ -338,7 +338,7 @@
                     </div>
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-center font-semibold">Ocorrências por Condomínio</h3>
+                            <h3 class="text-center font-semibold">Ocorrências por Condomínio (no Período)</h3>
                             <select id="period-category-filter" class="border border-slate-300 rounded-md px-2 py-1 text-xs focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                                 <option value="">Filtrar Categoria</option>
                             </select>
@@ -680,7 +680,7 @@
             };
 
             const renderTasks = () => {
-                const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
+                 const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
                 const filteredTasks = tasks.filter(task => {
                     const matchCondominio = task.condominio.toLowerCase().includes(filtroCondominio.value.toLowerCase());
                     const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
@@ -1380,7 +1380,8 @@
                      try {
                         const allData = {
                             tasks: JSON.parse(localStorage.getItem('monitoramentoTasks')) || [],
-                            archivedTasks: JSON.parse(localStorage.getItem('archivedTasks')) || []
+                            archivedTasks: JSON.parse(localStorage.getItem('archivedTasks')) || [],
+                            categories: JSON.parse(localStorage.getItem('monitoramentoCategorias')) || []
                         };
                         if (allData.tasks.length === 0 && allData.archivedTasks.length === 0) return;
                         
