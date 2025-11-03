@@ -916,7 +916,10 @@
             });
 
 
-            addTaskBtn.addEventListener('click', () => taskModal.classList.remove('hidden'));
+            addTaskBtn.addEventListener('click', () => {
+                document.getElementById('form-semana-trabalho').value = getWeekNumber(new Date());
+                taskModal.classList.remove('hidden')
+            });
             cancelBtn.addEventListener('click', () => {
                 taskModal.classList.add('hidden');
                 autocompleteList.classList.add('hidden');
@@ -953,6 +956,7 @@
             });
 
             bulkAddBtn.addEventListener('click', () => {
+                document.getElementById('bulk-week-number').value = getWeekNumber(new Date());
                 bulkAddModal.classList.remove('hidden');
             });
 
@@ -2093,5 +2097,4 @@
     </script>
 </body>
 </html>
-
 
