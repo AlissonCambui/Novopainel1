@@ -156,10 +156,10 @@
         
         <!-- Seção de Gráficos -->
         <section class="mt-12">
-            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800">Análise de Ocorrências (Geral - Histórico Completo)</h2>
+            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800">Ocorrências da Semana (por Condomínio)</h2>
             <div class="flex justify-center">
                 <div class="bg-white p-4 rounded-lg shadow-md w-full lg:w-1/2">
-                     <h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio</h3>
+                     <h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio (Semana Atual)</h3>
                      <div class="chart-container">
                         <canvas id="ocorrenciasChart"></canvas>
                      </div>
@@ -169,6 +169,7 @@
     </div>
     
     <input type="file" id="restore-input" class="hidden" accept=".json">
+    <!-- <input type="file" id="import-csv-input" class="hidden" accept=".csv"> --> <!-- REMOVIDO -->
 
     <!-- Modal de Prioridades -->
     <div id="priority-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
@@ -356,7 +357,7 @@
     </div>
     
     <!-- Modal para Adicionar Tarefa -->
-    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
             <h2 class="text-2xl font-bold mb-4">Adicionar Nova Análise</h2>
             <form id="task-form">
@@ -420,7 +421,7 @@
     </div>
 
     <!-- Modal para Detalhes da Ocorrência -->
-    <div id="ocorrencia-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="ocorrencia-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
             <h2 class="text-2xl font-bold mb-4">Registrar Detalhes da Ocorrência</h2>
             <form id="ocorrencia-form" class="flex-grow flex flex-col min-h-0">
@@ -475,7 +476,7 @@
 
 
     <!-- Modal para Renomear Condomínio -->
-    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
             <h2 class="text-2xl font-bold mb-4">Renomear Condomínio</h2>
             <form id="rename-form">
@@ -498,7 +499,7 @@
     </div>
     
     <!-- Modal para Confirmação de Restauração -->
-    <div id="restore-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-20">
+    <div id="restore-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-30">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
             <h2 class="text-2xl font-bold mb-4 text-orange-600">Atenção!</h2>
             <p class="text-slate-600">Restaurar um backup irá <strong>substituir todos os dados atuais</strong>. Esta ação não pode ser desfeita. Deseja continuar?</p>
@@ -510,7 +511,7 @@
     </div>
 
     <!-- Modal de Notificação Genérica -->
-    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-30">
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-40">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm text-center">
             <p id="notification-message" class="text-slate-700 text-lg"></p>
             <button id="notification-close-btn" class="mt-6 bg-sky-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-sky-700">OK</button>
@@ -567,6 +568,7 @@
             const expandAllBtn = document.getElementById('expand-all-btn');
             const collapseAllBtn = document.getElementById('collapse-all-btn');
             
+            //const backupBtn = document.getElementById('backup-btn'); // No longer needed for manual action
             const restoreBtn = document.getElementById('restore-btn');
             const restoreInput = document.getElementById('restore-input');
             const restoreConfirmModal = document.getElementById('restore-confirm-modal');
@@ -574,6 +576,15 @@
             const restoreConfirmProceedBtn = document.getElementById('restore-confirm-proceed-btn');
             let fileToRestore = null;
             
+            // REMOVIDO INÍCIO
+            // const importCsvBtn = document.getElementById('import-csv-btn'); 
+            // const importCsvModal = document.getElementById('import-csv-modal');
+            // const importCsvCancelBtn = document.getElementById('import-csv-cancel-btn');
+            // const importCsvSelectBtn = document.getElementById('import-csv-select-btn');
+            // const importCsvInput = document.getElementById('import-csv-input');
+            // REMOVIDO FIM
+
+
             const notificationModal = document.getElementById('notification-modal');
             const notificationMessage = document.getElementById('notification-message');
             const notificationCloseBtn = document.getElementById('notification-close-btn');
@@ -817,8 +828,24 @@
             };
             
             const updateCharts = () => {
-                const allTasks = [...tasks, ...archivedTasks]; // Use all tasks for overall chart
-                const dataByCondo = allTasks.reduce((acc, task) => {
+                // Main Chart (Weekly)
+                const today = new Date();
+                const dayOfWeek = today.getDay() || 7; // Sunday = 0, make it 7
+                const monday = new Date(today);
+                monday.setDate(today.getDate() - dayOfWeek + 1);
+                monday.setHours(0, 0, 0, 0);
+                
+                const currentDay = new Date();
+                currentDay.setHours(23, 59, 59, 999);
+
+                // *** FIX: Only use active tasks (tasks array) for weekly chart ***
+                const completedThisWeek = tasks.filter(task => 
+                    task.dataConclusao && 
+                    new Date(task.dataConclusao + 'T00:00:00') >= monday &&
+                    new Date(task.dataConclusao + 'T00:00:00') <= currentDay
+                );
+                
+                const dataByCondo = completedThisWeek.reduce((acc, task) => {
                     if (!acc[task.condominio]) acc[task.condominio] = { ocorrencias: 0 };
                     if (task.ocorrencia === 'Sim' && task.ocorrencias) acc[task.condominio].ocorrencias += task.ocorrencias.length;
                     return acc;
@@ -1037,7 +1064,7 @@
                     const newOcorrencias = Array.from(ocorrenciaListDiv.querySelectorAll('.ocorrencia-item')).map(item => ({
                         id: item.dataset.id,
                         categoria: item.querySelector('.view-mode .desc-text').dataset.categoria,
-                        desc: item.querySelector('.view-mode .desc-text').textContent,
+                        desc: item.querySelector('.view-mode .desc-text span.font-medium').textContent, // Get only text
                         horarioInicial: item.querySelector('.view-mode .time-text').dataset.start,
                         horarioFinal: item.querySelector('.view-mode .time-text').dataset.end,
                     }));
@@ -1093,12 +1120,14 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'ocorrencia-item p-3 bg-slate-100 rounded-md';
                 itemDiv.dataset.id = ocor.id || Date.now(); // Ensure ID exists
+                const descText = ocor.desc.replace(/.*: \s*/, ''); // Clean description if it has category prefix
+                const categoria = ocor.categoria || 'Outros';
 
                 itemDiv.innerHTML = `
                     <div class="view-mode">
                         <div class="flex items-start justify-between">
                             <div class="flex-grow mr-2">
-                                <p class="desc-text font-semibold text-slate-800" data-categoria="${ocor.categoria || 'Outros'}">${ocor.categoria || 'Outros'}: <span class="font-medium">${ocor.desc}</span></p>
+                                <p class="desc-text font-semibold text-slate-800" data-categoria="${categoria}">${categoria}: <span class="font-medium">${descText}</span></p>
                                 <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
                             </div>
                              <div class="flex flex-col items-end flex-shrink-0 space-y-1">
@@ -1114,7 +1143,7 @@
                         </div>
                          <div class="mb-2">
                              <label class="block text-xs font-medium text-slate-600">Descrição</label>
-                            <textarea class="edit-desc w-full border border-slate-300 rounded-md p-1 text-sm">${ocor.desc}</textarea>
+                            <textarea class="edit-desc w-full border border-slate-300 rounded-md p-1 mb-2 text-sm">${descText}</textarea>
                         </div>
                         <div class="flex gap-2">
                              <div class="w-full">
@@ -1136,7 +1165,7 @@
                 
                 // Populate category select in edit mode
                 const editSelect = itemDiv.querySelector('.edit-categoria');
-                populateCategorySelect(editSelect, ocor.categoria || 'Outros');
+                populateCategorySelect(editSelect, categoria);
             }
 
 
@@ -1505,6 +1534,92 @@
                 periodAnalysisModal.classList.remove('hidden');
             });
             periodAnalysisCloseBtn.addEventListener('click', () => periodAnalysisModal.classList.add('hidden'));
+            
+            // REMOVIDO INÍCIO
+            // importCsvBtn.addEventListener('click', () => importCsvModal.classList.remove('hidden'));
+            // importCsvCancelBtn.addEventListener('click', () => importCsvModal.classList.add('hidden'));
+            // importCsvSelectBtn.addEventListener('click', () => {
+            //     const userNameInput = document.getElementById('import-user-name');
+            //     if (!userNameInput.value.trim()) {
+            //         showNotification('Por favor, digite seu nome para filtrar a importação.');
+            //         return;
+            //     }
+            //     importCsvInput.click()
+            // });
+
+            // importCsvInput.addEventListener('change', (event) => {
+            //      const file = event.target.files[0];
+            //     if (!file) return;
+
+            //     const userName = document.getElementById('import-user-name').value.trim().toLowerCase();
+            //      if (!userName) {
+            //         showNotification('O nome do usuário não foi fornecido para o filtro.');
+            //         return;
+            //     }
+
+            //     const reader = new FileReader();
+            //     reader.onload = (e) => {
+            //         try {
+            //             const csvContent = e.target.result;
+            //             const lines = csvContent.split('\n').filter(line => line.trim() !== '');
+            //             const today = new Date().toISOString().split('T')[0];
+            //             let newTasksCount = 0;
+
+            //             const startRow = (lines[0] && (lines[0].toLowerCase().includes('semana') || lines[0].toLowerCase().includes('unidade'))) ? 1 : 0;
+
+            //             for(let i = startRow; i < lines.length; i++) {
+            //                 const line = lines[i];
+            //                 const columns = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                            
+            //                 if (columns.length < 6) {
+            //                     console.warn(`Linha ignorada no CSV (colunas insuficientes): "${line}"`);
+            //                     continue;
+            //                 }
+            //                 const dateStr = columns[1].trim().replace(/"/g, '');
+            //                 const condominio = columns[2].trim().replace(/"/g, '');
+            //                 const collaboratorName = columns[5].trim().toLowerCase().replace(/"/g, '');
+                            
+            //                 if (collaboratorName === userName) {
+            //                     const dateParts = dateStr.split('/');
+            //                     if (dateParts.length !== 3 || dateParts[2].length < 4 || isNaN(parseInt(dateParts[0])) || isNaN(parseInt(dateParts[1])) || isNaN(parseInt(dateParts[2]))) {
+            //                         console.warn(`Linha ignorada no CSV (formato de data inválido): "${line}"`);
+            //                         continue;
+            //                     }
+            //                      const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
+
+            //                     const newTask = {
+            //                         id: Date.now() + i, dataSolicitacao: today, condominio: condominio,
+            //                         dataAnalise: formattedDate,
+            //                         semanaDeTrabalho: null, // This old import didn't support it
+            //                         statusBackup: 'Pendente', dataBackup: '',
+            //                         statusAnalise: 'Pendente', ocorrencia: null, ocorrencias: [], acao: '', obs: '',
+            //                         isExpanded: true,
+            //                         dataConclusao: null,
+            //                     };
+            //                     tasks.push(newTask);
+            //                     newTasksCount++;
+            //                 }
+            //             };
+                        
+            //             importCsvModal.classList.add('hidden');
+            //             if(newTasksCount > 0){
+            //                 refreshUI();
+            //                 showNotification(`${newTasksCount} análises foram importadas com sucesso!`);
+            //             } else {
+            //                 showNotification('Nenhuma análise para o seu nome foi encontrada no arquivo. Verifique se o nome foi digitado corretamente.');
+            //             }
+
+            //         } catch (error) {
+            //             console.error('Erro ao processar arquivo CSV:', error);
+            //             showNotification('Ocorreu um erro ao processar o arquivo. Verifique se ele está no formato .csv correto.');
+            //         } finally {
+            //             importCsvInput.value = '';
+            //             // document.getElementById('import-user-name').value = ''; // Input doesn't exist anymore
+            //         }
+            //     };
+            //     reader.readAsText(file);
+            // });
+            // REMOVIDO FIM
             
             actionsMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
