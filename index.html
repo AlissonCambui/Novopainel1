@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Chosen Palette: Orange & White -->
     <!-- Application Structure Plan: A single-page dashboard designed for operational efficiency. The structure prioritizes immediate insight with key metrics (stat cards) at the top. Below, an interactive task management section allows for filtering and direct status updates on individual 'task cards', which is more modern and usable than a spreadsheet table. A modal is used for structured data entry of new tasks. Finally, two dynamic charts are placed at the bottom to provide analytical insights into incident patterns and financial impact across locations. This structure was chosen to mirror a typical workflow: 1) See the overall status, 2) Identify and work on specific tasks, 3) Analyze trends. -->
     <!-- Visualization & Content Choices: 
         - Report Info: Dashboard Metrics -> Goal: Inform (at a glance) -> Viz/Method: Stat Cards (HTML/CSS) -> Interaction: None, auto-updates -> Justification: Provides immediate, high-level summary of the workload and results.
@@ -56,7 +56,7 @@
         <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-lg shadow-md text-center">
                 <h3 class="text-sm font-semibold text-slate-500">Solicitações Ativas</h3>
-                <p id="total-solicitacoes" class="text-3xl font-bold text-sky-600 mt-1">0</p>
+                <p id="total-solicitacoes" class="text-3xl font-bold text-orange-600 mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-lg shadow-md text-center">
                 <h3 class="text-sm font-semibold text-slate-500">Backups Pendentes</h3>
@@ -86,17 +86,17 @@
         <section class="bg-white p-4 rounded-lg shadow-md mb-8">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-4 flex-grow">
-                    <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 flex-grow md:flex-grow-0">
-                    <input type="date" id="filtro-data" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                    <input type="number" id="filtro-semana" placeholder="Semana de Trabalho (Ex: 43)" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 w-44">
-                    <select id="filtro-backup" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 flex-grow md:flex-grow-0">
+                    <input type="date" id="filtro-data" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <input type="number" id="filtro-semana" placeholder="Semana de Trabalho (Ex: 43)" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-44">
+                    <select id="filtro-backup" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                         <option value="">Status do Backup (Todos)</option>
                         <option value="Pendente">Pendente</option>
                         <option value="Em Andamento">Em Andamento</option>
                         <option value="Concluído">Concluído</option>
                         <option value="Não visualizar">Não visualizar</option>
                     </select>
-                    <select id="filtro-analise" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <select id="filtro-analise" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                         <option value="">Status da Análise (Todos)</option>
                         <option value="Pendente">Pendente</option>
                         <option value="Em Análise">Em Análise</option>
@@ -109,16 +109,16 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button id="priority-btn" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-purple-700 transition-colors w-full sm:w-auto flex-grow">
+                    <button id="priority-btn" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700 transition-colors w-full sm:w-auto flex-grow">
                         Prioridades
                     </button>
-                    <button id="pdv-dashboard-btn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-teal-700 transition-colors w-full sm:w-auto flex-grow">
+                    <button id="pdv-dashboard-btn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-600 transition-colors w-full sm:w-auto flex-grow">
                         Painel do PDV
                     </button>
-                    <button id="period-analysis-btn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full sm:w-auto flex-grow">
+                    <button id="period-analysis-btn" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700 transition-colors w-full sm:w-auto flex-grow">
                         Análise por Período
                     </button>
-                    <button id="add-task-btn" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700 transition-colors w-full sm:w-auto flex-grow">
+                    <button id="add-task-btn" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700 transition-colors w-full sm:w-auto flex-grow">
                         + Adicionar Análise
                     </button>
                 </div>
@@ -126,7 +126,7 @@
              <div class="flex flex-wrap gap-2 w-full sm:w-auto mt-4 justify-end">
                 <div class="relative inline-block text-left" id="actions-menu-container">
                     <div>
-                        <button type="button" id="actions-menu-btn" class="inline-flex justify-center w-full rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 focus:ring-indigo-500" aria-haspopup="true" aria-expanded="true">
+                        <button type="button" id="actions-menu-btn" class="inline-flex justify-center w-full rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 focus:ring-orange-500" aria-haspopup="true" aria-expanded="true">
                             Ações
                             <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -196,13 +196,13 @@
             </div>
             <div class="mb-4">
                 <label for="pdv-select" class="block text-sm font-medium text-slate-700">Selecione o Condomínio</label>
-                <select id="pdv-select" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></select>
+                <select id="pdv-select" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"></select>
             </div>
             <div id="pdv-content" class="flex-grow overflow-y-auto hidden space-y-6">
                 <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-slate-100 p-4 rounded-lg text-center">
                         <h3 class="text-lg font-semibold text-slate-500">Total Análises (Histórico)</h3>
-                        <p id="pdv-total-analises" class="text-3xl font-bold text-sky-600 mt-1">0</p>
+                        <p id="pdv-total-analises" class="text-3xl font-bold text-orange-600 mt-1">0</p>
                     </div>
                     <div class="bg-slate-100 p-4 rounded-lg text-center">
                         <h3 class="text-lg font-semibold text-slate-500">Total Ocorrências (Histórico)</h3>
@@ -230,16 +230,16 @@
             <form id="archive-form">
                 <p class="text-slate-600 mb-4">Selecione o período para arquivar análises concluídas. Isso irá removê-las da tela principal, mas elas não serão excluídas.</p>
                 <div class="space-y-2 mb-6">
-                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-sky-50 has-[:checked]:border-sky-300">
-                        <input type="radio" name="archive_period" value="7" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-orange-50 has-[:checked]:border-orange-300">
+                        <input type="radio" name="archive_period" value="7" class="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500">
                         <span class="ml-3 text-sm font-medium text-slate-700">Mais antigas que 1 semana</span>
                     </label>
-                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-sky-50 has-[:checked]:border-sky-300">
-                        <input type="radio" name="archive_period" value="30" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" checked>
+                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-orange-50 has-[:checked]:border-orange-300">
+                        <input type="radio" name="archive_period" value="30" class="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" checked>
                         <span class="ml-3 text-sm font-medium text-slate-700">Mais antigas que 1 mês</span>
                     </label>
-                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-sky-50 has-[:checked]:border-sky-300">
-                        <input type="radio" name="archive_period" value="90" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-orange-50 has-[:checked]:border-orange-300">
+                        <input type="radio" name="archive_period" value="90" class="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500">
                         <span class="ml-3 text-sm font-medium text-slate-700">Mais antigas que 3 meses</span>
                     </label>
                 </div>
@@ -247,7 +247,7 @@
                     <button type="button" id="view-archive-btn" class="bg-slate-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-slate-600">Ver Arquivadas</button>
                     <div class="flex gap-3">
                         <button type="button" id="archive-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
-                        <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Arquivar</button>
+                        <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Arquivar</button>
                     </div>
                 </div>
             </form>
@@ -282,14 +282,14 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4 mb-4">
                 <div>
                     <label for="period-start-date" class="block text-sm font-medium text-slate-700">Data de Início</label>
-                    <input type="date" id="period-start-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                    <input type="date" id="period-start-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                 </div>
                 <div>
                     <label for="period-end-date" class="block text-sm font-medium text-slate-700">Data de Fim</label>
-                    <input type="date" id="period-end-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                    <input type="date" id="period-end-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                 </div>
                 <div class="flex items-end">
-                    <button id="generate-report-btn" class="bg-indigo-600 text-white font-semibold w-full px-4 py-2 rounded-md hover:bg-indigo-700">Gerar Relatório</button>
+                    <button id="generate-report-btn" class="bg-orange-600 text-white font-semibold w-full px-4 py-2 rounded-md hover:bg-orange-700">Gerar Relatório</button>
                 </div>
             </div>
 
@@ -297,11 +297,11 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">Analisar por:</label>
                 <div class="flex gap-4">
                     <label class="flex items-center">
-                        <input type="radio" name="analysis_type" value="dataAnalise" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" checked>
+                        <input type="radio" name="analysis_type" value="dataAnalise" class="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" checked>
                         <span class="ml-2 text-sm text-slate-700">Data da Análise</span>
                     </label>
                     <label class="flex items-center">
-                        <input type="radio" name="analysis_type" value="dataConclusao" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+                        <input type="radio" name="analysis_type" value="dataConclusao" class="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500">
                         <span class="ml-2 text-sm text-slate-700">Data da Conclusão</span>
                     </label>
                 </div>
@@ -318,11 +318,11 @@
                 <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="bg-slate-100 p-4 rounded-lg text-center">
                         <h3 class="text-lg font-semibold text-slate-500">Dias (Análises)</h3>
-                        <p id="period-dias" class="text-3xl font-bold text-sky-600 mt-1">0</p>
+                        <p id="period-dias" class="text-3xl font-bold text-orange-600 mt-1">0</p>
                     </div>
                     <div class="bg-slate-100 p-4 rounded-lg text-center">
                         <h3 class="text-lg font-semibold text-slate-500">PDV (Condomínios)</h3>
-                        <p id="period-pdv" class="text-3xl font-bold text-indigo-600 mt-1">0</p>
+                        <p id="period-pdv" class="text-3xl font-bold text-orange-500 mt-1">0</p>
                     </div>
                     <div class="bg-slate-100 p-4 rounded-lg text-center">
                         <h3 class="text-lg font-semibold text-slate-500">OC (Ocorrências)</h3>
@@ -339,7 +339,7 @@
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-center font-semibold">Ocorrências por Condomínio (no Período)</h3>
-                            <select id="period-category-filter" class="border border-slate-300 rounded-md px-2 py-1 text-xs focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                            <select id="period-category-filter" class="border border-slate-300 rounded-md px-2 py-1 text-xs focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                                 <option value="">Filtrar Categoria</option>
                             </select>
                         </div>
@@ -365,26 +365,26 @@
                     <div>
                         <label for="form-condominio" class="block text-sm font-medium text-slate-700">Condomínio</label>
                         <div class="relative">
-                            <input type="text" id="form-condominio" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required autocomplete="off">
+                            <input type="text" id="form-condominio" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required autocomplete="off">
                             <div id="autocomplete-list" class="absolute z-10 w-full bg-white border border-slate-300 rounded-md mt-1 hidden max-h-40 overflow-y-auto shadow-lg"></div>
                         </div>
                     </div>
                     <div>
                         <label for="form-data-analise" class="block text-sm font-medium text-slate-700">Data para Análise</label>
-                        <input type="date" id="form-data-analise" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
+                        <input type="date" id="form-data-analise" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required>
                     </div>
                 </div>
                  <div class="mt-4">
                     <label for="form-semana-trabalho" class="block text-sm font-medium text-slate-700">Semana de Trabalho (Nº)</label>
-                    <input type="number" id="form-semana-trabalho" placeholder="Ex: 44" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                    <input type="number" id="form-semana-trabalho" placeholder="Ex: 44" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                 </div>
                  <div class="mt-4">
                     <label for="form-observacoes" class="block text-sm font-medium text-slate-700">Observações</label>
-                    <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
+                    <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"></textarea>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" id="cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
-                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Salvar</button>
                 </div>
             </form>
         </div>
@@ -406,15 +406,15 @@
                 </div>
                  <div class="mb-4">
                     <label for="bulk-week-number" class="block text-sm font-medium text-slate-700">Semana de Trabalho (Nº) para este lote:</label>
-                    <input type="number" id="bulk-week-number" placeholder="Ex: 44" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
+                    <input type="number" id="bulk-week-number" placeholder="Ex: 44" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required>
                 </div>
                 <div>
                     <label for="bulk-input-area" class="block text-sm font-medium text-slate-700">Cole os dados da planilha aqui:</label>
-                    <textarea id="bulk-input-area" rows="10" class="mt-1 w-full border border-slate-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
+                    <textarea id="bulk-input-area" rows="10" class="mt-1 w-full border border-slate-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"></textarea>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" id="bulk-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
-                    <button type="submit" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-teal-700">Importar</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Importar</button>
                 </div>
             </form>
         </div>
@@ -432,26 +432,26 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div>
                             <label for="add-ocorrencia-categoria" class="block text-sm font-medium text-slate-700">Categoria</label>
-                            <select id="add-ocorrencia-categoria" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></select>
+                            <select id="add-ocorrencia-categoria" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"></select>
                         </div>
                         <div class="md:col-span-1">
                            <label for="add-ocorrencia-desc" class="block text-sm font-medium text-slate-700">Descrição</label>
-                           <textarea id="add-ocorrencia-desc" rows="2" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500"></textarea>
+                           <textarea id="add-ocorrencia-desc" rows="2" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500"></textarea>
                         </div>
                         <div>
                             <label for="add-horario-inicial" class="block text-sm font-medium text-slate-700">Horário Inicial</label>
-                            <input type="time" id="add-horario-inicial" step="1" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                            <input type="time" id="add-horario-inicial" step="1" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                         </div>
                         <div>
                             <label for="add-horario-final" class="block text-sm font-medium text-slate-700">Horário Final</label>
-                            <input type="time" id="add-horario-final" step="1" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500">
+                            <input type="time" id="add-horario-final" step="1" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                         </div>
                     </div>
-                     <button type="button" id="add-ocorrencia-btn" class="mt-3 w-full bg-sky-100 text-sky-800 font-semibold px-4 py-2 rounded-md hover:bg-sky-200">+ Adicionar à Lista</button>
+                     <button type="button" id="add-ocorrencia-btn" class="mt-3 w-full bg-orange-100 text-orange-800 font-semibold px-4 py-2 rounded-md hover:bg-orange-200">+ Adicionar à Lista</button>
                 </div>
                 <div class="mt-6 flex justify-end gap-3 flex-shrink-0">
                     <button type="button" id="ocorrencia-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
-                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar Ocorrências</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Salvar Ocorrências</button>
                 </div>
             </form>
         </div>
@@ -462,8 +462,8 @@
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md max-h-[90vh] flex flex-col">
             <h2 class="text-2xl font-bold mb-4">Gerenciar Categorias</h2>
             <form id="add-category-form" class="flex gap-2 mb-4">
-                <input type="text" id="new-category-name" placeholder="Nova categoria..." class="flex-grow border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
-                <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Adicionar</button>
+                <input type="text" id="new-category-name" placeholder="Nova categoria..." class="flex-grow border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required>
+                <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Adicionar</button>
             </form>
             <div id="category-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md min-h-[150px]">
                 <!-- Lista de categorias será inserida aqui -->
@@ -483,16 +483,16 @@
                 <div class="space-y-4">
                     <div>
                         <label for="form-old-name" class="block text-sm font-medium text-slate-700">Nome Antigo do Condomínio</label>
-                        <select id="form-old-name" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required></select>
+                        <select id="form-old-name" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required></select>
                     </div>
                     <div>
                         <label for="form-new-name" class="block text-sm font-medium text-slate-700">Novo Nome do Condomínio</label>
-                        <input type="text" id="form-new-name" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-sky-500 focus:border-sky-500" required>
+                        <input type="text" id="form-new-name" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" id="rename-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
-                    <button type="submit" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-sky-700">Salvar Alteração</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Salvar Alteração</button>
                 </div>
             </form>
         </div>
@@ -514,7 +514,7 @@
     <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-40">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm text-center">
             <p id="notification-message" class="text-slate-700 text-lg"></p>
-            <button id="notification-close-btn" class="mt-6 bg-sky-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-sky-700">OK</button>
+            <button id="notification-close-btn" class="mt-6 bg-orange-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-orange-700">OK</button>
         </div>
     </div>
 
@@ -655,8 +655,8 @@
             });
             
             const statusClasses = {
-                Pendente: 'bg-amber-100 text-amber-800', 'Em Andamento': 'bg-sky-100 text-sky-800', Concluído: 'bg-emerald-100 text-emerald-800',
-                'Em Análise': 'bg-sky-100 text-sky-800', Concluída: 'bg-emerald-100 text-emerald-800',
+                Pendente: 'bg-amber-100 text-amber-800', 'Em Andamento': 'bg-orange-100 text-orange-800', Concluído: 'bg-emerald-100 text-emerald-800',
+                'Em Análise': 'bg-orange-100 text-orange-800', Concluída: 'bg-emerald-100 text-emerald-800',
                 'Não visualizar': 'bg-slate-200 text-slate-700',
             };
 
@@ -708,7 +708,7 @@
                     filteredTasks.forEach(task => {
                         const card = document.createElement('div');
                         card.className = 'bg-white p-4 rounded-lg shadow-md border-l-4';
-                        card.style.borderColor = task.statusAnalise === 'Pendente' ? '#f59e0b' : (task.statusAnalise === 'Em Análise' ? '#0ea5e9' : '#10b981');
+                        card.style.borderColor = task.statusAnalise === 'Pendente' ? '#f59e0b' : (task.statusAnalise === 'Em Análise' ? '#f97316' : '#10b981');
                         
                         const isCollapsed = !task.isExpanded;
 
@@ -748,14 +748,14 @@
                                 <h3 class="font-bold text-lg text-slate-800 flex-1 pr-2">${task.condominio}</h3>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full ${task.ocorrencia === 'Sim' ? 'bg-red-100 text-red-800' : (task.ocorrencia === 'Não' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500')}">${task.ocorrencia || 'Pendente'}</span>
-                                    <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-sky-600 font-bold text-lg leading-none flex-shrink-0" title="Arquivar esta análise">&#128450;</button>
+                                    <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-orange-600 font-bold text-lg leading-none flex-shrink-0" title="Arquivar esta análise">&#128450;</button>
                                     <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-xl leading-none flex-shrink-0" title="Excluir esta análise">&times;</button>
                                 </div>
                             </div>
                             <div class="flex justify-between items-center">
                                 <div>
                                     <p class="text-sm text-slate-500">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
-                                    ${task.semanaDeTrabalho ? `<p class="text-xs text-sky-600 font-medium">Semana de Trabalho: <strong>${task.semanaDeTrabalho}</strong></p>` : ''}
+                                    ${task.semanaDeTrabalho ? `<p class="text-xs text-orange-600 font-medium">Semana de Trabalho: <strong>${task.semanaDeTrabalho}</strong></p>` : ''}
                                 </div>
                                 <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-full hover:bg-slate-200 ${isCollapsed ? 'collapsed' : ''}">
                                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -863,26 +863,26 @@
             const setupCharts = () => {
                 const ocorrenciasCtx = document.getElementById('ocorrenciasChart').getContext('2d');
                 ocorrenciasChart = new Chart(ocorrenciasCtx, {
-                    type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] },
+                    type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)', borderColor: 'rgba(249, 115, 22, 1)', borderWidth: 1 }] },
                     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
                 });
                 
                 const periodCtx = document.getElementById('periodChart').getContext('2d');
                 periodChart = new Chart(periodCtx, {
-                    type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(79, 70, 229, 0.6)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 1 }] },
+                    type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)', borderColor: 'rgba(249, 115, 22, 1)', borderWidth: 1 }] },
                     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
                 });
 
                 const periodCategoryCtx = document.getElementById('periodCategoryChart').getContext('2d');
                 periodCategoryChart = new Chart(periodCategoryCtx, {
-                    type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'] }] },
+                    type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#ef4444'] }] },
                     options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
                 
                 const pdvTrendCtx = document.getElementById('pdvTrendChart').getContext('2d');
                 pdvTrendChart = new Chart(pdvTrendCtx, {
                     type: 'line',
-                    data: { labels: [], datasets: [{ label: 'Ocorrências por Mês', data: [], borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.1 }] },
+                    data: { labels: [], datasets: [{ label: 'Ocorrências por Mês', data: [], borderColor: 'rgba(249, 115, 22, 1)', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.1 }] },
                     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM/yy' } } } } }
                 });
             };
@@ -1131,7 +1131,7 @@
                                 <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
                             </div>
                              <div class="flex flex-col items-end flex-shrink-0 space-y-1">
-                                <button type="button" class="edit-ocorrencia-item-btn text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded hover:bg-blue-200">Editar</button>
+                                <button type="button" class="edit-ocorrencia-item-btn text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded hover:bg-orange-200">Editar</button>
                                 <button type="button" class="remove-ocorrencia-btn text-red-500 hover:text-red-700 font-bold text-xl leading-none">&times;</button>
                              </div>
                         </div>
@@ -1304,7 +1304,7 @@
                 if (suggestions.length > 0) {
                     suggestions.forEach(suggestion => {
                         const item = document.createElement('div');
-                        item.className = 'p-2 hover:bg-sky-100 cursor-pointer text-sm';
+                        item.className = 'p-2 hover:bg-orange-100 cursor-pointer text-sm';
                         item.textContent = suggestion;
                         item.addEventListener('click', () => {
                             formCondominioInput.value = suggestion;
@@ -1819,7 +1819,7 @@
                     } else if (task.daysOverdue === 0) {
                         urgencyHTML = `<span class="font-bold text-amber-600">Para Hoje</span>`;
                     } else {
-                        urgencyHTML = `<span class="font-semibold text-sky-600">Futuro (${formatDate(task.dataAnalise)})</span>`;
+                        urgencyHTML = `<span class="font-semibold text-orange-600">Futuro (${formatDate(task.dataAnalise)})</span>`;
                     }
                     
                     const historyScore = occurrenceMap[task.condominio] || 0;
@@ -1965,7 +1965,7 @@
                         li.className = 'p-2 bg-white rounded-md text-sm flex justify-between items-center';
                         li.innerHTML = `
                             <label class="flex items-center flex-grow mr-4">
-                                <input type="checkbox" value="${task.id}" class="h-4 w-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500 archive-checkbox mr-3">
+                                <input type="checkbox" value="${task.id}" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 archive-checkbox mr-3">
                                 <span><strong>${task.condominio}</strong> - Análise de ${formatDate(task.dataAnalise)}</span>
                             </label>
                             <span class="text-slate-500 text-xs flex-shrink-0">Concluído em: ${formatDate(task.dataConclusao)}</span>
@@ -2093,4 +2093,5 @@
     </script>
 </body>
 </html>
+
 
