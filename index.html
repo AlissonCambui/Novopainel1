@@ -477,6 +477,12 @@
                             <input type="time" id="add-horario-final" step="1" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                         </div>
                     </div>
+                     <div class="mt-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="add-ocorrencia-inconclusiva" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="ml-2 text-sm font-medium text-slate-700">Marcar como Inconclusiva</span>
+                        </label>
+                    </div>
                      <button type="button" id="add-ocorrencia-btn" class="mt-3 w-full bg-orange-100 text-orange-800 font-semibold px-4 py-2 rounded-md hover:bg-orange-200">+ Adicionar à Lista</button>
                 </div>
                 <div class="mt-6 flex justify-end gap-3 flex-shrink-0">
@@ -581,6 +587,7 @@
             const ocorrenciaListDiv = document.getElementById('ocorrencia-list');
             const addOcorrenciaBtn = document.getElementById('add-ocorrencia-btn');
             const addOcorrenciaCategoriaSelect = document.getElementById('add-ocorrencia-categoria');
+            const addOcorrenciaInconclusiva = document.getElementById('add-ocorrencia-inconclusiva');
 
             const renameCondoBtn = document.getElementById('rename-condo-btn');
             const renameModal = document.getElementById('rename-modal');
@@ -673,6 +680,9 @@
             let periodChart;
             let periodCategoryChart;
             let pdvTrendChart;
+            
+            const multiOcColors = ['#fef9c3', '#ffe4e6', '#cffafe', '#dcfce7', '#f3e8ff', '#fef3c7']; // yellow-100, rose-100, cyan-100, green-100, purple-100, amber-100
+
 
             const saveTasks = () => {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
@@ -768,11 +778,15 @@
                         if (task.ocorrencia === 'Sim' && task.ocorrencias && task.ocorrencias.length > 0) {
                            ocorrenciaDetailsHTML += `<div class="mt-4 pt-3 border-t border-slate-200 space-y-2">`;
                            task.ocorrencias.forEach(ocor => {
+                               const inconclusivaBadge = ocor.isInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
                                ocorrenciaDetailsHTML += `
                                 <div class="p-2 bg-red-50 rounded-md">
                                     <p class="text-sm font-semibold text-red-800">${ocor.categoria || 'Sem Categoria'}</p>
                                     <p class="text-sm text-red-700">${ocor.desc}</p>
-                                    ${ocor.horarioInicial ? `<p class="text-xs text-red-600 mt-1"><strong>Horário:</strong> ${ocor.horarioInicial} - ${ocor.horarioFinal}</p>` : ''}
+                                    <div class="flex items-center mt-1">
+                                        <p class="text-xs text-red-600"><strong>Horário:</strong> ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                                        ${inconclusivaBadge}
+                                    </div>
                                 </div>
                                `;
                            });
@@ -1123,6 +1137,7 @@
                         desc: item.querySelector('.view-mode .desc-text span.font-medium').textContent, // Get only text
                         horarioInicial: item.querySelector('.view-mode .time-text').dataset.start,
                         horarioFinal: item.querySelector('.view-mode .time-text').dataset.end,
+                        isInconclusiva: !!item.querySelector('.view-mode span.bg-slate-400')
                     }));
                     task.ocorrencias = newOcorrencias;
                     task.ocorrencia = newOcorrencias.length > 0 ? 'Sim' : 'Não';
@@ -1171,6 +1186,45 @@
                     selectElement.appendChild(option);
                 });
             };
+            
+            const updateMultiOcVisuals = () => {
+                const items = Array.from(ocorrenciaListDiv.querySelectorAll('.ocorrencia-item'));
+                const startTimeMap = new Map();
+
+                // Reset all backgrounds
+                items.forEach(item => {
+                    item.style.backgroundColor = '#f1f5f9'; // bg-slate-100
+                });
+
+                // Group by start time
+                items.forEach(item => {
+                    let startTime;
+                    if (item.classList.contains('editing')) {
+                        startTime = item.querySelector('.edit-start').value;
+                    } else {
+                        startTime = item.querySelector('.view-mode .time-text').dataset.start;
+                    }
+                    
+                    if (startTime) { // Only group if time is set
+                        if (!startTimeMap.has(startTime)) {
+                            startTimeMap.set(startTime, []);
+                        }
+                        startTimeMap.get(startTime).push(item);
+                    }
+                });
+
+                let colorIndex = 0;
+                // Apply colors to groups
+                for (const [startTime, groupedItems] of startTimeMap.entries()) {
+                    if (groupedItems.length > 1) {
+                        const color = multiOcColors[colorIndex % multiOcColors.length];
+                        groupedItems.forEach(item => {
+                            item.style.backgroundColor = color;
+                        });
+                        colorIndex++;
+                    }
+                }
+            };
 
             const renderOcorrenciaItemInModal = (ocor) => {
                 const itemDiv = document.createElement('div');
@@ -1178,13 +1232,17 @@
                 itemDiv.dataset.id = ocor.id || Date.now(); // Ensure ID exists
                 const descText = ocor.desc.replace(/.*: \s*/, ''); // Clean description if it has category prefix
                 const categoria = ocor.categoria || 'Outros';
+                const inconclusivaBadge = ocor.isInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
 
                 itemDiv.innerHTML = `
                     <div class="view-mode">
                         <div class="flex items-start justify-between">
                             <div class="flex-grow mr-2">
                                 <p class="desc-text font-semibold text-slate-800" data-categoria="${categoria}">${categoria}: <span class="font-medium">${descText}</span></p>
-                                <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                                <div class="flex items-center mt-1">
+                                    <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                                    ${inconclusivaBadge}
+                                </div>
                             </div>
                              <div class="flex flex-col items-end flex-shrink-0 space-y-1">
                                 <button type="button" class="edit-ocorrencia-item-btn text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded hover:bg-orange-200">Editar</button>
@@ -1211,6 +1269,12 @@
                                 <input type="time" step="1" class="edit-end border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioFinal || ''}">
                              </div>
                         </div>
+                        <div class="mt-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="edit-inconclusiva h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500" ${ocor.isInconclusiva ? 'checked' : ''}>
+                                <span class="ml-2 text-sm font-medium text-slate-700">Inconclusiva</span>
+                            </label>
+                        </div>
                         <div class="mt-2 text-right">
                              <button type="button" class="cancel-edit-ocorrencia-btn text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded hover:bg-slate-300 mr-1">Cancelar</button>
                             <button type="button" class="save-edit-ocorrencia-btn text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">Salvar Edição</button>
@@ -1230,6 +1294,7 @@
                 const startInput = document.getElementById('add-horario-inicial');
                 const endInput = document.getElementById('add-horario-final');
                 const categoriaSelect = document.getElementById('add-ocorrencia-categoria');
+                const isInconclusiva = addOcorrenciaInconclusiva.checked;
                 
                 if (!descInput.value.trim()) {
                     descInput.classList.add('border-red-500');
@@ -1241,10 +1306,13 @@
                     categoria: categoriaSelect.value,
                     desc: descInput.value, 
                     horarioInicial: startInput.value, 
-                    horarioFinal: endInput.value
+                    horarioFinal: endInput.value,
+                    isInconclusiva: isInconclusiva
                 });
                 descInput.value = ''; startInput.value = ''; endInput.value = '';
+                addOcorrenciaInconclusiva.checked = false;
                 categoriaSelect.value = categories[0] || 'Outros'; // Reset select
+                updateMultiOcVisuals();
             });
             
              ocorrenciaListDiv.addEventListener('click', (e) => {
@@ -1253,6 +1321,7 @@
 
                 if (e.target.classList.contains('remove-ocorrencia-btn')) {
                     itemDiv.remove();
+                    updateMultiOcVisuals();
                 } else if (e.target.classList.contains('edit-ocorrencia-item-btn')) {
                      // Ensure only one item is editable at a time
                     ocorrenciaListDiv.querySelectorAll('.ocorrencia-item.editing').forEach(el => {
@@ -1267,20 +1336,26 @@
                     const newDesc = itemDiv.querySelector('.edit-desc').value;
                     const newStart = itemDiv.querySelector('.edit-start').value;
                     const newEnd = itemDiv.querySelector('.edit-end').value;
+                    const newInconclusiva = itemDiv.querySelector('.edit-inconclusiva').checked;
 
                     // Update view mode elements
                     const descText = itemDiv.querySelector('.view-mode .desc-text');
-                    const timeText = itemDiv.querySelector('.view-mode .time-text');
+                    const timeTextParent = itemDiv.querySelector('.view-mode .time-text').parentElement;
+                    
                     descText.innerHTML = `<span class="font-semibold text-slate-800">${newCategoria}:</span> <span class="font-medium">${newDesc}</span>`;
                     descText.dataset.categoria = newCategoria;
-                    timeText.dataset.start = newStart;
-                    timeText.dataset.end = newEnd;
-                    timeText.textContent = `Horário: ${newStart || 'N/A'} - ${newEnd || 'N/A'}`;
+                    
+                    const newInconclusivaBadge = newInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
+                    timeTextParent.innerHTML = `
+                        <p class="time-text text-sm text-slate-500" data-start="${newStart}" data-end="${newEnd}">Horário: ${newStart || 'N/A'} - ${newEnd || 'N/A'}</p>
+                        ${newInconclusivaBadge}
+                    `;
 
                     // Switch back to view mode
                     itemDiv.classList.remove('editing');
                     itemDiv.querySelector('.view-mode').classList.remove('hidden');
                     itemDiv.querySelector('.edit-mode').classList.add('hidden');
+                    updateMultiOcVisuals();
                 } else if (e.target.classList.contains('cancel-edit-ocorrencia-btn')) {
                      // Reset input values to original before canceling
                     const descText = itemDiv.querySelector('.view-mode .desc-text');
@@ -1289,11 +1364,13 @@
                     itemDiv.querySelector('.edit-desc').value = descText.querySelector('span.font-medium').textContent;
                     itemDiv.querySelector('.edit-start').value = timeText.dataset.start;
                     itemDiv.querySelector('.edit-end').value = timeText.dataset.end;
+                    itemDiv.querySelector('.edit-inconclusiva').checked = !!itemDiv.querySelector('.view-mode span.bg-slate-400');
 
                     // Switch back to view mode
                     itemDiv.classList.remove('editing');
                     itemDiv.querySelector('.view-mode').classList.remove('hidden');
                     itemDiv.querySelector('.edit-mode').classList.add('hidden');
+                    updateMultiOcVisuals();
                 }
             });
 
@@ -1321,10 +1398,12 @@
                          if (task.ocorrencias) {
                             task.ocorrencias.forEach(ocor => renderOcorrenciaItemInModal(ocor));
                         }
+                        updateMultiOcVisuals();
                          // Reset add form
                         document.getElementById('add-ocorrencia-desc').value = '';
                         document.getElementById('add-horario-inicial').value = '';
                         document.getElementById('add-horario-final').value = '';
+                        addOcorrenciaInconclusiva.checked = false;
                         ocorrenciaModal.classList.remove('hidden');
                     }
                 }
@@ -2049,7 +2128,7 @@
             viewArchiveCloseBtn.addEventListener('click', () => viewArchiveModal.classList.add('hidden'));
             
             archiveSearchInput.addEventListener('input', () => {
-                renderArchiveList(archiveSearchInput.value);
+                renderArchiveList();
             });
 
              // Event listener for single unarchive buttons
@@ -2067,7 +2146,7 @@
                         tasks.push(taskToUnarchive);
                         
                         // Re-render a lista de arquivados
-                        renderArchiveList(archiveSearchInput.value);
+                        renderArchiveList();
 
                         refreshUI(); // Refresh main UI
                         showNotification(`Análise desarquivada.`);
