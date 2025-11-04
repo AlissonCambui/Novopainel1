@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <!-- Chosen Palette: Orange & White -->
+    <!-- Chosen Palette: VendPerto Orange/Yellow -->
     <!-- Application Structure Plan: A single-page dashboard designed for operational efficiency. The structure prioritizes immediate insight with key metrics (stat cards) at the top. Below, an interactive task management section allows for filtering and direct status updates on individual 'task cards', which is more modern and usable than a spreadsheet table. A modal is used for structured data entry of new tasks. Finally, two dynamic charts are placed at the bottom to provide analytical insights into incident patterns and financial impact across locations. This structure was chosen to mirror a typical workflow: 1) See the overall status, 2) Identify and work on specific tasks, 3) Analyze trends. -->
     <!-- Visualization & Content Choices: 
         - Report Info: Dashboard Metrics -> Goal: Inform (at a glance) -> Viz/Method: Stat Cards (HTML/CSS) -> Interaction: None, auto-updates -> Justification: Provides immediate, high-level summary of the workload and results.
@@ -48,6 +48,10 @@
     <div class="container mx-auto p-4 md:p-6 lg:p-8">
         
         <header class="mb-8 text-center">
+            <!-- Logo Inserido -->
+            <div class="text-4xl font-extrabold mb-2 tracking-tight" style="font-family: 'Arial Black', Arial, sans-serif;">
+                <span style="color: #f26324;">vend</span><span style="color: #f7b41e;">Perto</span>
+            </div>
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Painel de Monitoramento</h1>
             <p class="text-slate-600 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
         </header>
@@ -875,7 +879,7 @@
 
                 const periodCategoryCtx = document.getElementById('periodCategoryChart').getContext('2d');
                 periodCategoryChart = new Chart(periodCategoryCtx, {
-                    type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#ef4444'] }] },
+                    type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ea580c', '#f97316', '#f7b41e', '#fbbf24', '#fcd34d', '#fed7aa', '#ffedd5'] }] },
                     options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
                 
