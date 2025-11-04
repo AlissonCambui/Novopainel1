@@ -140,6 +140,7 @@
     
                     <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20">
                         <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="actions-menu-btn">
+                            <button id="planner-btn" class="w-full text-left font-semibold text-orange-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Planejar Semana</button>
                             <button id="bulk-add-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Importar da Planilha</button>
                             <button id="rename-condo-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Renomear Condomínio</button>
                             <button id="category-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Gerenciar Categorias</button>
@@ -190,6 +191,28 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal Planejador Semanal -->
+    <div id="planner-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg max-h-[90vh] flex flex-col">
+            <h2 class="text-2xl font-bold mb-4">Planejador Semanal Inteligente</h2>
+            <form id="planner-form">
+                <p class="text-sm text-slate-600 mb-4">O sistema analisou seu histórico e sugere focar nestes condomínios de maior risco. Selecione quais deseja adicionar ao seu planejamento.</p>
+                 <div class="mb-4">
+                    <label for="planner-week-number" class="block text-sm font-medium text-slate-700">Planejar para a Semana de Trabalho (Nº):</label>
+                    <input type="number" id="planner-week-number" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required>
+                </div>
+                <div id="planner-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md min-h-[200px] max-h-64 space-y-2">
+                    <!-- Lista de sugestões será inserida aqui -->
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="planner-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Gerar Tarefas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <!-- Modal Painel do PDV -->
     <div id="pdv-dashboard-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
@@ -264,6 +287,9 @@
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold">Análises Arquivadas</h2>
                 <button id="view-archive-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+            </div>
+             <div class="mb-4">
+                <input type="text" id="archive-search-input" placeholder="Buscar em arquivadas por condomínio..." class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
             </div>
             <div id="view-archive-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md min-h-[200px]">
                 <p class="text-center text-slate-500">Nenhuma análise arquivada.</p>
@@ -613,6 +639,13 @@
             const pdvDashboardCloseBtn = document.getElementById('pdv-dashboard-close-btn');
             const pdvSelect = document.getElementById('pdv-select');
             const pdvContent = document.getElementById('pdv-content');
+
+            const plannerBtn = document.getElementById('planner-btn');
+            const plannerModal = document.getElementById('planner-modal');
+            const plannerCancelBtn = document.getElementById('planner-cancel-btn');
+            const plannerForm = document.getElementById('planner-form');
+            const plannerWeekNumberInput = document.getElementById('planner-week-number');
+            const plannerListContainer = document.getElementById('planner-list-container');
             
             const categoryBtn = document.getElementById('category-btn');
             const categoryModal = document.getElementById('category-modal');
@@ -630,6 +663,7 @@
             const viewArchiveCloseBtn = document.getElementById('view-archive-close-btn');
             const viewArchiveListContainer = document.getElementById('view-archive-list-container');
             const unarchiveSelectedBtn = document.getElementById('unarchive-selected-btn');
+            const archiveSearchInput = document.getElementById('archive-search-input');
 
             const actionsMenuContainer = document.getElementById('actions-menu-container');
             const actionsMenuBtn = document.getElementById('actions-menu-btn');
@@ -682,6 +716,20 @@
                 var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
                 return weekNo;
             };
+            
+             // Function to get the date of the Monday of a given ISO week number and year
+            const getDateOfISOWeek = (w, y) => {
+                var simple = new Date(y, 0, 1 + (w - 1) * 7);
+                var dow = simple.getDay();
+                var ISOweekStart = simple;
+                if (dow <= 4) { // 1(Mon) - 4(Thu)
+                    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+                } else { // 5(Fri) - 0(Sun)
+                    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+                }
+                return ISOweekStart;
+            }
+
 
             const renderTasks = () => {
                  const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
@@ -1964,11 +2012,16 @@
                 viewArchiveListContainer.innerHTML = ''; // Clear previous content
                 unarchiveSelectedBtn.disabled = true; // Disable button initially
 
-                if (archivedTasks.length > 0) {
+                const searchTerm = archiveSearchInput.value.toLowerCase();
+                const filteredArchived = archivedTasks.filter(task => 
+                    task.condominio.toLowerCase().includes(searchTerm)
+                );
+
+                if (filteredArchived.length > 0) {
                     const list = document.createElement('ul');
                     list.className = 'space-y-2';
-                    archivedTasks.sort((a,b) => new Date(b.dataConclusao || b.dataAnalise) - new Date(a.dataConclusao || a.dataAnalise));
-                    archivedTasks.forEach(task => {
+                    filteredArchived.sort((a,b) => new Date(b.dataConclusao || b.dataAnalise) - new Date(a.dataConclusao || a.dataAnalise));
+                    filteredArchived.forEach(task => {
                         const li = document.createElement('li');
                         li.className = 'p-2 bg-white rounded-md text-sm flex justify-between items-center';
                         li.innerHTML = `
@@ -1983,16 +2036,21 @@
                     });
                     viewArchiveListContainer.appendChild(list);
                 } else {
-                     viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada.</p>';
+                     viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada encontrada.</p>';
                 }
             };
 
             viewArchiveBtn.addEventListener('click', () => {
+                archiveSearchInput.value = ''; // Limpa a busca
                 renderArchiveList(); // Render the list on open
                 viewArchiveModal.classList.remove('hidden');
             });
 
             viewArchiveCloseBtn.addEventListener('click', () => viewArchiveModal.classList.add('hidden'));
+            
+            archiveSearchInput.addEventListener('input', () => {
+                renderArchiveList(archiveSearchInput.value);
+            });
 
              // Event listener for single unarchive buttons
              viewArchiveListContainer.addEventListener('click', (e) => {
@@ -2008,13 +2066,8 @@
                         const [taskToUnarchive] = archivedTasks.splice(taskIndex, 1);
                         tasks.push(taskToUnarchive);
                         
-                        e.target.closest('li').remove(); // Remove item from list
-                        
-                        // Update UI if list becomes empty
-                        if (archivedTasks.length === 0) {
-                             viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada.</p>';
-                        }
-                         unarchiveSelectedBtn.disabled = !viewArchiveListContainer.querySelector('.archive-checkbox:checked'); // Re-check button state
+                        // Re-render a lista de arquivados
+                        renderArchiveList(archiveSearchInput.value);
 
                         refreshUI(); // Refresh main UI
                         showNotification(`Análise desarquivada.`);
@@ -2043,8 +2096,14 @@
                 if (tasksToUnarchive.length > 0) {
                     tasks.push(...tasksToUnarchive);
                     archivedTasks = remainingArchived;
-                    refreshUI();
-                    viewArchiveModal.classList.add('hidden'); // Close modal after action
+                    renderArchiveList(); // Re-render the archive list
+                    refreshUI(); // Refresh main UI
+                    
+                    // Check if list is now empty and close modal
+                    if (archivedTasks.length === 0) {
+                         viewArchiveModal.classList.add('hidden');
+                    }
+                    
                     showNotification(`${tasksToUnarchive.length} análises foram desarquivadas.`);
                 }
             });
@@ -2090,6 +2149,107 @@
                     saveCategories();
                     renderCategoryList();
                 }
+            });
+            
+            plannerBtn.addEventListener('click', () => {
+                const nextWeekNumber = getWeekNumber(new Date()) + 1;
+                plannerWeekNumberInput.value = nextWeekNumber;
+                
+                const allTasks = [...tasks, ...archivedTasks];
+                const occurrenceMap = allTasks.reduce((acc, task) => {
+                    if (!acc[task.condominio]) {
+                        acc[task.condominio] = 0;
+                    }
+                    if (task.ocorrencias && task.ocorrencias.length > 0) {
+                        acc[task.condominio] += task.ocorrencias.length;
+                    }
+                    return acc;
+                }, {});
+
+                const rankedCondos = Object.entries(occurrenceMap).sort((a, b) => b[1] - a[1]);
+                
+                plannerListContainer.innerHTML = '';
+                if (rankedCondos.length === 0) {
+                    plannerListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhum histórico de ocorrências encontrado para gerar sugestões.</p>';
+                    return;
+                }
+
+                rankedCondos.forEach(([condominio, count]) => {
+                     const label = document.createElement('label');
+                     label.className = 'flex items-center p-3 bg-white border rounded-md cursor-pointer';
+                     label.innerHTML = `
+                        <input type="checkbox" value="${condominio}" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 planner-checkbox" checked>
+                        <span class="ml-3 text-sm font-medium text-slate-700">${condominio}</span>
+                        <span class="ml-auto text-xs font-bold text-red-600">${count} ocorr.</span>
+                     `;
+                     plannerListContainer.appendChild(label);
+                });
+                
+                plannerModal.classList.remove('hidden');
+            });
+            
+            plannerCancelBtn.addEventListener('click', () => {
+                plannerModal.classList.add('hidden');
+            });
+
+            plannerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const weekNum = parseInt(plannerWeekNumberInput.value);
+                if (!weekNum) {
+                    showNotification("Por favor, insira um número de semana válido.");
+                    return;
+                }
+                
+                const selectedCondos = Array.from(plannerListContainer.querySelectorAll('.planner-checkbox:checked'))
+                                             .map(cb => cb.value);
+                
+                if (selectedCondos.length === 0) {
+                     showNotification("Nenhum condomínio foi selecionado.");
+                     return;
+                }
+                
+                const today = new Date().toISOString().split('T')[0];
+                const year = new Date().getFullYear(); // Assumes current year for simplicity
+                const mondayOfTaskWeek = getDateOfISOWeek(weekNum, year);
+                const dataAnalise = formatDateForInput(mondayOfTaskWeek); // Default to Monday
+                let newTasksCount = 0;
+                let skippedCount = 0;
+
+                selectedCondos.forEach((condominio, index) => {
+                    const isDuplicate = tasks.some(task => 
+                        task.condominio === condominio && 
+                        task.dataAnalise === dataAnalise &&
+                        task.semanaDeTrabalho === weekNum
+                    );
+
+                    if (isDuplicate) {
+                        skippedCount++;
+                        return;
+                    }
+
+                     const newTask = {
+                        id: Date.now() + index,
+                        dataSolicitacao: today,
+                        condominio: condominio,
+                        dataAnalise: dataAnalise,
+                        semanaDeTrabalho: weekNum,
+                        statusBackup: 'Pendente',
+                        dataBackup: '',
+                        statusAnalise: 'Pendente',
+                        ocorrencia: null,
+                        ocorrencias: [],
+                        acao: '',
+                        obs: 'Gerado pelo Planejador Semanal',
+                        isExpanded: true,
+                        dataConclusao: null,
+                    };
+                    tasks.push(newTask);
+                    newTasksCount++;
+                });
+                
+                plannerModal.classList.add('hidden');
+                refreshUI();
+                showNotification(`${newTasksCount} tarefas geradas para a Semana ${weekNum}. ${skippedCount} duplicadas foram ignoradas.`);
             });
 
 
