@@ -119,6 +119,9 @@
                     <button id="pdv-dashboard-btn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-600 transition-colors w-full sm:w-auto flex-grow">
                         Painel do PDV
                     </button>
+                    <button id="annual-report-btn" class="bg-orange-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-600 transition-colors w-full sm:w-auto flex-grow">
+                        Análise Anual
+                    </button>
                     <button id="period-analysis-btn" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700 transition-colors w-full sm:w-auto flex-grow">
                         Análise por Período
                     </button>
@@ -140,7 +143,7 @@
     
                     <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20">
                         <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="actions-menu-btn">
-                            <button id="planner-btn" class="w-full text-left font-semibold text-orange-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Planejar Semana</button>
+                            <button id="planner-btn" class="w-full text-left font-semibold text-orange-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Planejar Semana</A-button>
                             <button id="bulk-add-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Importar da Planilha</button>
                             <button id="rename-condo-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Renomear Condomínio</button>
                             <button id="category-btn" class="w-full text-left text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100" role="menuitem">Gerenciar Categorias</button>
@@ -386,6 +389,48 @@
         </div>
     </div>
     
+    <!-- Modal para Análise Anual -->
+    <div id="annual-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-6xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold" id="annual-report-title">Análise Anual (2025)</h2>
+                <button id="annual-report-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="flex-grow overflow-y-auto space-y-6">
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-100 p-4 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-slate-500">Total de Análises Concluídas (Ano)</h3>
+                        <p id="annual-total-analises" class="text-3xl font-bold text-orange-600 mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-slate-500">Total de Ocorrências (Ano)</h3>
+                        <p id="annual-total-ocorrencias" class="text-3xl font-bold text-red-600 mt-1">0</p>
+                    </div>
+                </section>
+                <section class="bg-slate-50 p-4 rounded-lg">
+                    <h3 class="text-center font-semibold mb-4">Ocorrências por Mês</h3>
+                    <div class="chart-container" style="height: 250px; max-height: 250px;">
+                        <canvas id="annualReportChart_Monthly"></canvas>
+                    </div>
+                </section>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <h3 class="text-center font-semibold mb-4">Ocorrências por Categoria (Ano)</h3>
+                        <div class="chart-container" style="height: 300px; max-height: 300px;">
+                            <canvas id="annualReportChart_Category"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <h3 class="text-center font-semibold mb-4">Top 10 Condomínios (Ocorrências no Ano)</h3>
+                        <div class="chart-container" style="height: 300px; max-height: 300px;">
+                            <canvas id="annualReportChart_Condo"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para Adicionar Tarefa -->
     <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-10">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
@@ -415,6 +460,7 @@
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" id="cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300">Cancelar</button>
                     <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Salvar</button>
+
                 </div>
             </form>
         </div>
@@ -426,20 +472,16 @@
             <h2 class="text-2xl font-bold mb-4">Importar Análises da Planilha</h2>
             <form id="bulk-add-form">
                 <div class="text-sm text-slate-600 space-y-3 mb-6">
-                     <p>Copie os dados da sua planilha online e cole no campo abaixo para adicionar tarefas em massa.</p>
+                     <p>Copie os dados da sua planilha (incluindo a linha de cabeçalho) e cole no campo abaixo.</p>
                      <ol class="list-decimal list-inside space-y-2 pl-4">
-                         <li>Na planilha, selecione e copie (Ctrl+C) as linhas que contêm as tarefas. Certifique-se de incluir as colunas com a <strong>data</strong> e o <strong>nome da unidade</strong>.</li>
-                         <li>Insira a **Semana de Trabalho** para este lote de análises.</li>
-                         <li>Cole os dados (Ctrl+V) na área de texto abaixo e clique em "Importar".</li>
+                         <li>Garanta que sua planilha tenha as colunas: `Semana`, `Dia a visualizar`, `Unidade`, `Status` e `OC`.</li>
+                         <li>Copie os dados (Ctrl+C), incluindo a linha de cabeçalho.</li>
+                         <li>Cole os dados (Ctrl+V) na área de texto e clique em "Importar".</li>
                      </ol>
-                     <p class="text-xs text-slate-500 mt-2"><strong>Obs:</strong> Tarefas com a mesma data e condomínio que já existem no painel serão ignoradas para evitar duplicatas.</p>
-                </div>
-                 <div class="mb-4">
-                    <label for="bulk-week-number" class="block text-sm font-medium text-slate-700">Semana de Trabalho (Nº) para este lote:</label>
-                    <input type="number" id="bulk-week-number" placeholder="Ex: 44" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" required>
+                     <p class="text-xs text-slate-500 mt-2"><strong>Obs:</strong> Tarefas `Finalizado` com `OC > 0` serão arquivadas. Tarefas `Pendente` serão adicionadas ao painel. Duplicatas serão ignoradas.</p>
                 </div>
                 <div>
-                    <label for="bulk-input-area" class="block text-sm font-medium text-slate-700">Cole os dados da planilha aqui:</label>
+                    <label for="bulk-input-area" class="block text-sm font-medium text-slate-700">Cole os dados da planilha aqui (com cabeçalho):</label>
                     <textarea id="bulk-input-area" rows="10" class="mt-1 w-full border border-slate-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"></textarea>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
@@ -671,6 +713,10 @@
             const viewArchiveListContainer = document.getElementById('view-archive-list-container');
             const unarchiveSelectedBtn = document.getElementById('unarchive-selected-btn');
             const archiveSearchInput = document.getElementById('archive-search-input');
+            
+            const annualReportBtn = document.getElementById('annual-report-btn');
+            const annualReportModal = document.getElementById('annual-report-modal');
+            const annualReportCloseBtn = document.getElementById('annual-report-close-btn');
 
             const actionsMenuContainer = document.getElementById('actions-menu-container');
             const actionsMenuBtn = document.getElementById('actions-menu-btn');
@@ -680,9 +726,7 @@
             let periodChart;
             let periodCategoryChart;
             let pdvTrendChart;
-            
-            const multiOcColors = ['#fef9c3', '#ffe4e6', '#cffafe', '#dcfce7', '#f3e8ff', '#fef3c7']; // yellow-100, rose-100, cyan-100, green-100, purple-100, amber-100
-
+            let annualMonthlyChart, annualCategoryChart, annualCondoChart;
 
             const saveTasks = () => {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
@@ -951,6 +995,25 @@
                     data: { labels: [], datasets: [{ label: 'Ocorrências por Mês', data: [], borderColor: 'rgba(249, 115, 22, 1)', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.1 }] },
                     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM/yy' } } } } }
                 });
+                
+                // --- Gráficos Anuais ---
+                const annualMonthlyCtx = document.getElementById('annualReportChart_Monthly').getContext('2d');
+                annualMonthlyChart = new Chart(annualMonthlyCtx, {
+                    type: 'bar', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'], datasets: [{ label: 'Ocorrências por Mês', data: [], backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] },
+                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                });
+                
+                const annualCategoryCtx = document.getElementById('annualReportChart_Category').getContext('2d');
+                annualCategoryChart = new Chart(annualCategoryCtx, {
+                    type: 'doughnut', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ea580c', '#f97316', '#f7b41e', '#fbbf24', '#fcd34d', '#fed7aa', '#ffedd5'] }] },
+                    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+
+                const annualCondoCtx = document.getElementById('annualReportChart_Condo').getContext('2d');
+                annualCondoChart = new Chart(annualCondoCtx, {
+                    type: 'bar', data: { labels: [], datasets: [{ label: 'Top 10 Condomínios', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)', borderColor: 'rgba(249, 115, 22, 1)', borderWidth: 1 }] },
+                    options: { maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+                });
             };
 
             const refreshUI = () => {
@@ -1022,7 +1085,7 @@
             });
 
             bulkAddBtn.addEventListener('click', () => {
-                document.getElementById('bulk-week-number').value = getWeekNumber(new Date());
+                // document.getElementById('bulk-week-number').value = getWeekNumber(new Date()); // Removido, pois a semana vem da planilha
                 bulkAddModal.classList.remove('hidden');
             });
 
@@ -1033,12 +1096,7 @@
             bulkAddForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const inputText = bulkInputArea.value.trim();
-                const semanaTrabalho = parseInt(document.getElementById('bulk-week-number').value) || null;
-
-                if (!semanaTrabalho) {
-                    showNotification("Por favor, insira a Semana de Trabalho para este lote.");
-                    return;
-                }
+                
                 if (!inputText) {
                      showNotification("Por favor, cole os dados da planilha.");
                     return;
@@ -1048,75 +1106,99 @@
                 const today = new Date().toISOString().split('T')[0];
                 let newTasksCount = 0;
                 let skippedCount = 0;
+                let archivedCount = 0;
 
-                lines.forEach((line, index) => {
-                    const columns = line.split('\t'); // Split by tab for Excel copy-paste
+                // --- Nova Lógica de Importação ---
+                const headers = lines[0].split('\t').map(h => h.trim().toLowerCase());
+                
+                const idxSemana = headers.findIndex(h => h.includes('semana'));
+                const idxData = headers.findIndex(h => h.includes('dia a visualizar'));
+                const idxUnidade = headers.findIndex(h => h.includes('unidade'));
+                const idxStatus = headers.findIndex(h => h.includes('status'));
+                const idxOC = headers.findIndex(h => h === 'oc' || h === 'ocorrências');
+
+                if (idxData === -1 || idxUnidade === -1 || idxStatus === -1 || idxSemana === -1) {
+                    showNotification("Erro: Colunas 'Semana', 'Dia a visualizar', 'Unidade' ou 'Status' não encontradas. Verifique o cabeçalho.");
+                    return;
+                }
+
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (!line.trim()) continue;
+
+                    const columns = line.split('\t');
                     
-                    let dateStr = null;
-                    let condominio = null;
-                    const dateRegex = /\d{1,2}\/\d{1,2}\/\d{4}/;
-
-                    const dateColumnIndex = columns.findIndex(col => dateRegex.test(col.trim()));
-
-                    if (dateColumnIndex !== -1) {
-                        dateStr = columns[dateColumnIndex].trim();
-                        // Look for the next column that is not empty
-                        for (let i = dateColumnIndex + 1; i < columns.length; i++) {
-                            if (columns[i].trim()) {
-                                condominio = columns[i].trim();
-                                break;
-                            }
-                        }
+                    const dataStr = columns[idxData] ? columns[idxData].trim() : '';
+                    const condominio = columns[idxUnidade] ? columns[idxUnidade].trim() : '';
+                    const status = columns[idxStatus] ? columns[idxStatus].trim().toLowerCase() : 'pendente';
+                    const ocCount = idxOC !== -1 ? (parseInt(columns[idxOC]) || 0) : 0;
+                    const semanaTrabalho = columns[idxSemana] ? (parseInt(columns[idxSemana].replace('Semana', '')) || null) : null;
+                    
+                    if (!dataStr || !condominio || !semanaTrabalho) {
+                        console.warn(`Linha ignorada (dados essenciais faltando): "${line}"`);
+                        continue;
                     }
 
-                    if (!dateStr || !condominio) {
-                        console.warn(`Linha ignorada (não foi possível encontrar data e condomínio válidos): "${line}"`);
-                        return;
-                    }
-
-                    const dateParts = dateStr.split('/');
+                    const dateParts = dataStr.split('/');
                     if (dateParts.length !== 3 || dateParts[2].length < 4 || isNaN(parseInt(dateParts[0])) || isNaN(parseInt(dateParts[1])) || isNaN(parseInt(dateParts[2]))) {
                        console.warn(`Linha ignorada (formato de data inválido): "${line}"`);
-                       return; // Skip if date format is wrong
+                       continue;
                     }
                     const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
                     
-                    const isDuplicate = tasks.some(task => task.condominio === condominio && task.dataAnalise === formattedDate);
+                    const isDuplicate = tasks.some(task => task.condominio === condominio && task.dataAnalise === formattedDate) || 
+                                      archivedTasks.some(task => task.condominio === condominio && task.dataAnalise === formattedDate);
 
                     if (isDuplicate) {
                         skippedCount++;
-                        return;
+                        continue;
+                    }
+
+                    let taskOcorrencias = [];
+                    if (ocCount > 0) {
+                        for(let j=0; j < ocCount; j++) {
+                            taskOcorrencias.push({
+                                id: Date.now() + i + j,
+                                categoria: 'Importada',
+                                desc: 'Ocorrência importada da planilha',
+                                horarioInicial: '',
+                                horarioFinal: '',
+                                isInconclusiva: false
+                            });
+                        }
                     }
 
                     const newTask = {
-                        id: Date.now() + index,
+                        id: Date.now() + i,
                         dataSolicitacao: today,
                         condominio: condominio,
                         dataAnalise: formattedDate,
                         semanaDeTrabalho: semanaTrabalho,
-                        statusBackup: 'Pendente',
+                        statusBackup: status === 'finalizado' || status === 'finalizada' ? 'Concluído' : 'Pendente',
                         dataBackup: '',
-                        statusAnalise: 'Pendente',
-                        ocorrencia: null,
-                        ocorrencias: [],
+                        statusAnalise: status === 'finalizado' || status === 'finalizada' ? 'Concluída' : 'Pendente',
+                        ocorrencia: ocCount > 0 ? 'Sim' : 'Não',
+                        ocorrencias: taskOcorrencias,
                         acao: '',
-                        obs: '',
+                        obs: 'Importado da planilha',
                         isExpanded: true,
-                        dataConclusao: null,
+                        dataConclusao: status === 'finalizado' || status === 'finalizada' ? formattedDate : null, // Assume data de conclusão = data de análise
                     };
-                    tasks.push(newTask);
-                    newTasksCount++;
-                });
+
+                    if (status === 'finalizado' || status === 'finalizada') {
+                        archivedTasks.push(newTask);
+                        archivedCount++;
+                    } else {
+                        tasks.push(newTask);
+                        newTasksCount++;
+                    }
+                }
                 
                 bulkAddModal.classList.add('hidden');
                 bulkAddForm.reset();
-
-                if (newTasksCount > 0 || skippedCount > 0) {
-                    refreshUI();
-                    showNotification(`${newTasksCount} análises importadas. ${skippedCount} duplicadas foram ignoradas.`);
-                } else {
-                    showNotification('Nenhuma análise nova foi encontrada nos dados colados. Verifique o formato ou se as tarefas já existem.');
-                }
+                
+                refreshUI();
+                showNotification(`${newTasksCount} análises ativas e ${archivedCount} análises arquivadas importadas. ${skippedCount} duplicadas foram ignoradas.`);
             });
 
             ocorrenciaForm.addEventListener('submit', (e) => {
@@ -1908,6 +1990,69 @@
                 // Only update the charts, not the whole report
                 updatePeriodReportCharts(filteredTasks);
             });
+            
+            annualReportBtn.addEventListener('click', () => {
+                const currentYear = new Date().getFullYear();
+                document.getElementById('annual-report-title').textContent = `Análise Anual (${currentYear})`;
+
+                const allTasks = [...tasks, ...archivedTasks];
+                const tasksThisYear = allTasks.filter(task => 
+                    task.dataConclusao && 
+                    new Date(task.dataConclusao + 'T00:00:00').getFullYear() === currentYear
+                );
+                
+                const totalConcluidasAno = tasksThisYear.length;
+                const totalOcorrenciasAno = tasksThisYear.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
+                
+                document.getElementById('annual-total-analises').textContent = totalConcluidasAno;
+                document.getElementById('annual-total-ocorrencias').textContent = totalOcorrenciasAno;
+
+                // 1. Monthly Chart
+                const monthlyData = new Array(12).fill(0);
+                tasksThisYear.forEach(task => {
+                    if (task.ocorrencias && task.ocorrencias.length > 0) {
+                        const month = new Date(task.dataConclusao + 'T00:00:00').getMonth(); // 0-11
+                        monthlyData[month] += task.ocorrencias.length;
+                    }
+                });
+                annualMonthlyChart.data.datasets[0].data = monthlyData;
+                annualMonthlyChart.update();
+
+                // 2. Category Chart
+                const categoryData = tasksThisYear.reduce((acc, task) => {
+                    task.ocorrencias.forEach(ocor => {
+                        const cat = ocor.categoria || 'Outros';
+                        acc[cat] = (acc[cat] || 0) + 1;
+                    });
+                    return acc;
+                }, {});
+                annualCategoryChart.data.labels = Object.keys(categoryData);
+                annualCategoryChart.data.datasets[0].data = Object.values(categoryData);
+                annualCategoryChart.update();
+                
+                // 3. Top Condos Chart
+                const condoData = tasksThisYear.reduce((acc, task) => {
+                    if (task.ocorrencias && task.ocorrencias.length > 0) {
+                         acc[task.condominio] = (acc[task.condominio] || 0) + task.ocorrencias.length;
+                    }
+                    return acc;
+                }, {});
+                
+                const sortedCondos = Object.entries(condoData)
+                                        .sort((a, b) => b[1] - a[1]) // Sort descending
+                                        .slice(0, 10); // Get top 10
+
+                annualCondoChart.data.labels = sortedCondos.map(item => item[0]);
+                annualCondoChart.data.datasets[0].data = sortedCondos.map(item => item[1]);
+                annualCondoChart.update();
+
+                annualReportModal.classList.remove('hidden');
+            });
+            
+            annualReportCloseBtn.addEventListener('click', () => {
+                annualReportModal.classList.add('hidden');
+            });
+
 
             const renderPriorityView = () => {
                 const allTasks = [...tasks, ...archivedTasks];
@@ -2340,4 +2485,3 @@
     </script>
 </body>
 </html>
-
