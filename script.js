@@ -225,10 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     ocorrenciaDetailsHTML += `</div>`;
                 }
                 
+                // *** INÍCIO DA CORREÇÃO ***
+                // Permite que o botão de editar ocorrências apareça para status "Em Análise" E "Concluída"
                 let detailsButtonHTML = '';
-                if (task.statusAnalise === 'Em Análise') {
-                     detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full text-sm bg-slate-200 text-slate-700 font-semibold py-2 rounded-md hover:bg-slate-300 transition-colors">Registrar Ocorrências</button>`;
+                if (task.statusAnalise === 'Em Análise' || task.statusAnalise === 'Concluída') {
+                     const buttonText = task.statusAnalise === 'Concluída' ? 'Ver / Editar Ocorrências' : 'Registrar Ocorrências';
+                     detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full text-sm bg-slate-200 text-slate-700 font-semibold py-2 rounded-md hover:bg-slate-300 transition-colors">${buttonText}</button>`;
                 }
+                // *** FIM DA CORREÇÃO ***
 
                 let occurrenceCountHTML = '';
                 let completionDateHTML = '';
@@ -615,13 +619,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const oldStatus = task.statusAnalise;
                     task.statusAnalise = e.target.value;
                     
-                    if (task.statusAnalise === 'Concluída') {
+                    // Só define a data de conclusão se estiver mudando de um status NÃO-CONCLUÍDO para "Concluída"
+                    if (task.statusAnalise === 'Concluída' && oldStatus !== 'Concluída') {
                         task.dataConclusao = new Date().toISOString().split('T')[0];
-                    } else if (task.statusAnalise !== 'Concluída') {
-                        if(task.statusAnalise === 'Pendente') {
-                            task.dataConclusao = null;
-                        }
+                    } else if (task.statusAnalise === 'Pendente') {
+                        // Se voltar para Pendente, limpa a data de conclusão
+                        task.dataConclusao = null;
                     }
+                    // Se já estava "Concluída" e mudar para "Em Análise", ou qualquer outra combinação,
+                    // a dataConclusao existente é mantida, não sendo nem atualizada nem apagada.
                 }
                 refreshUI();
             }
@@ -1244,12 +1250,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const analysisType = document.querySelector('input[name="analysis_type"]:checked').value;
         
         let allTasksForReport;
-        if (analysisType === 'dataConclusao') {
-            // CORREÇÃO: Faltava incluir as tarefas arquivadas.
-            allTasksForReport = [...tasks, ...archivedTasks];
-        } else {
-            allTasksForReport = [...tasks, ...archivedTasks];
-        }
+        // CORREÇÃO: Sempre incluir tarefas ativas e arquivadas no relatório
+        allTasksForReport = [...tasks, ...archivedTasks];
 
         const filteredTasks = allTasksForReport.filter(task => {
             const dateToCompare = analysisType === 'dataConclusao' ? task.dataConclusao : task.dataAnalise;
@@ -1290,7 +1292,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const endDate = periodEndDateInput.value;
         if (!startDate || !endDate) return;
          const analysisType = document.querySelector('input[name="analysis_type"]:checked').value;
-         let allTasksForReport = (analysisType === 'dataConclusao') ? [...tasks] : [...tasks, ...archivedTasks];
+         // CORREÇÃO: Usar todas as tarefas (ativas e arquivadas) ao filtrar categoria
+         let allTasksForReport = [...tasks, ...archivedTasks];
          const filteredTasks = allTasksForReport.filter(task => {
             const dateToCompare = analysisType === 'dataConclusao' ? task.dataConclusao : task.dataAnalise;
             if (!dateToCompare) return false;
