@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Monitoramento (Completo Offline)</title>
+    <title>Painel Monitoramento (Offline Corrigido)</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -37,10 +37,10 @@
         
         .task-card { border-left: 5px solid var(--border); position: relative; transition: all 0.3s ease; }
         .task-card.pendente { border-left-color: var(--warning); }
-        .task-card.em-analise { border-left-color: var(--primary); background-color: #fff7ed; } /* Fundo levemente laranja para destaque */
+        .task-card.em-analise { border-left-color: var(--primary); background-color: #fff7ed; }
         .task-card.concluida { border-left-color: var(--success); }
 
-        /* Badges de Status */
+        /* Badges */
         .status-badge { font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; display: inline-block; margin-bottom: 5px; }
         .badge-pendente { background: #fef3c7; color: #d97706; }
         .badge-analise { background: #ffedd5; color: #ea580c; }
@@ -59,7 +59,7 @@
         .btn-secondary:hover { background: #cbd5e1; }
         .btn-danger { color: var(--danger); background: transparent; font-size: 1.2rem; padding: 0 0.5rem; }
         
-        /* Menu Dropdown */
+        /* Dropdown */
         .dropdown { position: relative; display: inline-block; }
         .dropdown-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 5px; padding: 5px 0; }
         .dropdown-content button { color: black; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; background: none; border: none; }
@@ -87,12 +87,10 @@
         .offline-warning { background: #fee2e2; color: #991b1b; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 20px; display: none; }
         hr { border: 0; border-top: 1px solid #eee; margin: 5px 0; }
         
-        /* Header */
-        header { text-align: center; margin-bottom: 2rem; }
-        .logo { font-family: 'Arial Black', sans-serif; font-size: 2rem; letter-spacing: -1px; }
-        .logo span:first-child { color: #f26324; }
-        .logo span:last-child { color: #f7b41e; }
-        h1 { font-size: 1.8rem; margin: 0.5rem 0; }
+        /* Estilos Específicos da Lista de Ocorrências */
+        .ocorrencia-item { margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        .ocorrencia-item.editing .view-mode { display: none; }
+        .ocorrencia-item:not(.editing) .edit-mode { display: none; }
     </style>
 </head>
 <body>
@@ -100,9 +98,11 @@
     <div class="container">
         <div id="chart-error-msg" class="offline-warning"><strong>Modo Offline:</strong> Gráficos desativados.</div>
 
-        <header>
-            <div class="logo"><span>vend</span><span>Perto</span></div>
-            <h1>Painel de Monitoramento</h1>
+        <header style="text-align: center; margin-bottom: 2rem;">
+            <div class="logo" style="font-family: 'Arial Black', sans-serif; font-size: 2rem; letter-spacing: -1px;">
+                <span style="color: #f26324;">vend</span><span style="color: #f7b41e;">Perto</span>
+            </div>
+            <h1 style="font-size: 1.8rem; margin: 0.5rem 0;">Painel de Monitoramento</h1>
             <p>Controle de backups, análises e ocorrências</p>
         </header>
 
@@ -164,7 +164,34 @@
     <div id="task-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 500px;"><h2>Nova Análise</h2><form id="task-form" style="display: flex; flex-direction: column; gap: 1rem;"><div><label>Condomínio</label><div style="position: relative;"><input type="text" id="form-condominio" class="w-full" required autocomplete="off"><div id="autocomplete-list" style="position: absolute; background: white; border: 1px solid #ccc; width: 100%; max-height: 150px; overflow-y: auto; display: none; z-index: 10;"></div></div></div><div style="display: flex; gap: 1rem;"><div style="flex: 1;"><label>Data</label><input type="date" id="form-data-analise" class="w-full" required></div><div style="width: 80px;"><label>Semana</label><input type="number" id="form-semana-trabalho" class="w-full"></div></div><div><label>Observações</label><textarea id="form-observacoes" class="w-full" rows="3"></textarea></div><div style="display: flex; justify-content: flex-end; gap: 0.5rem;"><button type="button" id="cancel-btn" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Salvar</button></div></form></div></div>
 
     <!-- Modal Ocorrências -->
-    <div id="ocorrencia-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 600px;"><h2>Gerenciar Ocorrências</h2><form id="ocorrencia-form"><input type="hidden" id="ocorrencia-task-id"><div id="ocorrencia-list" style="background: #f8fafc; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto; margin-bottom: 1rem;"></div><div style="border-top: 1px solid #e2e8f0; padding-top: 1rem;"><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;"><select id="add-ocorrencia-categoria" class="w-full"></select><input type="text" id="add-ocorrencia-desc" placeholder="Descrição" class="w-full"></div><div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: center;"><input type="time" id="add-horario-inicial" step="1"><input type="time" id="add-horario-final" step="1"><label style="font-size: 0.8rem;"><input type="checkbox" id="add-ocorrencia-inconclusiva"> Inconclusiva</label></div><button type="button" id="add-ocorrencia-btn" class="btn-secondary w-full mt-2" style="background: #ffedd5; color: #ea580c;">+ Adicionar Ocorrência</button></div><div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;"><button type="button" id="ocorrencia-cancel-btn" class="btn-secondary">Fechar</button><button type="submit" class="btn-primary">Salvar Tudo</button></div></form></div></div>
+    <div id="ocorrencia-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2>Gerenciar Ocorrências</h2>
+            <form id="ocorrencia-form">
+                <input type="hidden" id="ocorrencia-task-id">
+                <!-- Lista Ocorrências -->
+                <div id="ocorrencia-list" style="background: #f8fafc; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
+                
+                <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                    <h3 class="text-sm font-bold mb-2">Adicionar Nova:</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <select id="add-ocorrencia-categoria" class="w-full"></select>
+                        <input type="text" id="add-ocorrencia-desc" placeholder="Descrição" class="w-full">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: center;">
+                        <input type="time" id="add-horario-inicial" step="1">
+                        <input type="time" id="add-horario-final" step="1">
+                        <label style="font-size: 0.8rem;"><input type="checkbox" id="add-ocorrencia-inconclusiva"> Inconclusiva</label>
+                    </div>
+                    <button type="button" id="add-ocorrencia-btn" class="btn-secondary w-full mt-2" style="background: #ffedd5; color: #ea580c;">+ Inserir na Lista</button>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="button" id="ocorrencia-cancel-btn" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Modais Extras -->
     <div id="bulk-add-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 600px;"><h2>Importar Planilha</h2><p class="text-sm mb-4">Cole os dados com cabeçalho.</p><form id="bulk-add-form"><textarea id="bulk-input-area" rows="10" class="w-full mb-4"></textarea><div style="display: flex; justify-content: flex-end; gap: 0.5rem;"><button type="button" id="bulk-cancel-btn" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Importar</button></div></form></div></div>
@@ -223,7 +250,6 @@
                 filtered.forEach(t => {
                     const el = document.createElement('div');
                     
-                    // Lógica robusta de status
                     let statusClass = 'pendente';
                     let badgeHtml = '<span class="status-badge badge-pendente">Pendente</span>';
                     
@@ -238,9 +264,7 @@
                     el.className = `card task-card ${statusClass}`;
                     const isCollapsed = !t.isExpanded;
                     
-                    // Botão de Ocorrência
                     let btnOc = '';
-                    // Verifica explicitamente se não é Pendente para mostrar o botão
                     if (t.statusAnalise !== 'Pendente') {
                         const txt = t.statusAnalise === 'Concluída' ? 'Ver / Editar Ocorrências' : 'Registrar Ocorrências';
                         btnOc = `<button class="btn-secondary w-full mt-2 open-oc-btn" style="border: 1px solid #ccc;" data-id="${t.id}">${txt}</button>`;
@@ -390,56 +414,192 @@
                 saveTasks(); renderTasks(); updateDashboard(); closeModal('task-modal'); document.getElementById('task-form').reset();
             });
 
-            // Listener Global
+            // --- FUNÇÃO RENDER ITEM OCORRÊNCIA (NOVA) ---
+            const renderOcorrenciaItem = (oc, container) => {
+                const item = document.createElement('div');
+                item.className = 'ocorrencia-item p-3 bg-slate-100 rounded-md';
+                item.dataset.id = oc.id;
+                
+                item.innerHTML = `
+                    <div class="view-mode flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-sm">${oc.categoria}: <span class="font-normal">${oc.desc}</span></p>
+                            <p class="text-xs text-slate-500">${oc.horarioInicial || ''} - ${oc.horarioFinal || ''} ${oc.isInconclusiva ? '[INC]' : ''}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <button type="button" class="edit-oc-btn text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">Editar</button>
+                            <button type="button" class="remove-oc-btn text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">X</button>
+                        </div>
+                    </div>
+                    <div class="edit-mode hidden">
+                        <select class="edit-oc-cat w-full mb-1 border p-1 text-sm"></select>
+                        <input type="text" class="edit-oc-desc w-full mb-1 border p-1 text-sm" value="${oc.desc}">
+                        <div class="flex gap-1 mb-1">
+                            <input type="time" class="edit-oc-ini w-full border p-1 text-sm" value="${oc.horarioInicial || ''}" step="1">
+                            <input type="time" class="edit-oc-fim w-full border p-1 text-sm" value="${oc.horarioFinal || ''}" step="1">
+                        </div>
+                        <label class="text-xs flex items-center gap-1 mb-2"><input type="checkbox" class="edit-oc-inc" ${oc.isInconclusiva ? 'checked' : ''}> Inconclusiva</label>
+                        <div class="flex justify-end gap-1">
+                            <button type="button" class="cancel-edit-oc-btn text-xs bg-gray-200 px-2 py-1 rounded">Cancelar</button>
+                            <button type="button" class="save-edit-oc-btn text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Salvar</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+
+                // Popula select de edição
+                const select = item.querySelector('.edit-oc-cat');
+                categories.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    if(c === oc.categoria) opt.selected = true;
+                    select.appendChild(opt);
+                });
+            };
+
+            // Listener Global (Atualizado com lógica de Ocorrências)
             taskList.addEventListener('click', (e) => {
                 const target = e.target.closest('button'); if (!target) return;
                 const id = parseInt(target.dataset.id);
                 const task = tasks.find(t => t.id === id);
+                
                 if (target.classList.contains('toggle-btn')) { if(task) { task.isExpanded = !task.isExpanded; saveTasks(); renderTasks(); } }
                 if (target.classList.contains('delete-btn')) { if(confirm('Excluir?')) { tasks = tasks.filter(t => t.id !== id); saveTasks(); renderTasks(); updateDashboard(); } }
                 if (target.classList.contains('archive-btn')) { const idx = tasks.findIndex(t => t.id === id); if (idx > -1) { archivedTasks.push(tasks.splice(idx, 1)[0]); saveTasks(); renderTasks(); updateDashboard(); showNotification('Arquivado'); } }
+                
+                // ABRIR MODAL OCORRÊNCIAS
                 if (target.classList.contains('open-oc-btn')) {
                     const sel = document.getElementById('add-ocorrencia-categoria'); sel.innerHTML = '';
                     categories.forEach(c => sel.innerHTML += `<option>${c}</option>`);
                     document.getElementById('ocorrencia-task-id').value = id;
-                    const list = document.getElementById('ocorrencia-list'); list.innerHTML = '';
-                    if (task.ocorrencias) task.ocorrencias.forEach(oc => {
-                         // Correção visual para exibir itens existentes
-                         const div = document.createElement('div');
-                         div.style.cssText = "background:#fff; border-bottom:1px solid #eee; padding:5px;";
-                         div.innerHTML = `<b>${oc.categoria}</b>: ${oc.desc} <span style="font-size:0.8em">(${oc.horarioInicial||''}-${oc.horarioFinal||''})</span>`;
-                         list.appendChild(div);
-                    });
+                    
+                    const list = document.getElementById('ocorrencia-list'); 
+                    list.innerHTML = '';
+                    
+                    if (task.ocorrencias) {
+                        task.ocorrencias.forEach(oc => {
+                            renderOcorrenciaItem(oc, list);
+                        });
+                    }
                     openModal('ocorrencia-modal');
                 }
             });
 
-            // Lógica Salvar Ocorrências (Fix)
+            // --- GERENCIAMENTO DA LISTA DE OCORRÊNCIAS (EVENT DELEGATION) ---
+            const ocListDiv = document.getElementById('ocorrencia-list');
+            
+            ocListDiv.addEventListener('click', (e) => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                
+                const itemDiv = target.closest('.ocorrencia-item');
+                
+                // Remover
+                if (target.classList.contains('remove-oc-btn')) {
+                    if(confirm('Remover esta ocorrência?')) {
+                        itemDiv.remove();
+                    }
+                }
+                
+                // Editar (Entrar no modo edição)
+                if (target.classList.contains('edit-oc-btn')) {
+                    itemDiv.querySelector('.view-mode').classList.add('hidden');
+                    itemDiv.querySelector('.edit-mode').classList.remove('hidden');
+                }
+                
+                // Cancelar Edição
+                if (target.classList.contains('cancel-edit-oc-btn')) {
+                    itemDiv.querySelector('.view-mode').classList.remove('hidden');
+                    itemDiv.querySelector('.edit-mode').classList.add('hidden');
+                }
+                
+                // Salvar Edição (Visualmente)
+                if (target.classList.contains('save-edit-oc-btn')) {
+                    const cat = itemDiv.querySelector('.edit-oc-cat').value;
+                    const desc = itemDiv.querySelector('.edit-oc-desc').value;
+                    const ini = itemDiv.querySelector('.edit-oc-ini').value;
+                    const fim = itemDiv.querySelector('.edit-oc-fim').value;
+                    const inc = itemDiv.querySelector('.edit-oc-inc').checked;
+                    
+                    // Atualiza view mode
+                    const viewMode = itemDiv.querySelector('.view-mode');
+                    viewMode.innerHTML = `
+                        <div>
+                            <p class="font-bold text-sm">${cat}: <span class="font-normal">${desc}</span></p>
+                            <p class="text-xs text-slate-500">${ini} - ${fim} ${inc ? '[INC]' : ''}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <button type="button" class="edit-oc-btn text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">Editar</button>
+                            <button type="button" class="remove-oc-btn text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">X</button>
+                        </div>
+                    `;
+                    
+                    itemDiv.querySelector('.view-mode').classList.remove('hidden');
+                    itemDiv.querySelector('.edit-mode').classList.add('hidden');
+                }
+            });
+
+            // Adicionar Nova Ocorrência (Visualmente na lista)
             document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
                 const cat = document.getElementById('add-ocorrencia-categoria').value;
                 const desc = document.getElementById('add-ocorrencia-desc').value;
                 const hi = document.getElementById('add-horario-inicial').value;
                 const hf = document.getElementById('add-horario-final').value;
                 const inc = document.getElementById('add-ocorrencia-inconclusiva').checked;
+                
                 if(!desc) return;
-                const div = document.createElement('div'); div.className = 'new-item';
-                div.dataset.cat = cat; div.dataset.desc = desc; div.dataset.hi = hi; div.dataset.hf = hf; div.dataset.inc = inc;
-                div.style.cssText = "background:#ecfdf5; padding:5px; border-bottom:1px solid #d1fae5; margin-top:5px";
-                div.innerHTML = `<b>${cat}</b>: ${desc} <br><span style="font-size:0.8em">(${hi}-${hf}) ${inc?'[INC]':''}</span> <span style="float:right; font-size:0.7rem; background:#10b981; color:white; padding:2px 4px; border-radius:3px;">NOVO</span>`;
-                document.getElementById('ocorrencia-list').appendChild(div);
+                
+                const newOc = {
+                    id: Date.now(), // ID temporário
+                    categoria: cat,
+                    desc: desc,
+                    horarioInicial: hi,
+                    horarioFinal: hf,
+                    isInconclusiva: inc
+                };
+                
+                renderOcorrenciaItem(newOc, document.getElementById('ocorrencia-list'));
+                
+                // Limpa campos
                 document.getElementById('add-ocorrencia-desc').value = '';
+                document.getElementById('add-horario-inicial').value = '';
+                document.getElementById('add-horario-final').value = '';
+                document.getElementById('add-ocorrencia-inconclusiva').checked = false;
             });
 
+            // Salvar Alterações da Modal no Objeto Task
             document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const id = parseInt(document.getElementById('ocorrencia-task-id').value);
                 const task = tasks.find(t => t.id === id) || archivedTasks.find(t => t.id === id);
+                
                 if(task) {
-                    if(!task.ocorrencias) task.ocorrencias = [];
-                    document.querySelectorAll('.new-item').forEach(item => {
-                        task.ocorrencias.push({ id: Date.now() + Math.random(), categoria: item.dataset.cat, desc: item.dataset.desc, horarioInicial: item.dataset.hi, horarioFinal: item.dataset.hf, isInconclusiva: item.dataset.inc === 'true' });
+                    // Reconstrói o array de ocorrências baseado no DOM atual da lista
+                    const items = document.getElementById('ocorrencia-list').querySelectorAll('.ocorrencia-item');
+                    const updatedOcorrencias = [];
+                    
+                    items.forEach(item => {
+                        // Se estiver em modo de edição quando salvar, pega os valores dos inputs
+                        // Se estiver em modo visual, pega do view mode? 
+                        // Melhor estratégia: Sempre pegar dos inputs do edit-mode, pois eles guardam o estado atual (mesmo que hidden)
+                        // Quando clicamos em "Salvar Edição" no item, atualizamos os inputs? Sim, eles já são os inputs.
+                        
+                        updatedOcorrencias.push({
+                            id: parseInt(item.dataset.id) || Date.now(),
+                            categoria: item.querySelector('.edit-oc-cat').value,
+                            desc: item.querySelector('.edit-oc-desc').value,
+                            horarioInicial: item.querySelector('.edit-oc-ini').value,
+                            horarioFinal: item.querySelector('.edit-oc-fim').value,
+                            isInconclusiva: item.querySelector('.edit-oc-inc').checked
+                        });
                     });
-                    if(task.ocorrencias.length > 0) task.ocorrencia = 'Sim';
+                    
+                    task.ocorrencias = updatedOcorrencias;
+                    
+                    // Atualiza flag se tem ocorrência
+                    task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não';
+                    
                     saveTasks(); renderTasks(); updateDashboard();
                 }
                 closeModal('ocorrencia-modal');
