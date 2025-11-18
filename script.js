@@ -136,13 +136,18 @@ document.addEventListener('DOMContentLoaded', () => {
         notificationModal.classList.add('hidden');
     });
     
+    // *** 1. SUBSTITUIÇÃO: statusClasses ***
     const statusClasses = {
-        Pendente: 'bg-amber-100 text-amber-800', 'Em Andamento': 'bg-orange-100 text-orange-800', Concluído: 'bg-emerald-100 text-emerald-800',
-        'Em Análise': 'bg-orange-100 text-orange-800', Concluída: 'bg-emerald-100 text-emerald-800',
-        'Não visualizar': 'bg-slate-200 text-slate-700',
+        Pendente: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+        'Em Andamento': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+        Concluído: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+        'Em Análise': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+        Concluída: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+        'Não visualizar': 'bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-300',
     };
 
-    const multiOcColors = ['#ffe4e1', '#e0ffff', '#f0f8ff', '#faebd7', '#fff0f5', '#fffacd'];
+    // *** 2. SUBSTITUIÇÃO: multiOcColors ***
+    const multiOcColors = ['#592b2b', '#2b4f4f', '#2b3f54', '#594a3a', '#59394a', '#59573a'];
 
     const formatDate = (dateString, options = {}) => {
         if (!dateString) return 'N/A';
@@ -174,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return ISOweekStart;
     }
 
-
+    // *** 5. SUBSTITUIÇÃO: renderTasks ***
     const renderTasks = () => {
          const currentWeekFilter = filtroSemana.value ? parseInt(filtroSemana.value) : null;
         const filteredTasks = tasks.filter(task => {
@@ -182,12 +187,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchData = !filtroData.value || task.dataAnalise === filtroData.value;
             const matchBackup = !filtroBackup.value || task.statusBackup === filtroBackup.value;
             const matchAnalise = !filtroAnalise.value || task.statusAnalise === filtroAnalise.value;
-            
+
             let matchSemana = !currentWeekFilter;
             if (currentWeekFilter && !filtroData.value) {
                 matchSemana = (task.semanaDeTrabalho === currentWeekFilter); 
             }
-            
+
             if (filtroData.value) {
                 matchSemana = true;
             }
@@ -197,26 +202,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         taskList.innerHTML = '';
         if(filteredTasks.length === 0) {
-            taskList.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`;
+            taskList.innerHTML = `<p class="text-slate-500 dark:text-slate-400 text-center col-span-full">Nenhuma tarefa encontrada.</p>`;
         } else {
             filteredTasks.forEach(task => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-4 rounded-lg shadow-md border-l-4';
+                card.className = 'bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md border-l-4';
                 card.style.borderColor = task.statusAnalise === 'Pendente' ? '#f59e0b' : (task.statusAnalise === 'Em Análise' ? '#f97316' : '#10b981');
-                
+
                 const isCollapsed = !task.isExpanded;
 
                 let ocorrenciaDetailsHTML = '';
                 if (task.ocorrencia === 'Sim' && task.ocorrencias && task.ocorrencias.length > 0) {
-                    ocorrenciaDetailsHTML += `<div class="mt-4 pt-3 border-t border-slate-200 space-y-2">`;
+                    ocorrenciaDetailsHTML += `<div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2">`;
                     task.ocorrencias.forEach(ocor => {
-                        const inconclusivaBadge = ocor.isInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
+                        const inconclusivaBadge = ocor.isInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 dark:bg-slate-500 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
                         ocorrenciaDetailsHTML += `
-                         <div class="p-2 bg-red-50 rounded-md">
-                             <p class="text-sm font-semibold text-red-800">${ocor.categoria || 'Sem Categoria'}</p>
-                             <p class="text-sm text-red-700">${ocor.desc}</p>
+                         <div class="p-2 bg-red-50 dark:bg-red-900/40 rounded-md">
+                             <p class="text-sm font-semibold text-red-800 dark:text-red-200">${ocor.categoria || 'Sem Categoria'}</p>
+                             <p class="text-sm text-red-700 dark:text-red-300">${ocor.desc}</p>
                              <div class="flex items-center mt-1">
-                                 <p class="text-xs text-red-600"><strong>Horário:</strong> ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                                 <p class="text-xs text-red-600 dark:text-red-400"><strong>Horário:</strong> ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
                                  ${inconclusivaBadge}
                              </div>
                          </div>
@@ -224,52 +229,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     ocorrenciaDetailsHTML += `</div>`;
                 }
-                
-                // *** INÍCIO DA CORREÇÃO ***
-                // Permite que o botão de editar ocorrências apareça para status "Em Análise" E "Concluída"
+
                 let detailsButtonHTML = '';
                 if (task.statusAnalise === 'Em Análise' || task.statusAnalise === 'Concluída') {
                      const buttonText = task.statusAnalise === 'Concluída' ? 'Ver / Editar Ocorrências' : 'Registrar Ocorrências';
-                     detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full text-sm bg-slate-200 text-slate-700 font-semibold py-2 rounded-md hover:bg-slate-300 transition-colors">${buttonText}</button>`;
+                     detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full text-sm bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-2 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors">${buttonText}</button>`;
                 }
-                // *** FIM DA CORREÇÃO ***
 
                 let occurrenceCountHTML = '';
                 let completionDateHTML = '';
                 if (task.statusAnalise === 'Concluída') {
                     const count = task.ocorrencias ? task.ocorrencias.length : 0;
-                    occurrenceCountHTML = `<div class="mt-2 text-sm font-bold ${count > 0 ? 'text-red-600' : 'text-emerald-600'}">Ocorrências: ${count}</div>`;
+                    occurrenceCountHTML = `<div class="mt-2 text-sm font-bold ${count > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}">Ocorrências: ${count}</div>`;
                     if (task.dataConclusao) {
-                        completionDateHTML = `<div class="text-xs text-emerald-600 font-medium mt-1">Concluído em: ${formatDate(task.dataConclusao)}</div>`;
+                        completionDateHTML = `<div class="text-xs text-emerald-600 dark:text-emerald-500 font-medium mt-1">Concluído em: ${formatDate(task.dataConclusao)}</div>`;
                     }
                 }
 
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
-                        <h3 class="font-bold text-lg text-slate-800 flex-1 pr-2">${task.condominio}</h3>
+                        <h3 class="font-bold text-lg text-slate-800 dark:text-slate-200 flex-1 pr-2">${task.condominio}</h3>
                         <div class="flex items-center gap-2 flex-shrink-0">
-                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${task.ocorrencia === 'Sim' ? 'bg-red-100 text-red-800' : (task.ocorrencia === 'Não' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500')}">${task.ocorrencia || 'Pendente'}</span>
-                            <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-orange-600 font-bold text-lg leading-none flex-shrink-0" title="Arquivar esta análise">&#128450;</button>
-                            <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-xl leading-none flex-shrink-0" title="Excluir esta análise">&times;</button>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${task.ocorrencia === 'Sim' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : (task.ocorrencia === 'Não' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300')}">${task.ocorrencia || 'Pendente'}</span>
+                            <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 font-bold text-lg leading-none flex-shrink-0" title="Arquivar esta análise">&#128450;</button>
+                            <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 dark:hover:text-red-400 font-bold text-xl leading-none flex-shrink-0" title="Excluir esta análise">&times;</button>
                         </div>
                     </div>
                     <div class="flex justify-between items-center">
                         <div>
-                            <p class="text-sm text-slate-500">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
-                            ${task.semanaDeTrabalho ? `<p class="text-xs text-orange-600 font-medium">Semana de Trabalho: <strong>${task.semanaDeTrabalho}</strong></p>` : ''}
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Analisar data: <strong>${formatDate(task.dataAnalise)}</strong></p>
+                            ${task.semanaDeTrabalho ? `<p class="text-xs text-orange-600 dark:text-orange-400 font-medium">Semana de Trabalho: <strong>${task.semanaDeTrabalho}</strong></p>` : ''}
                         </div>
-                        <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-full hover:bg-slate-200 ${isCollapsed ? 'collapsed' : ''}">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 ${isCollapsed ? 'collapsed' : ''}">
+                            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                     </div>
                     <div class="details-content ${isCollapsed ? 'hidden' : ''}">
                         ${occurrenceCountHTML}
                         ${completionDateHTML}
-                        
+
                         <div class="space-y-3 text-sm mt-4">
-                            <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Backup:</span><select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option><option value="Não visualizar" ${task.statusBackup === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
-                            <div class="flex items-center justify-between"><span class="font-semibold text-slate-600">Análise:</span><select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option><option value="Não visualizar" ${task.statusAnalise === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
+                            <div class="flex items-center justify-between"><span class="font-semibold text-slate-600 dark:text-slate-400">Backup:</span><select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option><option value="Não visualizar" ${task.statusBackup === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
+                            <div class="flex items-center justify-between"><span class="font-semibold text-slate-600 dark:text-slate-400">Análise:</span><select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option><option value="Não visualizar" ${task.statusAnalise === 'Não visualizar' ? 'selected' : ''}>Não visualizar</option></select></div>
                         </div>
                         ${ocorrenciaDetailsHTML}
                         ${detailsButtonHTML}
@@ -356,7 +358,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // *** 3. SUBSTITUIÇÃO: setupCharts ***
     const setupCharts = () => {
+        // LINHAS ADICIONADAS
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        const chartTextColor = isDarkMode ? '#cbd5e1' : '#334155'; // slate-300 / slate-700
+        const chartBorderColor = isDarkMode ? '#475569' : '#e2e8f0'; // slate-600 / slate-200
+        Chart.defaults.color = chartTextColor;
+        Chart.defaults.borderColor = chartBorderColor;
+        // FIM DAS LINHAS ADICIONADAS
+
         const ocorrenciasCtx = document.getElementById('ocorrenciasChart').getContext('2d');
         ocorrenciasChart = new Chart(ocorrenciasCtx, {
             type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)', borderColor: 'rgba(249, 115, 22, 1)', borderWidth: 1 }] },
@@ -647,12 +658,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
+    // *** 4. SUBSTITUIÇÃO: updateMultiOcVisuals ***
     const updateMultiOcVisuals = () => {
         const items = Array.from(ocorrenciaListDiv.querySelectorAll('.ocorrencia-item'));
         const startTimeMap = new Map();
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        const defaultBg = isDarkMode ? '#334155' : '#f1f5f9'; // slate-700 / slate-100
 
         items.forEach(item => {
-            item.style.backgroundColor = '#f1f5f9';
+            item.style.backgroundColor = defaultBg;
         });
 
         items.forEach(item => {
@@ -662,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 startTime = item.querySelector('.view-mode .time-text').dataset.start;
             }
-            
+
             if (startTime) {
                 if (!startTimeMap.has(startTime)) {
                     startTimeMap.set(startTime, []);
@@ -683,58 +697,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // *** 6. SUBSTITUIÇÃO: renderOcorrenciaItemInModal ***
     const renderOcorrenciaItemInModal = (ocor) => {
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'ocorrencia-item p-3 bg-slate-100 rounded-md';
+        itemDiv.className = 'ocorrencia-item p-3 bg-slate-100 dark:bg-slate-700 rounded-md';
         itemDiv.dataset.id = ocor.id || Date.now();
         const descText = ocor.desc.replace(/.*: \s*/, '');
         const categoria = ocor.categoria || 'Outros';
-        const inconclusivaBadge = ocor.isInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
+        const inconclusivaBadge = ocor.isInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 dark:bg-slate-500 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
 
         itemDiv.innerHTML = `
             <div class="view-mode">
                 <div class="flex items-start justify-between">
                     <div class="flex-grow mr-2">
-                        <p class="desc-text font-semibold text-slate-800" data-categoria="${categoria}">${categoria}: <span class="font-medium">${descText}</span></p>
+                        <p class="desc-text font-semibold text-slate-800 dark:text-slate-200" data-categoria="${categoria}">${categoria}: <span class="font-medium">${descText}</span></p>
                         <div class="flex items-center mt-1">
-                            <p class="time-text text-sm text-slate-500" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
+                            <p class="time-text text-sm text-slate-500 dark:text-slate-400" data-start="${ocor.horarioInicial || ''}" data-end="${ocor.horarioFinal || ''}">Horário: ${ocor.horarioInicial || 'N/A'} - ${ocor.horarioFinal || 'N/A'}</p>
                             ${inconclusivaBadge}
                         </div>
                     </div>
                      <div class="flex flex-col items-end flex-shrink-0 space-y-1">
-                        <button type="button" class="edit-ocorrencia-item-btn text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded hover:bg-orange-200">Editar</button>
-                        <button type="button" class="remove-ocorrencia-btn text-red-500 hover:text-red-700 font-bold text-xl leading-none">&times;</button>
+                        <button type="button" class="edit-ocorrencia-item-btn text-xs bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200 px-2 py-0.5 rounded hover:bg-orange-200 dark:hover:bg-orange-800">Editar</button>
+                        <button type="button" class="remove-ocorrencia-btn text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold text-xl leading-none">&times;</button>
                      </div>
                 </div>
             </div>
             <div class="edit-mode hidden">
                  <div class="mb-2">
-                     <label class="block text-xs font-medium text-slate-600">Categoria</label>
-                     <select class="edit-categoria w-full border border-slate-300 rounded-md p-1 text-sm"></select>
+                     <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Categoria</label>
+                     <select class="edit-categoria w-full border border-slate-300 dark:border-slate-600 rounded-md p-1 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"></select>
                  </div>
                  <div class="mb-2">
-                    <label class="block text-xs font-medium text-slate-600">Descrição</label>
-                    <textarea class="edit-desc w-full border border-slate-300 rounded-md p-1 mb-2 text-sm">${descText}</textarea>
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Descrição</label>
+                    <textarea class="edit-desc w-full border border-slate-300 dark:border-slate-600 rounded-md p-1 mb-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">${descText}</textarea>
                  </div>
                 <div class="flex gap-2">
                      <div class="w-full">
-                        <label class="block text-xs font-medium text-slate-600">Início</label>
-                        <input type="time" step="1" class="edit-start border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioInicial || ''}">
+                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Início</label>
+                        <input type="time" step="1" class="edit-start border border-slate-300 dark:border-slate-600 rounded-md p-1 text-sm w-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" value="${ocor.horarioInicial || ''}">
                      </div>
                      <div class="w-full">
-                        <label class="block text-xs font-medium text-slate-600">Fim</label>
-                        <input type="time" step="1" class="edit-end border border-slate-300 rounded-md p-1 text-sm w-full" value="${ocor.horarioFinal || ''}">
+                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">Fim</label>
+                        <input type="time" step="1" class="edit-end border border-slate-300 dark:border-slate-600 rounded-md p-1 text-sm w-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" value="${ocor.horarioFinal || ''}">
                      </div>
                 </div>
                 <div class="mt-2">
                     <label class="flex items-center">
-                        <input type="checkbox" class="edit-inconclusiva h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500" ${ocor.isInconclusiva ? 'checked' : ''}>
-                        <span class="ml-2 text-sm font-medium text-slate-700">Inconclusiva</span>
+                        <input type="checkbox" class="edit-inconclusiva h-4 w-4 text-orange-600 border-gray-300 dark:border-slate-600 rounded focus:ring-orange-500" ${ocor.isInconclusiva ? 'checked' : ''}>
+                        <span class="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300">Inconclusiva</span>
                     </label>
                 </div>
                 <div class="mt-2 text-right">
-                     <button type="button" class="cancel-edit-ocorrencia-btn text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded hover:bg-slate-300 mr-1">Cancelar</button>
-                    <button type="button" class="save-edit-ocorrencia-btn text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">Salvar Edição</button>
+                     <button type="button" class="cancel-edit-ocorrencia-btn text-xs bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-300 px-2 py-1 rounded hover:bg-slate-300 dark:hover:bg-slate-500 mr-1">Cancelar</button>
+                    <button type="button" class="save-edit-ocorrencia-btn text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded hover:bg-green-200 dark:hover:bg-green-800">Salvar Edição</button>
                 </div>
             </div>
         `;
@@ -840,12 +855,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const descText = itemDiv.querySelector('.view-mode .desc-text');
             const timeTextParent = itemDiv.querySelector('.view-mode .time-text').parentElement;
             
-            descText.innerHTML = `<span class="font-semibold text-slate-800">${newCategoria}:</span> <span class="font-medium">${newDesc}</span>`;
+            descText.innerHTML = `<span class="font-semibold text-slate-800 dark:text-slate-200">${newCategoria}:</span> <span class="font-medium">${newDesc}</span>`;
             descText.dataset.categoria = newCategoria;
             
-            const newInconclusivaBadge = newInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
+            const newInconclusivaBadge = newInconclusiva ? `<span class="text-xs font-semibold text-white bg-slate-400 dark:bg-slate-500 px-2 py-0.5 rounded-full ml-2">Inconclusiva</span>` : '';
             timeTextParent.innerHTML = `
-                <p class="time-text text-sm text-slate-500" data-start="${newStart}" data-end="${newEnd}">Horário: ${newStart || 'N/A'} - ${newEnd || 'N/A'}</p>
+                <p class="time-text text-sm text-slate-500 dark:text-slate-400" data-start="${newStart}" data-end="${newEnd}">Horário: ${newStart || 'N/A'} - ${newEnd || 'N/A'}</p>
                 ${newInconclusivaBadge}
             `;
 
@@ -910,7 +925,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 archivedTasks.push(taskToArchive);
                 
                 refreshUI();
-                showNotification('Análise arquivada manualmente.');
+                showNotification('Análise arquivada manually.');
             }
         }
 
@@ -1239,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         periodChart.update();
     };
 
-
+    // *** 11. SUBSTITUIÇÃO: generateReportBtn listener ***
     generateReportBtn.addEventListener('click', () => {
         const startDate = periodStartDateInput.value;
         const endDate = periodEndDateInput.value;
@@ -1248,9 +1263,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const analysisType = document.querySelector('input[name="analysis_type"]:checked').value;
-        
+
         let allTasksForReport;
-        // CORREÇÃO: Sempre incluir tarefas ativas e arquivadas no relatório
         allTasksForReport = [...tasks, ...archivedTasks];
 
         const filteredTasks = allTasksForReport.filter(task => {
@@ -1258,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!dateToCompare) return false;
             return dateToCompare >= startDate && dateToCompare <= endDate;
         });
-        
+
         const totalDias = filteredTasks.length;
         const uniquePdvs = new Set(filteredTasks.map(task => task.condominio)).size;
         const totalOcorrencias = filteredTasks.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
@@ -1266,21 +1280,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('period-dias').textContent = totalDias;
         document.getElementById('period-pdv').textContent = uniquePdvs;
         document.getElementById('period-oc').textContent = totalOcorrencias;
-        
+
         periodTaskList.innerHTML = '';
         if(filteredTasks.length > 0){
             filteredTasks.sort((a, b) => new Date(a.dataAnalise) - new Date(b.dataAnalise));
             filteredTasks.forEach(task => {
                 const li = document.createElement('li');
-                li.className = 'text-sm p-2 bg-slate-100 rounded-md flex justify-between items-center';
+                li.className = 'text-sm p-2 bg-slate-100 dark:bg-slate-700 rounded-md flex justify-between items-center';
                 li.innerHTML = `
-                    <span><strong>${task.condominio}</strong> - ${formatDate(task.dataAnalise)}</span>
-                    <span class="font-bold ${task.ocorrencias && task.ocorrencias.length > 0 ? 'text-red-600' : 'text-emerald-600'}">${task.ocorrencias ? task.ocorrencias.length : 0} ocorr.</span>
+                    <span class="text-slate-800 dark:text-slate-200"><strong>${task.condominio}</strong> - ${formatDate(task.dataAnalise)}</span>
+                    <span class="font-bold ${task.ocorrencias && task.ocorrencias.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}">${task.ocorrencias ? task.ocorrencias.length : 0} ocorr.</span>
                 `;
                 periodTaskList.appendChild(li);
             });
         } else {
-            periodTaskList.innerHTML = '<li class="text-sm text-slate-500 text-center">Nenhuma análise encontrada para o período.</li>';
+            periodTaskList.innerHTML = '<li class="text-sm text-slate-500 dark:text-slate-400 text-center">Nenhuma análise encontrada para o período.</li>';
         }
 
         updatePeriodReportCharts(filteredTasks);
@@ -1361,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         annualReportModal.classList.add('hidden');
     });
 
-
+    // *** 7. SUBSTITUIÇÃO: renderPriorityView ***
     const renderPriorityView = () => {
         const allTasks = [...tasks, ...archivedTasks];
         const occurrenceMap = allTasks.reduce((acc, task) => {
@@ -1396,28 +1410,28 @@ document.addEventListener('DOMContentLoaded', () => {
         priorityTaskList.innerHTML = '';
 
         if (pendingTasks.length === 0) {
-            priorityTaskList.innerHTML = '<li class="text-center text-slate-500 p-4 bg-emerald-50 rounded-md">Parabéns! Você está em dia com todas as análises.</li>';
+            priorityTaskList.innerHTML = '<li class="text-center text-slate-500 dark:text-emerald-300 p-4 bg-emerald-50 dark:bg-emerald-900 rounded-md">Parabéns! Você está em dia com todas as análises.</li>';
             return;
         }
 
         pendingTasks.forEach(task => {
             let urgencyHTML = '';
             if (task.daysOverdue > 0) {
-                urgencyHTML = `<span class="font-bold text-red-600">Atrasado ${task.daysOverdue} dia(s)</span>`;
+                urgencyHTML = `<span class="font-bold text-red-600 dark:text-red-400">Atrasado ${task.daysOverdue} dia(s)</span>`;
             } else if (task.daysOverdue === 0) {
-                urgencyHTML = `<span class="font-bold text-amber-600">Para Hoje</span>`;
+                urgencyHTML = `<span class="font-bold text-amber-600 dark:text-amber-400">Para Hoje</span>`;
             } else {
-                urgencyHTML = `<span class="font-semibold text-orange-600">Futuro (${formatDate(task.dataAnalise)})</span>`;
+                urgencyHTML = `<span class="font-semibold text-orange-600 dark:text-orange-400">Futuro (${formatDate(task.dataAnalise)})</span>`;
             }
             
             const historyScore = occurrenceMap[task.condominio] || 0;
 
             const li = document.createElement('li');
-            li.className = 'p-3 bg-slate-100 rounded-md flex justify-between items-center';
+            li.className = 'p-3 bg-slate-100 dark:bg-slate-700 rounded-md flex justify-between items-center';
             li.innerHTML = `
                 <div>
-                    <p class="font-bold text-slate-800">${task.condominio}</p>
-                    <p class="text-xs text-slate-500">Histórico: <strong>${historyScore}</strong> ocorrências</p>
+                    <p class="font-bold text-slate-800 dark:text-slate-200">${task.condominio}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Histórico: <strong>${historyScore}</strong> ocorrências</p>
                 </div>
                 <div class="text-right">
                     ${urgencyHTML}
@@ -1448,22 +1462,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pdvDashboardCloseBtn.addEventListener('click', () => pdvDashboardModal.classList.add('hidden'));
 
+    // *** 8. SUBSTITUIÇÃO: pdvSelect listener ***
     pdvSelect.addEventListener('change', () => {
         const selectedCondo = pdvSelect.value;
         if (!selectedCondo) {
             pdvContent.classList.add('hidden');
             return;
         }
-        
+
         const allTasks = [...tasks, ...archivedTasks];
         const condoTasks = allTasks.filter(t => t.condominio === selectedCondo);
-        
+
         const totalAnalises = condoTasks.length;
         const totalOcorrencias = condoTasks.reduce((acc, task) => acc + (task.ocorrencias ? task.ocorrencias.length : 0), 0);
-        
+
         document.getElementById('pdv-total-analises').textContent = totalAnalises;
         document.getElementById('pdv-total-ocorrencias').textContent = totalOcorrencias;
-        
+
         const monthlyData = {};
         for (let i = 11; i >= 0; i--) {
             const d = new Date();
@@ -1471,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const label = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
             monthlyData[label] = 0;
         }
-        
+
         condoTasks.forEach(task => {
             if (task.dataAnalise && task.ocorrencias && task.ocorrencias.length > 0) {
                  const d = new Date(task.dataAnalise + 'T00:00:00');
@@ -1485,22 +1500,22 @@ document.addEventListener('DOMContentLoaded', () => {
         pdvTrendChart.data.labels = Object.keys(monthlyData).map(label => new Date(label + '-01T00:00:00'));
         pdvTrendChart.data.datasets[0].data = Object.values(monthlyData);
         pdvTrendChart.update();
-        
+
         const pdvTaskListUl = document.getElementById('pdv-task-list');
         pdvTaskListUl.innerHTML = '';
         if(condoTasks.length > 0) {
             condoTasks.sort((a,b) => new Date(b.dataAnalise) - new Date(a.dataAnalise));
             condoTasks.forEach(task => {
                 const li = document.createElement('li');
-                li.className = 'text-sm p-2 bg-white rounded-md flex justify-between items-center';
+                li.className = 'text-sm p-2 bg-white dark:bg-slate-700 rounded-md flex justify-between items-center';
                 li.innerHTML = `
                     <span><strong>${formatDate(task.dataAnalise)}</strong> (Semana ${task.semanaDeTrabalho || 'N/A'})</span>
-                    <span class="font-bold ${task.ocorrencias && task.ocorrencias.length > 0 ? 'text-red-600' : 'text-emerald-600'}">${task.ocorrencias ? task.ocorrencias.length : 0} ocorr.</span>
+                    <span class="font-bold ${task.ocorrencias && task.ocorrencias.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}">${task.ocorrencias ? task.ocorrencias.length : 0} ocorr.</span>
                 `;
                 pdvTaskListUl.appendChild(li);
             });
         } else {
-             pdvTaskListUl.innerHTML = '<li class="text-sm text-slate-500 text-center">Nenhuma análise encontrada.</li>';
+             pdvTaskListUl.innerHTML = '<li class="text-sm text-slate-500 dark:text-slate-400 text-center">Nenhuma análise encontrada.</li>';
         }
 
         pdvContent.classList.remove('hidden');
@@ -1538,6 +1553,7 @@ document.addEventListener('DOMContentLoaded', () => {
         archiveModal.classList.add('hidden');
     });
 
+    // *** 9. SUBSTITUIÇÃO: renderArchiveList ***
     const renderArchiveList = () => {
         viewArchiveListContainer.innerHTML = '';
         unarchiveSelectedBtn.disabled = true;
@@ -1553,20 +1569,20 @@ document.addEventListener('DOMContentLoaded', () => {
             filteredArchived.sort((a,b) => new Date(b.dataConclusao || b.dataAnalise) - new Date(a.dataConclusao || a.dataAnalise));
             filteredArchived.forEach(task => {
                 const li = document.createElement('li');
-                li.className = 'p-2 bg-white rounded-md text-sm flex justify-between items-center';
+                li.className = 'p-2 bg-white dark:bg-slate-700 rounded-md text-sm flex justify-between items-center';
                 li.innerHTML = `
                     <label class="flex items-center flex-grow mr-4">
-                        <input type="checkbox" value="${task.id}" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 archive-checkbox mr-3">
-                        <span><strong>${task.condominio}</strong> - Análise de ${formatDate(task.dataAnalise)}</span>
+                        <input type="checkbox" value="${task.id}" class="h-4 w-4 text-orange-600 border-gray-300 dark:border-slate-500 rounded focus:ring-orange-500 archive-checkbox mr-3">
+                        <span class="ml-3 text-slate-800 dark:text-slate-200"><strong>${task.condominio}</strong> - Análise de ${formatDate(task.dataAnalise)}</span>
                     </label>
-                    <span class="text-slate-500 text-xs flex-shrink-0">Concluído em: ${formatDate(task.dataConclusao)}</span>
-                     <button data-id="${task.id}" class="unarchive-single-btn ml-4 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded hover:bg-orange-200">Desarquivar</button>
+                    <span class="text-slate-500 dark:text-slate-400 text-xs flex-shrink-0">Concluído em: ${formatDate(task.dataConclusao)}</span>
+                     <button data-id="${task.id}" class="unarchive-single-btn ml-4 text-xs bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200 px-2 py-0.5 rounded hover:bg-orange-200 dark:hover:bg-orange-800">Desarquivar</button>
                 `;
                 list.appendChild(li);
             });
             viewArchiveListContainer.appendChild(list);
         } else {
-             viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma análise arquivada encontrada.</p>';
+             viewArchiveListContainer.innerHTML = '<p class="text-center text-slate-500 dark:text-slate-400">Nenhuma análise arquivada encontrada.</p>';
         }
     };
 
@@ -1635,18 +1651,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // *** 9. SUBSTITUIÇÃO: renderCategoryList ***
     const renderCategoryList = () => {
         categoryListContainer.innerHTML = '';
         if(categories.length === 0) {
-             categoryListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhuma categoria cadastrada.</p>';
+             categoryListContainer.innerHTML = '<p class="text-center text-slate-500 dark:text-slate-400">Nenhuma categoria cadastrada.</p>';
              return;
         }
         categories.forEach(cat => {
             const div = document.createElement('div');
-            div.className = 'flex justify-between items-center p-2 bg-white rounded-md';
+            div.className = 'flex justify-between items-center p-2 bg-white dark:bg-slate-700 rounded-md';
             div.innerHTML = `
-                <span class="text-sm">${cat}</span>
-                <button data-category="${cat}" class="delete-category-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none">&times;</button>
+                <span class="text-sm text-slate-800 dark:text-slate-200">${cat}</span>
+                <button data-category="${cat}" class="delete-category-btn text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold text-lg leading-none">&times;</button>
             `;
             categoryListContainer.appendChild(div);
         });
@@ -1678,10 +1695,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // *** 10. SUBSTITUIÇÃO: plannerBtn listener ***
     plannerBtn.addEventListener('click', () => {
         const nextWeekNumber = getWeekNumber(new Date()) + 1;
         plannerWeekNumberInput.value = nextWeekNumber;
-        
+
         const allTasks = [...tasks, ...archivedTasks];
         const occurrenceMap = allTasks.reduce((acc, task) => {
             if (!acc[task.condominio]) {
@@ -1694,20 +1712,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }, {});
 
         const rankedCondos = Object.entries(occurrenceMap).sort((a, b) => b[1] - a[1]);
-        
+
         plannerListContainer.innerHTML = '';
         if (rankedCondos.length === 0) {
-            plannerListContainer.innerHTML = '<p class="text-center text-slate-500">Nenhum histórico de ocorrências encontrado para gerar sugestões.</p>';
+            plannerListContainer.innerHTML = '<p class="text-center text-slate-500 dark:text-slate-400">Nenhum histórico de ocorrências encontrado para gerar sugestões.</p>';
             return;
         }
 
         rankedCondos.forEach(([condominio, count]) => {
              const label = document.createElement('label');
-             label.className = 'flex items-center p-3 bg-white border rounded-md cursor-pointer';
+             label.className = 'flex items-center p-3 bg-white dark:bg-slate-700 border dark:border-slate-600 rounded-md cursor-pointer';
              label.innerHTML = `
-                 <input type="checkbox" value="${condominio}" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 planner-checkbox" checked>
-                 <span class="ml-3 text-sm font-medium text-slate-700">${condominio}</span>
-                 <span class="ml-auto text-xs font-bold text-red-600">${count} ocorr.</span>
+                 <input type="checkbox" value="${condominio}" class="h-4 w-4 text-orange-600 border-gray-300 dark:border-slate-500 rounded focus:ring-orange-500 planner-checkbox" checked>
+                 <span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-200">${condominio}</span>
+                 <span class="ml-auto text-xs font-bold text-red-600 dark:text-red-400">${count} ocorr.</span>
              `;
              plannerListContainer.appendChild(label);
         });
