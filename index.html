@@ -5,19 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Monitoramento (Completo Offline)</title>
     
-    <!-- Tenta carregar bibliotecas, mas o sistema funciona sem elas -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
     <style>
-        /* --- ESTILO VISUAL NATIVO (Funciona sem internet) --- */
-        
+        /* --- ESTILO VISUAL NATIVO --- */
         :root {
             --bg-body: #f1f5f9;
             --text-primary: #1e293b;
             --text-secondary: #64748b;
-            --primary: #ea580c; /* Laranja */
+            --primary: #ea580c;
             --primary-hover: #c2410c;
             --card-bg: #ffffff;
             --border: #cbd5e1;
@@ -25,89 +23,36 @@
             --warning: #f59e0b;
             --danger: #ef4444;
         }
-
-        body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-primary); 
-            margin: 0; 
-            padding: 20px;
-        }
-
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg-body); color: var(--text-primary); margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-
-        /* Cabeçalho */
-        header { text-align: center; margin-bottom: 2rem; }
-        .logo { font-family: 'Arial Black', sans-serif; font-size: 2rem; letter-spacing: -1px; }
-        .logo span:first-child { color: #f26324; }
-        .logo span:last-child { color: #f7b41e; }
-        h1 { font-size: 1.8rem; margin: 0.5rem 0; }
         
-        /* Grids e Layout */
-        .grid-resumo { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-            gap: 1rem; 
-            margin-bottom: 2rem; 
-        }
-        .grid-tasks {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
+        /* Layout */
+        .grid-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .grid-tasks { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
         
         /* Cartões */
-        .card { 
-            background: var(--card-bg); 
-            padding: 1.5rem; 
-            border-radius: 0.5rem; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
-        }
+        .card { background: var(--card-bg); padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .card-resumo { text-align: center; }
         .big-number { font-size: 2rem; font-weight: bold; margin: 0.5rem 0 0 0; }
         
-        .task-card { border-left: 5px solid var(--border); position: relative; }
+        .task-card { border-left: 5px solid var(--border); position: relative; transition: all 0.3s ease; }
         .task-card.pendente { border-left-color: var(--warning); }
-        .task-card.em-analise { border-left-color: var(--primary); }
+        .task-card.em-analise { border-left-color: var(--primary); background-color: #fff7ed; } /* Fundo levemente laranja para destaque */
         .task-card.concluida { border-left-color: var(--success); }
 
-        /* Controles e Filtros */
-        .controls-section { 
-            background: white; 
-            padding: 1rem; 
-            border-radius: 0.5rem; 
-            margin-bottom: 2rem; 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 1rem; 
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
+        /* Badges de Status */
+        .status-badge { font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; display: inline-block; margin-bottom: 5px; }
+        .badge-pendente { background: #fef3c7; color: #d97706; }
+        .badge-analise { background: #ffedd5; color: #ea580c; }
+        .badge-concluida { background: #d1fae5; color: #059669; }
+
+        /* Controles */
+        .controls-section { background: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; flex: 1; }
-        
-        /* Inputs e Botões */
-        input, select, textarea {
-            padding: 0.5rem;
-            border: 1px solid var(--border);
-            border-radius: 0.25rem;
-            font-size: 0.9rem;
-            width: 100%; 
-            box-sizing: border-box;
-        }
-        
-        /* Estilo específico para inputs nos filtros para não ficarem gigantes */
+        input, select, textarea { padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.25rem; font-size: 0.9rem; width: 100%; box-sizing: border-box; }
         .filters input, .filters select { width: auto; }
 
-        button {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
+        button { padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; cursor: pointer; font-weight: 600; transition: background 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-secondary { background: #e2e8f0; color: var(--text-primary); }
@@ -116,27 +61,8 @@
         
         /* Menu Dropdown */
         .dropdown { position: relative; display: inline-block; }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background-color: #f9f9f9;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            padding: 5px 0;
-        }
-        .dropdown-content button {
-            color: black;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            width: 100%;
-            text-align: left;
-            background: none;
-            border: none;
-        }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 5px; padding: 5px 0; }
+        .dropdown-content button { color: black; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; background: none; border: none; }
         .dropdown-content button:hover {background-color: #f1f1f1;}
         .show {display:block;}
 
@@ -155,42 +81,24 @@
         .mb-4 { margin-bottom: 1rem; }
 
         /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            width: 90%;
-            max-width: 800px; /* Maior para relatórios */
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
         .chart-box { height: 300px; position: relative; margin-bottom: 20px; }
-
-        /* Aviso de Offline */
-        .offline-warning {
-            background: #fee2e2; color: #991b1b; 
-            padding: 10px; text-align: center; 
-            border-radius: 8px; margin-bottom: 20px;
-            display: none; 
-        }
-        
+        .offline-warning { background: #fee2e2; color: #991b1b; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 20px; display: none; }
         hr { border: 0; border-top: 1px solid #eee; margin: 5px 0; }
+        
+        /* Header */
+        header { text-align: center; margin-bottom: 2rem; }
+        .logo { font-family: 'Arial Black', sans-serif; font-size: 2rem; letter-spacing: -1px; }
+        .logo span:first-child { color: #f26324; }
+        .logo span:last-child { color: #f7b41e; }
+        h1 { font-size: 1.8rem; margin: 0.5rem 0; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        
-        <div id="chart-error-msg" class="offline-warning">
-            <strong>Modo Offline:</strong> Gráficos desativados (sem conexão), mas todas as funções operacionais estão ativas.
-        </div>
+        <div id="chart-error-msg" class="offline-warning"><strong>Modo Offline:</strong> Gráficos desativados.</div>
 
         <header>
             <div class="logo"><span>vend</span><span>Perto</span></div>
@@ -200,22 +108,10 @@
 
         <!-- Resumo -->
         <div class="grid-resumo">
-            <div class="card card-resumo">
-                <span class="text-sm">Ativas</span>
-                <p id="total-solicitacoes" class="big-number text-orange">0</p>
-            </div>
-            <div class="card card-resumo">
-                <span class="text-sm">Backups Pendentes</span>
-                <p id="backups-pendentes" class="big-number" style="color: #d97706">0</p>
-            </div>
-            <div class="card card-resumo">
-                <span class="text-sm">Análises Pendentes</span>
-                <p id="analises-pendentes" class="big-number text-red">0</p>
-            </div>
-            <div class="card card-resumo">
-                <span class="text-sm">Ocorrências (Semana)</span>
-                <p id="total-ocorrencias-semana" class="big-number">0</p>
-            </div>
+            <div class="card card-resumo"><span class="text-sm">Ativas</span><p id="total-solicitacoes" class="big-number text-orange">0</p></div>
+            <div class="card card-resumo"><span class="text-sm">Backups Pendentes</span><p id="backups-pendentes" class="big-number" style="color: #d97706">0</p></div>
+            <div class="card card-resumo"><span class="text-sm">Análises Pendentes</span><p id="analises-pendentes" class="big-number text-red">0</p></div>
+            <div class="card card-resumo"><span class="text-sm">Ocorrências (Semana)</span><p id="total-ocorrencias-semana" class="big-number">0</p></div>
         </div>
 
         <!-- Controles -->
@@ -235,8 +131,6 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <button id="add-task-btn" class="btn-primary">+ Nova Análise</button>
-                
-                <!-- MENU DE AÇÕES (Botão Dropdown) -->
                 <div class="dropdown">
                     <button id="actions-menu-btn" class="btn-secondary">Ações &#9662;</button>
                     <div id="actions-menu" class="dropdown-content">
@@ -257,195 +151,28 @@
         </div>
 
         <!-- Lista de Tarefas -->
-        <main id="task-list" class="grid-tasks">
-            <!-- Tarefas inseridas via JS -->
-        </main>
+        <main id="task-list" class="grid-tasks"></main>
         
-        <!-- Gráficos (Só aparecem se a biblioteca carregar) -->
         <section class="card mt-2" id="chart-section" style="margin-top: 3rem;">
             <h2 style="text-align: center;">Ocorrências da Semana</h2>
-            <div class="chart-box">
-                <canvas id="ocorrenciasChart"></canvas>
-            </div>
+            <div class="chart-box"><canvas id="ocorrenciasChart"></canvas></div>
         </section>
-
     </div>
 
     <!-- ================= MODAIS ================= -->
-    
     <!-- Modal Adicionar -->
-    <div id="task-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 500px;">
-            <h2>Nova Análise</h2>
-            <form id="task-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                <div>
-                    <label>Condomínio</label>
-                    <div style="position: relative;">
-                        <input type="text" id="form-condominio" class="w-full" required autocomplete="off">
-                        <div id="autocomplete-list" style="position: absolute; background: white; border: 1px solid #ccc; width: 100%; max-height: 150px; overflow-y: auto; display: none; z-index: 10;"></div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 1rem;">
-                    <div style="flex: 1;">
-                        <label>Data</label>
-                        <input type="date" id="form-data-analise" class="w-full" required>
-                    </div>
-                    <div style="width: 80px;">
-                        <label>Semana</label>
-                        <input type="number" id="form-semana-trabalho" class="w-full">
-                    </div>
-                </div>
-                <div>
-                    <label>Observações</label>
-                    <textarea id="form-observacoes" class="w-full" rows="3"></textarea>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                    <button type="button" id="cancel-btn" class="btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="task-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 500px;"><h2>Nova Análise</h2><form id="task-form" style="display: flex; flex-direction: column; gap: 1rem;"><div><label>Condomínio</label><div style="position: relative;"><input type="text" id="form-condominio" class="w-full" required autocomplete="off"><div id="autocomplete-list" style="position: absolute; background: white; border: 1px solid #ccc; width: 100%; max-height: 150px; overflow-y: auto; display: none; z-index: 10;"></div></div></div><div style="display: flex; gap: 1rem;"><div style="flex: 1;"><label>Data</label><input type="date" id="form-data-analise" class="w-full" required></div><div style="width: 80px;"><label>Semana</label><input type="number" id="form-semana-trabalho" class="w-full"></div></div><div><label>Observações</label><textarea id="form-observacoes" class="w-full" rows="3"></textarea></div><div style="display: flex; justify-content: flex-end; gap: 0.5rem;"><button type="button" id="cancel-btn" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Salvar</button></div></form></div></div>
 
     <!-- Modal Ocorrências -->
-    <div id="ocorrencia-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 600px;">
-            <h2>Gerenciar Ocorrências</h2>
-            <form id="ocorrencia-form">
-                <input type="hidden" id="ocorrencia-task-id">
-                <div id="ocorrencia-list" style="background: #f8fafc; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto; margin-bottom: 1rem;"></div>
-                <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <select id="add-ocorrencia-categoria" class="w-full"></select>
-                        <input type="text" id="add-ocorrencia-desc" placeholder="Descrição" class="w-full">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: center;">
-                        <input type="time" id="add-horario-inicial">
-                        <input type="time" id="add-horario-final">
-                        <label style="font-size: 0.8rem;"><input type="checkbox" id="add-ocorrencia-inconclusiva"> Inconclusiva</label>
-                    </div>
-                    <button type="button" id="add-ocorrencia-btn" class="btn-secondary w-full mt-2" style="background: #ffedd5; color: #ea580c;">+ Adicionar Ocorrência</button>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
-                    <button type="button" id="ocorrencia-cancel-btn" class="btn-secondary">Fechar</button>
-                    <button type="submit" class="btn-primary">Salvar Tudo</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="ocorrencia-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 600px;"><h2>Gerenciar Ocorrências</h2><form id="ocorrencia-form"><input type="hidden" id="ocorrencia-task-id"><div id="ocorrencia-list" style="background: #f8fafc; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto; margin-bottom: 1rem;"></div><div style="border-top: 1px solid #e2e8f0; padding-top: 1rem;"><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;"><select id="add-ocorrencia-categoria" class="w-full"></select><input type="text" id="add-ocorrencia-desc" placeholder="Descrição" class="w-full"></div><div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: center;"><input type="time" id="add-horario-inicial" step="1"><input type="time" id="add-horario-final" step="1"><label style="font-size: 0.8rem;"><input type="checkbox" id="add-ocorrencia-inconclusiva"> Inconclusiva</label></div><button type="button" id="add-ocorrencia-btn" class="btn-secondary w-full mt-2" style="background: #ffedd5; color: #ea580c;">+ Adicionar Ocorrência</button></div><div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;"><button type="button" id="ocorrencia-cancel-btn" class="btn-secondary">Fechar</button><button type="submit" class="btn-primary">Salvar Tudo</button></div></form></div></div>
 
-    <!-- Modal Importar (Bulk) -->
-    <div id="bulk-add-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 600px;">
-            <h2>Importar Planilha</h2>
-            <p class="text-sm mb-4">Cole os dados com cabeçalho (Semana, Dia a visualizar, Unidade, Status, OC).</p>
-            <form id="bulk-add-form">
-                <textarea id="bulk-input-area" rows="10" class="w-full mb-4" placeholder="Cole aqui..."></textarea>
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                    <button type="button" id="bulk-cancel-btn" class="btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn-primary">Importar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Relatório Anual -->
-    <div id="annual-report-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="annual-report-title">Relatório Anual</h2>
-                <button id="annual-report-close-btn" style="font-size: 1.5rem;">&times;</button>
-            </div>
-            <div class="grid-resumo">
-                <div class="card card-resumo"><p>Análises</p><p id="annual-total-analises" class="big-number text-orange">0</p></div>
-                <div class="card card-resumo"><p>Ocorrências</p><p id="annual-total-ocorrencias" class="big-number text-red">0</p></div>
-            </div>
-            <div class="chart-box"><canvas id="annualReportChart_Monthly"></canvas></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="chart-box"><canvas id="annualReportChart_Category"></canvas></div>
-                <div class="chart-box"><canvas id="annualReportChart_Condo"></canvas></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Análise Por Período -->
-    <div id="period-analysis-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2>Análise por Período</h2>
-                <button id="period-analysis-close-btn" style="font-size: 1.5rem;">&times;</button>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; margin-bottom: 1rem;">
-                <input type="date" id="period-start-date">
-                <input type="date" id="period-end-date">
-                <button id="generate-report-btn" class="btn-primary">Gerar</button>
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label><input type="radio" name="analysis_type" value="dataAnalise" checked> Data Análise</label>
-                <label style="margin-left: 1rem;"><input type="radio" name="analysis_type" value="dataConclusao"> Data Conclusão</label>
-            </div>
-            <div class="grid-resumo">
-                <div class="card card-resumo"><p>Dias</p><p id="period-dias" class="big-number">0</p></div>
-                <div class="card card-resumo"><p>PDVs</p><p id="period-pdv" class="big-number">0</p></div>
-                <div class="card card-resumo"><p>OCs</p><p id="period-oc" class="big-number text-red">0</p></div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="chart-box"><canvas id="periodCategoryChart"></canvas></div>
-                <div class="chart-box">
-                    <select id="period-category-filter" class="w-full mb-2"><option value="">Filtrar Categoria</option></select>
-                    <canvas id="periodChart"></canvas>
-                </div>
-            </div>
-            <ul id="period-task-list" style="max-height: 150px; overflow-y: auto; background: #f8fafc; padding: 10px;"></ul>
-        </div>
-    </div>
-    
-    <!-- Modal Prioridades -->
-    <div id="priority-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="flex justify-between items-center mb-4">
-                <h2>Prioridades</h2>
-                <button id="priority-close-btn" style="font-size: 1.5rem;">&times;</button>
-            </div>
-            <ul id="priority-task-list" style="list-style: none; padding: 0;"></ul>
-        </div>
-    </div>
-    
-    <!-- Modal Planejador -->
-    <div id="planner-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 500px;">
-            <h2>Planejador Semanal</h2>
-            <form id="planner-form">
-                <input type="number" id="planner-week-number" class="w-full mb-4" placeholder="Semana Nº" required>
-                <div id="planner-list-container" style="height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 1rem;"></div>
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                    <button type="button" id="planner-cancel-btn" class="btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn-primary">Gerar Tarefas</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal PDV Dashboard -->
-    <div id="pdv-dashboard-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2>Painel PDV</h2>
-                <button id="pdv-dashboard-close-btn" style="font-size: 1.5rem;">&times;</button>
-            </div>
-            <select id="pdv-select" class="w-full mb-4"></select>
-            <div id="pdv-content" class="hidden">
-                <div class="grid-resumo">
-                    <div class="card card-resumo"><p>Total</p><p id="pdv-total-analises" class="big-number">0</p></div>
-                    <div class="card card-resumo"><p>OCs</p><p id="pdv-total-ocorrencias" class="big-number text-red">0</p></div>
-                </div>
-                <div class="chart-box"><canvas id="pdvTrendChart"></canvas></div>
-                <ul id="pdv-task-list" style="max-height: 150px; overflow-y: auto; background: #f8fafc; padding: 10px;"></ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Outros Modais Simples -->
+    <!-- Modais Extras -->
+    <div id="bulk-add-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 600px;"><h2>Importar Planilha</h2><p class="text-sm mb-4">Cole os dados com cabeçalho.</p><form id="bulk-add-form"><textarea id="bulk-input-area" rows="10" class="w-full mb-4"></textarea><div style="display: flex; justify-content: flex-end; gap: 0.5rem;"><button type="button" id="bulk-cancel-btn" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Importar</button></div></form></div></div>
+    <div id="annual-report-modal" class="modal-overlay hidden"><div class="modal-content"><div class="flex justify-between items-center mb-4"><h2 id="annual-report-title">Relatório Anual</h2><button id="annual-report-close-btn" style="font-size: 1.5rem;">&times;</button></div><div class="grid-resumo"><div class="card card-resumo"><p>Análises</p><p id="annual-total-analises" class="big-number text-orange">0</p></div><div class="card card-resumo"><p>Ocorrências</p><p id="annual-total-ocorrencias" class="big-number text-red">0</p></div></div><div class="chart-box"><canvas id="annualReportChart_Monthly"></canvas></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div class="chart-box"><canvas id="annualReportChart_Category"></canvas></div><div class="chart-box"><canvas id="annualReportChart_Condo"></canvas></div></div></div></div>
+    <div id="period-analysis-modal" class="modal-overlay hidden"><div class="modal-content"><div class="flex justify-between items-center mb-4"><h2>Análise por Período</h2><button id="period-analysis-close-btn" style="font-size: 1.5rem;">&times;</button></div><div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; margin-bottom: 1rem;"><input type="date" id="period-start-date"><input type="date" id="period-end-date"><button id="generate-report-btn" class="btn-primary">Gerar</button></div><div class="mb-4"><label><input type="radio" name="analysis_type" value="dataAnalise" checked> Data Análise</label><label style="margin-left: 1rem;"><input type="radio" name="analysis_type" value="dataConclusao"> Data Conclusão</label></div><div class="grid-resumo"><div class="card card-resumo"><p>Dias</p><p id="period-dias" class="big-number">0</p></div><div class="card card-resumo"><p>PDVs</p><p id="period-pdv" class="big-number">0</p></div><div class="card card-resumo"><p>OCs</p><p id="period-oc" class="big-number text-red">0</p></div></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div class="chart-box"><canvas id="periodCategoryChart"></canvas></div><div class="chart-box"><select id="period-category-filter" class="w-full mb-2"><option value="">Filtrar Categoria</option></select><canvas id="periodChart"></canvas></div></div><ul id="period-task-list" style="max-height: 150px; overflow-y: auto; background: #f8fafc; padding: 10px;"></ul></div></div>
+    <div id="priority-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 600px;"><div class="flex justify-between items-center mb-4"><h2>Prioridades</h2><button id="priority-close-btn" style="font-size: 1.5rem;">&times;</button></div><ul id="priority-task-list" style="list-style: none; padding: 0;"></ul></div></div>
+    <div id="planner-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 500px;"><h2>Planejador Semanal</h2><form id="planner-form"><input type="number" id="planner-week-number" class="w-full mb-4" placeholder="Semana Nº" required><div id="planner-list-container" style="height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 1rem;"></div><div style="display: flex; justify-content: flex-end; gap: 0.5rem;"><button type="button" id="planner-cancel-btn" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Gerar Tarefas</button></div></form></div></div>
+    <div id="pdv-dashboard-modal" class="modal-overlay hidden"><div class="modal-content"><div class="flex justify-between items-center mb-4"><h2>Painel PDV</h2><button id="pdv-dashboard-close-btn" style="font-size: 1.5rem;">&times;</button></div><select id="pdv-select" class="w-full mb-4"></select><div id="pdv-content" class="hidden"><div class="grid-resumo"><div class="card card-resumo"><p>Total</p><p id="pdv-total-analises" class="big-number">0</p></div><div class="card card-resumo"><p>OCs</p><p id="pdv-total-ocorrencias" class="big-number text-red">0</p></div></div><div class="chart-box"><canvas id="pdvTrendChart"></canvas></div><ul id="pdv-task-list" style="max-height: 150px; overflow-y: auto; background: #f8fafc; padding: 10px;"></ul></div></div></div>
     <div id="category-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 400px;"><h2>Categorias</h2><form id="add-category-form" class="flex gap-2 mb-4"><input type="text" id="new-category-name" required><button type="submit" class="btn-primary">Add</button></form><div id="category-list-container" style="height: 150px; overflow-y: auto; margin-bottom: 1rem;"></div><button id="category-close-btn" class="btn-secondary w-full">Fechar</button></div></div>
     <div id="rename-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 400px;"><h2>Renomear</h2><form id="rename-form"><label>Antigo</label><select id="form-old-name" class="w-full mb-2"></select><label>Novo</label><input type="text" id="form-new-name" class="w-full mb-4"><div class="flex justify-end gap-2"><button type="button" id="rename-cancel-btn" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Salvar</button></div></form></div></div>
     <div id="archive-modal" class="modal-overlay hidden"><div class="modal-content" style="max-width: 400px;"><h2>Arquivar</h2><form id="archive-form"><div class="mb-4"><label><input type="radio" name="archive_period" value="7"> > 1 semana</label><br><label><input type="radio" name="archive_period" value="30" checked> > 1 mês</label><br><label><input type="radio" name="archive_period" value="90"> > 3 meses</label></div><div class="flex justify-between"><button type="button" id="view-archive-btn" class="btn-secondary">Ver Arquivo</button><div class="flex gap-2"><button type="button" id="archive-cancel-btn" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Arquivar</button></div></div></form></div></div>
@@ -455,45 +182,23 @@
 
     <input type="file" id="restore-input" class="hidden" accept=".json">
 
-    <!-- Script Lógico -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Dados
             let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
             let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
             let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
 
             tasks.forEach(t => { if (t.isExpanded === undefined) t.isExpanded = true; });
-
             const taskList = document.getElementById('task-list');
 
             // --- FUNÇÕES BÁSICAS ---
-            const saveTasks = () => {
-                localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
-                localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
-            };
+            const saveTasks = () => { localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks)); localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks)); };
             const saveCategories = () => localStorage.setItem('monitoramentoCategorias', JSON.stringify(categories));
-
-            const showNotification = (msg) => {
-                document.getElementById('notification-message').textContent = msg;
-                document.getElementById('notification-modal').classList.remove('hidden');
-            };
+            const showNotification = (msg) => { document.getElementById('notification-message').textContent = msg; document.getElementById('notification-modal').classList.remove('hidden'); };
             document.getElementById('notification-close-btn').addEventListener('click', () => document.getElementById('notification-modal').classList.add('hidden'));
-
-            const formatDate = (dateString) => {
-                if (!dateString) return 'N/A';
-                const date = new Date(dateString + 'T00:00:00');
-                return date.toLocaleDateString('pt-BR');
-            };
-            
+            const formatDate = (dateString) => { if (!dateString) return 'N/A'; const date = new Date(dateString + 'T00:00:00'); return date.toLocaleDateString('pt-BR'); };
             const formatDateForInput = (date) => date.toISOString().split('T')[0];
-
-            const getWeekNumber = (d) => {
-                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-                var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-                return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-            };
+            const getWeekNumber = (d) => { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); return Math.ceil((((d - yearStart) / 86400000) + 1) / 7); };
 
             // --- RENDERIZAÇÃO ---
             const renderTasks = () => {
@@ -513,39 +218,49 @@
                 });
 
                 taskList.innerHTML = '';
-                if (filtered.length === 0) {
-                    taskList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Nenhuma análise encontrada.</p>';
-                    return;
-                }
+                if (filtered.length === 0) { taskList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Nenhuma análise encontrada.</p>'; return; }
 
                 filtered.forEach(t => {
                     const el = document.createElement('div');
+                    
+                    // Lógica robusta de status
                     let statusClass = 'pendente';
-                    if (t.statusAnalise === 'Em Análise') statusClass = 'em-analise';
-                    if (t.statusAnalise === 'Concluída') statusClass = 'concluida';
+                    let badgeHtml = '<span class="status-badge badge-pendente">Pendente</span>';
+                    
+                    if (t.statusAnalise === 'Em Análise') {
+                        statusClass = 'em-analise';
+                        badgeHtml = '<span class="status-badge badge-analise">Em Análise</span>';
+                    } else if (t.statusAnalise === 'Concluída') {
+                        statusClass = 'concluida';
+                        badgeHtml = '<span class="status-badge badge-concluida">Concluída</span>';
+                    }
 
                     el.className = `card task-card ${statusClass}`;
-                    
                     const isCollapsed = !t.isExpanded;
                     
+                    // Botão de Ocorrência
                     let btnOc = '';
-                    if (t.statusAnalise === 'Em Análise' || t.statusAnalise === 'Concluída') {
+                    // Verifica explicitamente se não é Pendente para mostrar o botão
+                    if (t.statusAnalise !== 'Pendente') {
                         const txt = t.statusAnalise === 'Concluída' ? 'Ver / Editar Ocorrências' : 'Registrar Ocorrências';
-                        btnOc = `<button class="btn-secondary w-full mt-2 open-oc-btn" data-id="${t.id}">${txt}</button>`;
+                        btnOc = `<button class="btn-secondary w-full mt-2 open-oc-btn" style="border: 1px solid #ccc;" data-id="${t.id}">${txt}</button>`;
                     }
 
                     let ocHtml = '';
                     if (t.ocorrencias && t.ocorrencias.length > 0) {
                         ocHtml = '<div style="margin-top: 10px; background: #fff1f2; padding: 5px; border-radius: 4px;">';
                         t.ocorrencias.forEach(oc => {
-                            ocHtml += `<div style="font-size: 0.85rem; margin-bottom: 4px;"><span style="font-weight: bold; color: #991b1b;">${oc.categoria}:</span> ${oc.desc}</div>`;
+                            ocHtml += `<div style="font-size: 0.85rem; margin-bottom: 4px;"><span style="font-weight: bold; color: #991b1b;">${oc.categoria}:</span> ${oc.desc} <span style="color:#64748b; font-size:0.75rem;">(${oc.horarioInicial || ''}-${oc.horarioFinal || ''}) ${oc.isInconclusiva ? '[INC]' : ''}</span></div>`;
                         });
                         ocHtml += '</div>';
                     }
 
                     el.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <h3 style="margin: 0; font-size: 1.1rem;">${t.condominio}</h3>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                ${badgeHtml}
+                                <h3 style="margin: 0; font-size: 1.1rem;">${t.condominio}</h3>
+                            </div>
                             <div>
                                 <button class="archive-btn btn-danger" data-id="${t.id}">&#128450;</button>
                                 <button class="delete-btn btn-danger" data-id="${t.id}">&times;</button>
@@ -585,7 +300,6 @@
                 document.getElementById('total-solicitacoes').textContent = tasks.length;
                 document.getElementById('backups-pendentes').textContent = tasks.filter(t => t.statusBackup === 'Pendente').length;
                 document.getElementById('analises-pendentes').textContent = tasks.filter(t => t.statusAnalise === 'Pendente').length;
-                
                 const now = new Date();
                 const day = now.getDay() || 7;
                 const monday = new Date(now);
@@ -596,156 +310,123 @@
                 document.getElementById('total-ocorrencias-semana').textContent = totalOc;
             };
 
-            // --- GRÁFICOS SAFE ---
-            let charts = {};
-            const safeChart = (canvasId, config) => {
-                if (typeof Chart === 'undefined') return;
-                const ctx = document.getElementById(canvasId).getContext('2d');
-                if (charts[canvasId]) charts[canvasId].destroy();
-                charts[canvasId] = new Chart(ctx, config);
+            // --- GRÁFICOS ---
+            const setupCharts = () => {
+                if (typeof Chart === 'undefined') { document.getElementById('chart-error-msg').style.display = 'block'; document.getElementById('chart-section').style.display = 'none'; return; }
+                const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
+                const now = new Date();
+                const day = now.getDay() || 7;
+                const monday = new Date(now);
+                monday.setDate(now.getDate() - day + 1);
+                monday.setHours(0,0,0,0);
+                const concluidas = tasks.filter(t => t.dataConclusao && new Date(t.dataConclusao + 'T00:00:00') >= monday);
+                const dataMap = {};
+                concluidas.forEach(t => { if(t.ocorrencias && t.ocorrencias.length > 0) { dataMap[t.condominio] = (dataMap[t.condominio] || 0) + t.ocorrencias.length; } });
+                new Chart(ctx, { type: 'bar', data: { labels: Object.keys(dataMap), datasets: [{ label: 'Ocorrências', data: Object.values(dataMap), backgroundColor: 'rgba(234, 88, 12, 0.6)' }] }, options: { responsive: true, maintainAspectRatio: false } });
             };
 
             // --- LISTENERS ---
             ['filtro-condominio', 'filtro-data', 'filtro-analise', 'filtro-semana'].forEach(id => document.getElementById(id).addEventListener('input', renderTasks));
             
-            // Toggle Menu Ações
-            document.getElementById('actions-menu-btn').addEventListener('click', () => {
-                document.getElementById('actions-menu').classList.toggle('show');
-            });
-            window.onclick = (e) => {
-                if (!e.target.matches('#actions-menu-btn')) {
-                    const dropdowns = document.getElementsByClassName("dropdown-content");
-                    for (let i = 0; i < dropdowns.length; i++) {
-                        if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
-                    }
-                }
-            }
+            document.getElementById('actions-menu-btn').addEventListener('click', () => document.getElementById('actions-menu').classList.toggle('show'));
+            window.onclick = (e) => { if (!e.target.matches('#actions-menu-btn')) { const d = document.getElementsByClassName("dropdown-content"); for (let i = 0; i < d.length; i++) { if (d[i].classList.contains('show')) d[i].classList.remove('show'); } } }
 
-            // Botões Modais
             const openModal = (id) => document.getElementById(id).classList.remove('hidden');
             const closeModal = (id) => document.getElementById(id).classList.add('hidden');
 
-            document.getElementById('add-task-btn').addEventListener('click', () => {
-                document.getElementById('form-semana-trabalho').value = getWeekNumber(new Date());
-                openModal('task-modal');
-            });
+            document.getElementById('add-task-btn').addEventListener('click', () => { document.getElementById('form-semana-trabalho').value = getWeekNumber(new Date()); openModal('task-modal'); });
             document.getElementById('cancel-btn').addEventListener('click', () => closeModal('task-modal'));
-            
             document.getElementById('restore-btn').addEventListener('click', () => document.getElementById('restore-input').click());
             
-            // Botões do Menu de Ações
             document.getElementById('priority-btn').addEventListener('click', () => {
-                // Lógica simplificada de prioridades
                 const list = document.getElementById('priority-task-list');
                 list.innerHTML = '';
-                const pending = tasks.filter(t => t.statusBackup === 'Pendente' || t.statusAnalise === 'Pendente')
-                    .sort((a,b) => new Date(a.dataAnalise) - new Date(b.dataAnalise));
-                
-                pending.forEach(t => {
-                    const li = document.createElement('li');
-                    li.style.padding = "10px"; li.style.borderBottom = "1px solid #eee";
-                    li.innerHTML = `<b>${t.condominio}</b> - ${formatDate(t.dataAnalise)}`;
-                    list.appendChild(li);
-                });
+                const pending = tasks.filter(t => t.statusBackup === 'Pendente' || t.statusAnalise === 'Pendente').sort((a,b) => new Date(a.dataAnalise) - new Date(b.dataAnalise));
+                if(pending.length === 0) list.innerHTML = '<li style="padding:10px; text-align:center">Tudo em dia!</li>';
+                pending.forEach(t => { list.innerHTML += `<li style="padding:10px; border-bottom:1px solid #eee"><b>${t.condominio}</b> - ${formatDate(t.dataAnalise)}</li>`; });
                 openModal('priority-modal');
             });
             document.getElementById('priority-close-btn').addEventListener('click', () => closeModal('priority-modal'));
-
             document.getElementById('planner-btn').addEventListener('click', () => openModal('planner-modal'));
             document.getElementById('planner-cancel-btn').addEventListener('click', () => closeModal('planner-modal'));
-
-            document.getElementById('period-analysis-btn').addEventListener('click', () => {
-                // Reset charts logic here if needed
-                openModal('period-analysis-modal');
-            });
+            document.getElementById('period-analysis-btn').addEventListener('click', () => openModal('period-analysis-modal'));
             document.getElementById('period-analysis-close-btn').addEventListener('click', () => closeModal('period-analysis-modal'));
-
             document.getElementById('annual-report-btn').addEventListener('click', () => openModal('annual-report-modal'));
             document.getElementById('annual-report-close-btn').addEventListener('click', () => closeModal('annual-report-modal'));
-
             document.getElementById('pdv-dashboard-btn').addEventListener('click', () => {
-                // Populate select
-                const sel = document.getElementById('pdv-select');
-                sel.innerHTML = '<option>Selecione...</option>';
+                const sel = document.getElementById('pdv-select'); sel.innerHTML = '<option>Selecione...</option>';
                 [...new Set([...tasks, ...archivedTasks].map(t => t.condominio))].sort().forEach(c => sel.innerHTML += `<option>${c}</option>`);
                 openModal('pdv-dashboard-modal');
             });
             document.getElementById('pdv-dashboard-close-btn').addEventListener('click', () => closeModal('pdv-dashboard-modal'));
-
             document.getElementById('bulk-add-btn').addEventListener('click', () => openModal('bulk-add-modal'));
             document.getElementById('bulk-cancel-btn').addEventListener('click', () => closeModal('bulk-add-modal'));
-
             document.getElementById('category-btn').addEventListener('click', () => {
-                const list = document.getElementById('category-list-container');
-                list.innerHTML = '';
+                const list = document.getElementById('category-list-container'); list.innerHTML = '';
                 categories.forEach(c => list.innerHTML += `<div style="padding:5px; border-bottom:1px solid #eee">${c}</div>`);
                 openModal('category-modal');
             });
             document.getElementById('category-close-btn').addEventListener('click', () => closeModal('category-modal'));
-
             document.getElementById('rename-condo-btn').addEventListener('click', () => {
-                const sel = document.getElementById('form-old-name');
-                sel.innerHTML = '';
+                const sel = document.getElementById('form-old-name'); sel.innerHTML = '';
                 [...new Set([...tasks, ...archivedTasks].map(t => t.condominio))].sort().forEach(c => sel.innerHTML += `<option>${c}</option>`);
                 openModal('rename-modal');
             });
             document.getElementById('rename-cancel-btn').addEventListener('click', () => closeModal('rename-modal'));
-
             document.getElementById('archive-btn').addEventListener('click', () => openModal('archive-modal'));
             document.getElementById('archive-cancel-btn').addEventListener('click', () => closeModal('archive-modal'));
             document.getElementById('view-archive-btn').addEventListener('click', () => {
-                const list = document.getElementById('view-archive-list-container');
-                list.innerHTML = '';
+                const list = document.getElementById('view-archive-list-container'); list.innerHTML = '';
+                if(archivedTasks.length === 0) list.innerHTML = '<p style="text-align:center; padding:10px;">Vazio</p>';
                 archivedTasks.forEach(t => list.innerHTML += `<div style="padding:5px; border-bottom:1px solid #eee">${t.condominio} - ${formatDate(t.dataAnalise)} <button class="btn-secondary text-xs unarchive-btn" data-id="${t.id}">Recuperar</button></div>`);
                 openModal('view-archive-modal');
             });
             document.getElementById('view-archive-close-btn').addEventListener('click', () => closeModal('view-archive-modal'));
 
-
-            // Lógica dos Formulários (Simplificada para brevidade, mas funcional)
+            // Lógica Formulários
             document.getElementById('task-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                tasks.push({
-                    id: Date.now(),
-                    condominio: document.getElementById('form-condominio').value,
-                    dataAnalise: document.getElementById('form-data-analise').value,
-                    semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value),
-                    statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencia: 'Não', ocorrencias: [], isExpanded: true
-                });
+                tasks.push({ id: Date.now(), condominio: document.getElementById('form-condominio').value, dataAnalise: document.getElementById('form-data-analise').value, semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value), statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencia: 'Não', ocorrencias: [], isExpanded: true });
                 saveTasks(); renderTasks(); updateDashboard(); closeModal('task-modal'); document.getElementById('task-form').reset();
             });
 
-            // Listener global para botões dinâmicos
+            // Listener Global
             taskList.addEventListener('click', (e) => {
-                const target = e.target.closest('button');
-                if (!target) return;
+                const target = e.target.closest('button'); if (!target) return;
                 const id = parseInt(target.dataset.id);
                 const task = tasks.find(t => t.id === id);
-
                 if (target.classList.contains('toggle-btn')) { if(task) { task.isExpanded = !task.isExpanded; saveTasks(); renderTasks(); } }
                 if (target.classList.contains('delete-btn')) { if(confirm('Excluir?')) { tasks = tasks.filter(t => t.id !== id); saveTasks(); renderTasks(); updateDashboard(); } }
-                if (target.classList.contains('archive-btn')) { 
-                    const idx = tasks.findIndex(t => t.id === id);
-                    if (idx > -1) { archivedTasks.push(tasks.splice(idx, 1)[0]); saveTasks(); renderTasks(); updateDashboard(); showNotification('Arquivado'); }
-                }
+                if (target.classList.contains('archive-btn')) { const idx = tasks.findIndex(t => t.id === id); if (idx > -1) { archivedTasks.push(tasks.splice(idx, 1)[0]); saveTasks(); renderTasks(); updateDashboard(); showNotification('Arquivado'); } }
                 if (target.classList.contains('open-oc-btn')) {
-                    const sel = document.getElementById('add-ocorrencia-categoria');
-                    sel.innerHTML = '';
+                    const sel = document.getElementById('add-ocorrencia-categoria'); sel.innerHTML = '';
                     categories.forEach(c => sel.innerHTML += `<option>${c}</option>`);
                     document.getElementById('ocorrencia-task-id').value = id;
-                    const list = document.getElementById('ocorrencia-list');
-                    list.innerHTML = '';
-                    if (task.ocorrencias) task.ocorrencias.forEach(oc => list.innerHTML += `<div style="border-bottom:1px solid #eee; padding:5px"><b>${oc.categoria}</b>: ${oc.desc}</div>`);
+                    const list = document.getElementById('ocorrencia-list'); list.innerHTML = '';
+                    if (task.ocorrencias) task.ocorrencias.forEach(oc => {
+                         // Correção visual para exibir itens existentes
+                         const div = document.createElement('div');
+                         div.style.cssText = "background:#fff; border-bottom:1px solid #eee; padding:5px;";
+                         div.innerHTML = `<b>${oc.categoria}</b>: ${oc.desc} <span style="font-size:0.8em">(${oc.horarioInicial||''}-${oc.horarioFinal||''})</span>`;
+                         list.appendChild(div);
+                    });
                     openModal('ocorrencia-modal');
                 }
             });
 
-            // Salvar Ocorrências
+            // Lógica Salvar Ocorrências (Fix)
             document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
                 const cat = document.getElementById('add-ocorrencia-categoria').value;
                 const desc = document.getElementById('add-ocorrencia-desc').value;
+                const hi = document.getElementById('add-horario-inicial').value;
+                const hf = document.getElementById('add-horario-final').value;
+                const inc = document.getElementById('add-ocorrencia-inconclusiva').checked;
                 if(!desc) return;
-                document.getElementById('ocorrencia-list').innerHTML += `<div class="new-item" data-cat="${cat}" data-desc="${desc}" style="background:#ecfdf5; padding:5px"><b>${cat}</b>: ${desc} (Novo)</div>`;
+                const div = document.createElement('div'); div.className = 'new-item';
+                div.dataset.cat = cat; div.dataset.desc = desc; div.dataset.hi = hi; div.dataset.hf = hf; div.dataset.inc = inc;
+                div.style.cssText = "background:#ecfdf5; padding:5px; border-bottom:1px solid #d1fae5; margin-top:5px";
+                div.innerHTML = `<b>${cat}</b>: ${desc} <br><span style="font-size:0.8em">(${hi}-${hf}) ${inc?'[INC]':''}</span> <span style="float:right; font-size:0.7rem; background:#10b981; color:white; padding:2px 4px; border-radius:3px;">NOVO</span>`;
+                document.getElementById('ocorrencia-list').appendChild(div);
                 document.getElementById('add-ocorrencia-desc').value = '';
             });
 
@@ -754,8 +435,9 @@
                 const id = parseInt(document.getElementById('ocorrencia-task-id').value);
                 const task = tasks.find(t => t.id === id) || archivedTasks.find(t => t.id === id);
                 if(task) {
+                    if(!task.ocorrencias) task.ocorrencias = [];
                     document.querySelectorAll('.new-item').forEach(item => {
-                        task.ocorrencias.push({ id: Date.now(), categoria: item.dataset.cat, desc: item.dataset.desc });
+                        task.ocorrencias.push({ id: Date.now() + Math.random(), categoria: item.dataset.cat, desc: item.dataset.desc, horarioInicial: item.dataset.hi, horarioFinal: item.dataset.hf, isInconclusiva: item.dataset.inc === 'true' });
                     });
                     if(task.ocorrencias.length > 0) task.ocorrencia = 'Sim';
                     saveTasks(); renderTasks(); updateDashboard();
@@ -764,17 +446,67 @@
             });
             document.getElementById('ocorrencia-cancel-btn').addEventListener('click', () => closeModal('ocorrencia-modal'));
 
-            // Gráficos
-            if (typeof Chart !== 'undefined') {
-                const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
-                new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: 'OCs', data: [] }] } }); // Placeholder init
-            } else {
-                document.getElementById('chart-error-msg').style.display = 'block';
-            }
+            // Listener Status Change
+            taskList.addEventListener('change', (e) => {
+                if (e.target.classList.contains('status-select')) {
+                    const id = parseInt(e.target.dataset.id);
+                    const task = tasks.find(t => t.id === id);
+                    const type = e.target.dataset.type;
+                    const val = e.target.value;
+                    if (task) {
+                        if (type === 'backup') task.statusBackup = val;
+                        if (type === 'analise') {
+                            const oldStatus = task.statusAnalise;
+                            task.statusAnalise = val;
+                            if (val === 'Concluída' && oldStatus !== 'Concluída') task.dataConclusao = new Date().toISOString().split('T')[0];
+                            else if (val === 'Pendente') task.dataConclusao = null;
+                        }
+                        saveTasks(); renderTasks(); updateDashboard();
+                    }
+                }
+            });
 
-            // Inicializa
-            renderTasks();
-            updateDashboard();
+            // Autocomplete
+            const inpCondo = document.getElementById('form-condominio');
+            const listCondo = document.getElementById('autocomplete-list');
+            inpCondo.addEventListener('input', () => {
+                const val = inpCondo.value.toLowerCase(); listCondo.innerHTML = '';
+                if (!val) { listCondo.style.display = 'none'; return; }
+                const unique = [...new Set(tasks.map(t => t.condominio))];
+                const matches = unique.filter(c => c.toLowerCase().includes(val));
+                if (matches.length > 0) {
+                    listCondo.style.display = 'block';
+                    matches.forEach(m => {
+                        const d = document.createElement('div'); d.textContent = m; d.style.padding = '8px'; d.style.cursor = 'pointer';
+                        d.onmouseover = () => d.style.background = '#eee'; d.onmouseout = () => d.style.background = 'white';
+                        d.onclick = () => { inpCondo.value = m; listCondo.style.display = 'none'; };
+                        listCondo.appendChild(d);
+                    });
+                } else listCondo.style.display = 'none';
+            });
+
+            document.getElementById('restore-input').addEventListener('change', (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => { try { const data = JSON.parse(ev.target.result); if (data.tasks) tasks = data.tasks; if (data.archivedTasks) archivedTasks = data.archivedTasks; saveTasks(); renderTasks(); updateDashboard(); alert('Restaurado!'); } catch (err) { alert('Erro!'); } };
+                reader.readAsText(file);
+            });
+
+            // Restore Listener for view archive
+            document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
+                if(e.target.classList.contains('unarchive-btn')) {
+                    const id = parseInt(e.target.dataset.id);
+                    const idx = archivedTasks.findIndex(t => t.id === id);
+                    if(idx > -1) {
+                        tasks.push(archivedTasks.splice(idx, 1)[0]);
+                        saveTasks(); renderTasks(); updateDashboard();
+                        document.getElementById('view-archive-btn').click(); // Refresh list
+                        showNotification('Recuperado');
+                    }
+                }
+            });
+
+            renderTasks(); updateDashboard(); setupCharts();
         });
     </script>
 </body>
