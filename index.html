@@ -3,513 +3,1162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Monitoramento</title>
-    
-    <!-- Fonte Inter (Padrão Moderno) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Scripts -->
-    <script src="https://cdn.tailwindcss.com" onerror="handleResourceError('Tailwind CSS')"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" onerror="handleResourceError('Chart.js')"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns" onerror="handleResourceError('Date Adapter')"></script>
+    <title>Painel de Monitoramento de Minimercados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     
     <style>
-        /* Estilo Global Refinado */
-        body { 
-            background-color: #0f172a; 
-            color: #cbd5e1; 
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
+        /* CSS Personalizado Original */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
         }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
-        /* Estilização dos Selects */
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.5rem center;
-            background-size: 1em;
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
         }
-
-        /* Classes de Privacidade */
-        .privacy-active .sensitive-data { filter: blur(5px); transition: filter 0.3s; }
-        .privacy-active .sensitive-data:hover { filter: blur(0); }
+        .details-content.hidden {
+            display: none;
+        }
+        .toggle-details-btn svg {
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-details-btn.collapsed svg {
+            transform: rotate(180deg);
+        }
+        .ocorrencia-item.editing .view-mode { display: none; }
+        .ocorrencia-item:not(.editing) .edit-mode { display: none; }
         
-        /* Modal de Erro */
-        #resource-error-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; }
-        .error-content { background: #1e293b; padding: 2rem; border-radius: 16px; border: 1px solid #ef4444; text-align: center; max-width: 400px; }
+        /* Garante que o modal fique acima de tudo */
+        .z-50 { z-index: 50; }
     </style>
-
-    <script>
-        function handleResourceError(res) {
-            const m = document.getElementById('resource-error-modal');
-            if(m) { m.style.display = 'flex'; document.getElementById('err-msg').innerText = res; }
-        }
-    </script>
 </head>
-<body class="bg-slate-950 antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
 
-    <div id="resource-error-modal"><div class="error-content"><h2 class="text-red-500 text-xl font-bold mb-2">Erro de Carregamento</h2><p class="text-slate-300 mb-4">Falha ao carregar: <span id="err-msg"></span>. Desative bloqueadores de anúncio.</p><button onclick="location.reload()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">Recarregar</button></div></div>
-
-    <div class="max-w-7xl mx-auto p-4 md:p-8">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
         
-        <!-- Header Moderno -->
-        <header class="mb-10 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-2">
-                    <span class="text-indigo-500">vend</span><span class="text-amber-400">Perto</span>
-                    <span class="text-slate-600 text-sm font-normal ml-2 bg-slate-900 px-2 py-1 rounded-full border border-slate-800">v3.0</span>
-                </h1>
-                <p class="text-slate-400 mt-1 font-medium">Painel de Monitoramento Inteligente</p>
+        <header class="mb-8 text-center">
+            <!-- New Dark Mode Toggle Container -->
+             <div class="absolute top-4 right-4 md:top-6 md:right-6">
+                 <button id="theme-toggle" class="p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-yellow-400 shadow-md hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                    <!-- Sun icon (default/light mode) -->
+                    <svg id="sun-icon" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <!-- Moon icon (dark mode) -->
+                    <svg id="moon-icon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                 </button>
+             </div>
+            <div class="text-4xl font-extrabold mb-2 tracking-tight" style="font-family: 'Arial Black', Arial, sans-serif;">
+                <span style="color: #f26324;">vend</span><span style="color: #f7b41e;">Perto</span>
             </div>
-            
-            <div class="flex gap-3">
-                <button id="privacy-toggle-btn" class="flex items-center gap-2 bg-slate-900/50 border border-slate-700/50 text-slate-300 px-4 py-2 rounded-full hover:bg-slate-800 hover:border-slate-600 transition-all active:scale-95">
-                    <span id="privacy-icon">👁️</span> <span class="text-sm font-semibold">Privacidade</span>
-                </button>
-            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Painel de Monitoramento</h1>
+            <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
         </header>
 
-        <!-- Dashboard KPIs -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/60 transition-colors">
-                <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Análises Ativas</h3>
-                <p id="total-solicitacoes" class="text-3xl font-bold text-white">0</p>
+        <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
+                <p id="total-solicitacoes" class="text-3xl font-bold text-orange-600 mt-1">0</p>
             </div>
-            <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/60 transition-colors">
-                <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Backups Pendentes</h3>
-                <p id="backups-pendentes" class="text-3xl font-bold text-amber-400">0</p>
+            <div class="bg-white p-4 rounded-lg shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Backups Pendentes</h3>
+                <p id="backups-pendentes" class="text-3xl font-bold text-amber-500 mt-1">0</p>
             </div>
-            <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/60 transition-colors relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full -mr-4 -mt-4"></div>
-                <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Concluídas (Semana)</h3>
-                <p id="analises-concluidas" class="text-3xl font-bold text-emerald-400">0</p>
+            <div class="bg-white p-4 rounded-lg shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Análises Pendentes</h3>
+                <p id="analises-pendentes" class="text-3xl font-bold text-red-500 mt-1">0</p>
             </div>
-            <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/60 transition-colors">
-                <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ocorrências (Semana)</h3>
-                <p id="total-ocorrencias-semana" class="text-3xl font-bold text-white">0</p>
+            <div class="bg-white p-4 rounded-lg shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Ocorrências (Semana)</h3>
+                <p id="total-ocorrencias-semana" class="text-3xl font-bold text-slate-700 mt-1 dark:text-slate-100">0</p>
             </div>
         </section>
 
-        <!-- Barra de Ferramentas -->
-        <section class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 mb-8 backdrop-blur-sm sticky top-2 z-30 shadow-2xl shadow-black/20">
+        <section id="weekly-productivity" class="mb-8">
+             <div class="bg-white p-4 rounded-lg shadow-md text-center max-w-sm mx-auto dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Produtividade Semanal (Ocorrências / Análise)</h3>
+                <p id="produtividade-semanal" class="text-3xl font-bold text-emerald-600 mt-1">N/A</p>
+                <p class="text-xs text-slate-400 mt-1">Média da semana atual</p>
+            </div>
+        </section>
+
+
+        <section class="bg-white p-4 rounded-lg shadow-md mb-8 dark:bg-slate-800 dark:shadow-xl">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <!-- Filtros -->
-                <div class="flex flex-wrap items-center gap-3 flex-grow">
-                    <div class="relative flex-grow md:flex-grow-0 md:w-64">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔎</span>
-                        <input type="text" id="filtro-condominio" placeholder="Buscar Unidade..." class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 pl-9 pr-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
-                    </div>
-                    <input type="number" id="filtro-semana" placeholder="Semana" class="w-24 bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-center">
-                    <select id="filtro-analise" class="bg-slate-950 border border-slate-700 rounded-xl py-2 pl-3 pr-8 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all cursor-pointer">
-                        <option value="">Todos os Status</option>
+                <div class="flex flex-wrap items-center gap-4 flex-grow">
+                    <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 flex-grow md:flex-grow-0 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <input type="date" id="filtro-data" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <input type="number" id="filtro-semana" placeholder="Semana (Ex: 43)" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-32 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <select id="filtro-backup" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        <option value="">Backup (Todos)</option>
                         <option value="Pendente">Pendente</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                    <select id="filtro-analise" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        <option value="">Análise (Todos)</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Análise">Em Análise</option>
                         <option value="Concluída">Concluída</option>
                     </select>
+                    <div class="flex gap-2">
+                        <button id="expand-all-btn" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Expandir</button>
+                        <button id="collapse-all-btn" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Recolher</button>
+                    </div>
                 </div>
-                
-                <!-- Botões Principais -->
-                <div class="flex gap-3 w-full md:w-auto">
-                    <button id="add-task-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2 rounded-xl transition-all shadow-lg shadow-indigo-900/30 active:scale-95 flex items-center justify-center gap-2 flex-grow md:flex-grow-0">
-                        <span class="text-lg leading-none">+</span> Nova
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <button id="add-task-btn" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700 transition-colors w-full sm:w-auto flex-grow">
+                        + Adicionar
                     </button>
-                    
-                    <div class="relative" id="actions-menu-container">
-                        <button id="actions-menu-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium px-4 py-2 rounded-xl transition-all flex items-center gap-2 h-full">
-                            <span>Ações</span> <span class="text-xs opacity-50">▼</span>
+                    <div class="relative inline-block text-left" id="actions-menu-container">
+                        <button type="button" id="actions-menu-btn" class="inline-flex justify-center w-full rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 focus:ring-orange-500 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-600">
+                            Ações
+                            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
-                        <!-- Dropdown -->
-                        <div id="actions-menu" class="absolute right-0 mt-2 w-56 bg-slate-800 rounded-xl border border-slate-700 shadow-2xl hidden z-50 overflow-hidden">
-                            <button id="archive-week-btn" class="w-full text-left px-4 py-3 text-sm font-semibold text-amber-400 hover:bg-slate-700 transition-colors">📦 Fechar Semana</button>
-                            <div class="h-px bg-slate-700 mx-2"></div>
-                            <button id="period-analysis-btn" class="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">📊 Análise Período</button>
-                            <button id="annual-report-btn" class="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">📈 Relatório Anual</button>
-                            <div class="h-px bg-slate-700 mx-2"></div>
-                            <button id="bulk-add-btn" class="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">📑 Importar Excel</button>
-                            <button id="rename-condo-btn" class="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">✏️ Renomear</button>
-                            <button id="archive-btn" class="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">📂 Arquivos</button>
+                        <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20 dark:bg-slate-700 dark:ring-slate-600">
+                            <div class="py-1">
+                                <button id="priority-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Prioridades</button>
+                                <button id="planner-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Planejar Semana</button>
+                                <button id="period-analysis-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise por Período</button>
+                                <button id="annual-report-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise Anual</button>
+                                <button id="pdv-dashboard-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Painel do PDV</button>
+                                <div class="border-t border-slate-100 my-1 dark:border-slate-600"></div>
+                                <button id="bulk-add-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Importar Planilha</button>
+                                <button id="category-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Categorias</button>
+                                <button id="rename-condo-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Renomear</button>
+                                <button id="archive-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Arquivar</button>
+                                <button id="restore-btn" class="w-full text-left text-orange-700 font-bold block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Restaurar Backup</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Lista de Tarefas -->
-        <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12"></main>
+        <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Tarefas aqui -->
+        </main>
         
-        <!-- Gráfico -->
-        <section class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50">
-            <h2 class="text-xl font-bold text-center mb-6 text-white">Ocorrências da Semana</h2>
+        <section class="mt-12">
+            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800 dark:text-slate-100">Ocorrências da Semana (por Condomínio)</h2>
             <div class="flex justify-center">
-                <div class="chart-container w-full max-w-2xl"><canvas id="ocorrenciasChart"></canvas></div>
+                <div class="bg-white p-4 rounded-lg shadow-md w-full lg:w-1/2 dark:bg-slate-800 dark:shadow-xl">
+                     <div class="chart-container">
+                        <canvas id="ocorrenciasChart"></canvas>
+                     </div>
+                </div>
             </div>
         </section>
     </div>
 
     <!-- MODAIS -->
-    
-    <!-- Nova Análise -->
-    <div id="task-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-md p-6 shadow-2xl">
-            <h2 class="text-xl font-bold text-white mb-5">Nova Análise</h2>
-            <form id="task-form" class="space-y-4">
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Condomínio</label><input type="text" id="form-condominio" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none" required></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Data do Vídeo</label><input type="date" id="form-data-analise" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none" required></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Semana</label><input type="number" id="form-semana-trabalho" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"></div>
+
+    <!-- Modal Adicionar -->
+    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Adicionar Nova Análise</h2>
+            <form id="task-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Condomínio</label>
+                        <div class="relative">
+                            <input type="text" id="form-condominio" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required autocomplete="off">
+                            <div id="autocomplete-list" class="absolute z-10 w-full bg-white border border-slate-300 rounded-md mt-1 hidden max-h-40 overflow-y-auto shadow-lg dark:bg-slate-700 dark:border-slate-600"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <input type="date" id="form-data-analise" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required>
+                    </div>
                 </div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Observações</label><textarea id="form-observacoes" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"></textarea></div>
-                <div class="flex justify-end gap-2 pt-2"><button type="button" id="cancel-btn" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 font-medium">Cancelar</button><button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-bold shadow-lg shadow-indigo-900/50">Salvar</button></div>
+                 <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Semana (Nº)</label>
+                    <input type="number" id="form-semana-trabalho" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                 </div>
+                 <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Observações</label>
+                    <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></textarea>
+                 </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Salvar</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- Ocorrências -->
-    <div id="ocorrencia-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50 backdrop-blur-sm">
-        <div class="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl">
-            <div class="p-6 border-b border-slate-800"><h2 class="text-xl font-bold text-white">Registrar Ocorrências</h2></div>
-            <div id="ocorrencia-list" class="flex-grow overflow-y-auto p-6 space-y-3"></div>
-            <div class="p-6 bg-slate-800/50 border-t border-slate-800">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-3">
-                    <div class="md:col-span-4"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tipo</label><select id="add-ocorrencia-categoria" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></select></div>
-                    <div class="md:col-span-4"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Descrição</label><input type="text" id="add-ocorrencia-desc" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
-                    <div class="md:col-span-2"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Início</label><input type="time" id="add-horario-inicial" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white"></div>
-                    <div class="md:col-span-2"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Fim</label><input type="time" id="add-horario-final" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white"></div>
+    <!-- Modal Ocorrências -->
+    <div id="ocorrencia-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Registrar Ocorrências</h2>
+            <form id="ocorrencia-form" class="flex-grow flex flex-col min-h-0">
+                <input type="hidden" id="ocorrencia-task-id">
+                <div id="ocorrencia-list" class="flex-grow overflow-y-auto pr-2 -mr-2 mb-4 space-y-3"></div>
+                
+                <div class="flex-shrink-0 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <h3 class="font-semibold mb-2 text-sm text-slate-600 dark:text-slate-300">Nova Ocorrência</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Categoria</label>
+                            <select id="add-ocorrencia-categoria" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></select>
+                         </div>
+                        <div>
+                           <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Descrição</label>
+                           <input type="text" id="add-ocorrencia-desc" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Início</label>
+                            <input type="time" id="add-horario-inicial" step="1" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Fim</label>
+                            <input type="time" id="add-horario-final" step="1" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        </div>
+                    </div>
+                     <div class="mt-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="add-ocorrencia-inconclusiva" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                            <span class="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300">Inconclusiva</span>
+                        </label>
+                    </div>
+                     <button type="button" id="add-ocorrencia-btn" class="mt-3 w-full bg-orange-100 text-orange-800 font-semibold px-4 py-2 rounded-md hover:bg-orange-200 text-sm dark:bg-orange-900 dark:text-orange-100 dark:hover:bg-orange-800">+ Adicionar à Lista</button>
                 </div>
-                <button type="button" id="add-ocorrencia-btn" class="w-full bg-slate-700 border border-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-600 transition-colors flex justify-center items-center gap-2"><span>+</span> Adicionar</button>
-                <div class="flex justify-end gap-3 mt-6"><button type="button" id="ocorrencia-cancel-btn" class="px-5 py-2.5 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700">Fechar</button><button type="submit" form="ocorrencia-form" class="px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 font-bold shadow-lg">Salvar Alterações</button></div>
-            </div>
-            <form id="ocorrencia-form" class="hidden"></form>
+                <div class="mt-6 flex justify-end gap-3 flex-shrink-0">
+                    <button type="button" id="ocorrencia-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Fechar</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-orange-700">Salvar Tudo</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Importar -->
-    <div id="bulk-add-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50 backdrop-blur-sm">
-        <div class="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-xl p-6 shadow-2xl">
-            <h2 class="text-xl font-bold text-white mb-2">Importar Planilha</h2>
-            <p class="text-sm text-slate-400 mb-4">Copie do Excel e cole abaixo. Ordem: <br><code class="bg-slate-800 px-1 rounded text-xs">Semana | Data | Unidade | OC | Colaborador | Status</code></p>
+    <!-- Modais Secundários - ATUALIZADO IMPORTAR PLANILHA -->
+    <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Importar Planilha</h2>
+            <p class="text-sm text-slate-600 mb-4 dark:text-slate-300">Cole os dados do Excel. A ordem esperada das colunas é:<br>
+            <strong>Semana | Data | Unidade | OC | Colaborador | Status</strong></p>
             <form id="bulk-add-form">
-                <textarea id="bulk-input-area" rows="8" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-xs font-mono text-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none placeholder-slate-600" placeholder="Cole aqui os dados..."></textarea>
-                <div class="flex justify-end gap-3 mt-4"><button type="button" id="bulk-cancel-btn" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700">Cancelar</button><button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-bold">Importar Dados</button></div>
+                <textarea id="bulk-input-area" rows="10" class="w-full border border-slate-300 rounded-md p-2 mb-4 text-xs font-mono dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Cole aqui (ex: Semana 47	16/11/2025	ALPHAVIEW	8	Joao Silva	Finalizado)"></textarea>
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="bulk-cancel-btn" class="bg-slate-200 px-4 py-2 rounded text-sm font-semibold hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
+                    <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-orange-700">Processar e Importar</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- Utilitários -->
-    <div id="notification-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-[60]"><div class="bg-slate-800 p-8 rounded-2xl border border-slate-600 text-center max-w-sm"><div class="text-4xl mb-4">🔔</div><p id="notification-message" class="mb-6 text-white text-lg font-medium"></p><button id="notification-close-btn" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-indigo-500 w-full">Entendi</button></div></div>
-    <div id="archive-week-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center"><div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-96 shadow-2xl"><h2 class="text-xl font-bold text-white mb-2">Fechar Semana</h2><p class="text-sm text-slate-400 mb-6">Isso move as análises da semana escolhida para o arquivo morto.</p><div class="mb-6"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Semana</label><input type="number" id="archive-week-input" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-xl text-center focus:ring-2 focus:ring-indigo-500 outline-none"></div><div class="flex gap-2"><button id="archive-week-cancel-btn" class="flex-1 bg-slate-800 text-slate-300 py-2.5 rounded-xl hover:bg-slate-700">Cancelar</button><button id="archive-week-confirm-btn" class="flex-1 bg-amber-600 text-white py-2.5 rounded-xl hover:bg-amber-500 font-bold">Arquivar</button></div></div></div>
+    <div id="restore-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm text-center dark:bg-slate-800 dark:shadow-xl"><h2 class="text-xl font-bold text-red-600 mb-2">Atenção!</h2><p class="text-slate-600 dark:text-slate-300">Substituir dados atuais?</p><div class="mt-4 flex justify-center gap-4"><button id="restore-confirm-cancel-btn" class="bg-slate-200 px-4 py-2 rounded dark:bg-slate-700 dark:text-slate-100">Cancelar</button><button id="restore-confirm-proceed-btn" class="bg-red-600 text-white px-4 py-2 rounded">Sim</button></div></div></div>
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm text-center dark:bg-slate-800 dark:shadow-xl"><p id="notification-message" class="mb-4 text-lg text-slate-700 dark:text-slate-300"></p><button id="notification-close-btn" class="bg-orange-600 text-white px-6 py-2 rounded">OK</button></div></div>
     
-    <!-- Análise por Período -->
-    <div id="period-analysis-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center"><div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-full max-w-4xl h-[85vh] flex flex-col"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-white">Relatório por Período</h2><button id="period-analysis-close-btn" class="text-slate-400 hover:text-white text-2xl">&times;</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div><label class="text-xs font-bold text-slate-500 uppercase">Início</label><input type="date" id="period-start-date" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white mt-1"></div><div><label class="text-xs font-bold text-slate-500 uppercase">Fim</label><input type="date" id="period-end-date" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white mt-1"></div><div class="flex items-end"><button id="generate-report-btn" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl hover:bg-indigo-500">Filtrar</button></div></div><div class="flex gap-6 mb-4 px-2"><label class="flex items-center cursor-pointer gap-2"><input type="radio" name="analysis_type" value="dataAnalise" class="accent-indigo-500" checked><span class="text-sm text-slate-300">Data do Vídeo</span></label><label class="flex items-center cursor-pointer gap-2"><input type="radio" name="analysis_type" value="dataConclusao" class="accent-indigo-500"><span class="text-sm text-slate-300">Data da Conclusão</span></label></div><div class="flex gap-2 mb-6 overflow-x-auto pb-2"><button data-period="today" class="period-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">Hoje</button><button data-period="yesterday" class="period-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">Ontem</button><button data-period="this-week" class="period-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">Esta Semana</button><button data-period="this-month" class="period-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">Este Mês</button></div><div id="period-results-content" class="hidden flex-grow overflow-y-auto pr-2"><div class="grid grid-cols-3 gap-4 mb-6"><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-center"><div class="text-xs font-bold text-slate-500 uppercase">Dias</div><div id="period-dias" class="text-2xl font-bold text-indigo-400">0</div></div><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-center"><div class="text-xs font-bold text-slate-500 uppercase">Unidades</div><div id="period-pdv" class="text-2xl font-bold text-amber-400">0</div></div><div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-center"><div class="text-xs font-bold text-slate-500 uppercase">Ocorrências</div><div id="period-oc" class="text-2xl font-bold text-red-400">0</div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700"><div class="chart-container" style="height: 200px;"><canvas id="periodChart"></canvas></div></div><div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700"><div class="chart-container" style="height: 200px;"><canvas id="periodCategoryChart"></canvas></div></div></div><h3 class="text-white font-bold mb-3 pl-1">Extrato Detalhado</h3><ul id="period-task-list" class="bg-slate-800 rounded-2xl p-2 space-y-1 border border-slate-700"></ul></div></div></div>
+    <!-- MODAL ANÁLISE POR PERÍODO (COMPLETO) -->
+    <div id="period-analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-4xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Análise por Período</h2>
+                <button id="period-analysis-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4 mb-4 dark:border-slate-700">
+                <div>
+                    <label for="period-start-date" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
+                    <input type="date" id="period-start-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                </div>
+                <div>
+                    <label for="period-end-date" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim</label>
+                    <input type="date" id="period-end-date" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                </div>
+                <div class="flex items-end">
+                    <button id="generate-report-btn" class="bg-orange-600 text-white font-semibold w-full px-4 py-2 rounded-md hover:bg-orange-700">Gerar Relatório</button>
+                </div>
+            </div>
 
-    <!-- Modais Extras -->
-    <div id="archive-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center"><div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-80"><h2 class="text-white font-bold mb-4">Arquivos</h2><button id="view-archive-btn" class="w-full bg-slate-800 text-white py-3 rounded-xl mb-2 hover:bg-slate-700">Ver Arquivo Morto</button><button id="archive-cancel-btn" class="w-full border border-slate-700 text-slate-400 py-2 rounded-xl">Fechar</button></div></div>
-    <div id="view-archive-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center"><div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-full max-w-2xl h-4/5 flex flex-col"><div class="flex justify-between mb-4"><h2 class="text-white font-bold">Arquivo Morto</h2><button id="view-archive-close-btn" class="text-white text-2xl">&times;</button></div><input id="archive-search-input" class="bg-slate-800 border-slate-700 text-white p-3 rounded-xl mb-4 outline-none" placeholder="Buscar no arquivo..."><div id="view-archive-list-container" class="flex-grow overflow-y-auto bg-slate-950 p-2 rounded-xl border border-slate-800"></div></div></div>
-    <div id="rename-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center"><div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-96"><h2 class="text-white font-bold mb-4">Renomear</h2><form id="rename-form" class="space-y-3"><select id="form-old-name" class="w-full bg-slate-800 text-white p-3 rounded-xl border border-slate-700"></select><input id="form-new-name" class="w-full bg-slate-800 text-white p-3 rounded-xl border border-slate-700" placeholder="Novo nome"><div class="flex gap-2 justify-end pt-2"><button type="button" id="rename-cancel-btn" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl">Cancelar</button><button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold">Salvar</button></div></form></div></div>
-    <div id="restore-confirm-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center"><div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-80 text-center"><h2 class="text-red-500 text-xl font-bold mb-2">Cuidado!</h2><p class="text-slate-400 text-sm mb-4">Isso substituirá TODOS os dados atuais pelos do backup. Continuar?</p><div class="flex gap-2 justify-center"><button id="restore-confirm-cancel-btn" class="bg-slate-800 text-white px-4 py-2 rounded-xl">Não</button><button id="restore-confirm-proceed-btn" class="bg-red-600 text-white px-4 py-2 rounded-xl font-bold">Sim</button></div></div></div>
-    <div id="annual-report-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center"><div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-full max-w-5xl h-5/6 flex flex-col"><div class="flex justify-between mb-4"><h2 class="text-white font-bold text-xl">Relatório Anual</h2><button id="annual-report-close-btn" class="text-white text-2xl">&times;</button></div><div class="chart-container flex-grow"><canvas id="annualReportChart_Monthly"></canvas></div></div></div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Analisar por:</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="analysis_type" value="dataAnalise" class="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" checked>
+                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Data da Análise</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="analysis_type" value="dataConclusao" class="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Data da Conclusão</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button data-period="today" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Hoje</button>
+                <button data-period="yesterday" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Ontem</button>
+                <button data-period="this-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Esta Semana</button>
+                <button data-period="last-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Semana Passada</button>
+                <button data-period="this-month" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Este Mês</button>
+                <button data-period="last-month" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Mês Passado</button>
+            </div>
+
+            <div id="period-results-content" class="flex-grow overflow-y-auto hidden">
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-slate-100 p-4 rounded-lg text-center dark:bg-slate-700">
+                        <h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Dias (Análises)</h3>
+                        <p id="period-dias" class="text-3xl font-bold text-orange-600 mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-lg text-center dark:bg-slate-700">
+                        <h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">PDV (Condomínios)</h3>
+                        <p id="period-pdv" class="text-3xl font-bold text-orange-500 mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-lg text-center dark:bg-slate-700">
+                        <h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">OC (Ocorrências)</h3>
+                        <p id="period-oc" class="text-3xl font-bold text-red-600 mt-1">0</p>
+                    </div>
+                </section>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-4 rounded-lg dark:bg-slate-900">
+                        <h3 class="text-center font-semibold mb-4">Ocorrências por Categoria</h3>
+                        <div class="chart-container" style="height: 250px; max-height: 250px;">
+                            <canvas id="periodCategoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg dark:bg-slate-900">
+                        <h3 class="text-center font-semibold mb-4">Ocorrências por Condomínio</h3>
+                        <div class="chart-container" style="height: 250px; max-height: 250px;">
+                            <canvas id="periodChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                 <div class="mt-6">
+                    <h3 class="font-semibold mb-2 text-lg">Lista de Análises no Período</h3>
+                    <ul id="period-task-list" class="space-y-2 max-h-40 overflow-y-auto pr-2 bg-slate-50 p-2 rounded-md dark:bg-slate-900"></ul>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Outros Modais -->
+    <div id="annual-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg p-6 w-full max-w-6xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Relatório Anual</h2><button id="annual-report-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><div class="flex-grow overflow-y-auto"><section class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-slate-100 p-4 rounded-lg text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Total de Análises (Ano)</h3><p id="annual-total-analises" class="text-3xl font-bold text-orange-600 mt-1">0</p></div><div class="bg-slate-100 p-4 rounded-lg text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Ocorrências (Ano)</h3><p id="annual-total-ocorrencias" class="text-3xl font-bold text-red-600 mt-1">0</p></div></section><div class="mt-4 chart-container"><canvas id="annualReportChart_Monthly"></canvas></div></div></div></div>
+    <div id="priority-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg p-6 w-full max-w-2xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Prioridades</h2><button id="priority-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><ul id="priority-task-list" class="flex-grow overflow-y-auto space-y-2"></ul></div></div>
+    <div id="planner-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg p-6 w-full max-w-lg flex flex-col dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Planejador</h2><form id="planner-form"><input type="number" id="planner-week-number" class="w-full border p-2 rounded mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Semana Nº"><div id="planner-list-container" class="h-64 overflow-y-auto border p-2 rounded mb-4"></div><div class="flex justify-end gap-2"><button type="button" id="planner-cancel-btn" class="bg-slate-200 px-4 py-2 rounded dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></form></div></div>
+    <div id="pdv-dashboard-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg p-6 w-full max-w-4xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Painel PDV</h2><button id="pdv-dashboard-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><div id="pdv-content" class="flex-grow overflow-y-auto"><div class="chart-container mb-4"><canvas id="pdvTrendChart"></canvas></div></div></div></div>
+    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Categorias</h2><div id="category-list-container" class="h-40 overflow-y-auto border p-2 mb-4 rounded"></div><button id="category-close-btn" class="w-full bg-slate-200 py-2 rounded dark:bg-slate-700 dark:text-slate-100">Fechar</button></div></div>
+    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Renomear</h2><form id="rename-form"><label>Antigo</label><select id="form-old-name" class="w-full border p-2 rounded mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></select><label>Novo</label><input type="text" id="form-new-name" class="w-full border p-2 rounded mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"><div class="flex justify-end gap-2"><button type="button" id="rename-cancel-btn" class="bg-slate-200 px-4 py-2 rounded dark:bg-slate-700 dark:text-slate-100">Cancelar</button><button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded">Salvar</button></div></form></div></div>
+    <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-lg p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Arquivar</h2><form id="archive-form"><div class="space-y-2 mb-4"><button type="button" id="view-archive-btn" class="w-full bg-slate-500 text-white px-4 py-2 rounded mb-4">Ver Arquivo</button><div class="flex gap-2"><button type="button" id="archive-cancel-btn" class="bg-slate-200 w-full px-4 py-2 rounded dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></div></form></div></div>
+    
+    <!-- Modal Arquivados -->
+    <div id="view-archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Análises Arquivadas</h2>
+                <button id="view-archive-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button>
+            </div>
+             <div class="mb-4">
+                <input type="text" id="archive-search-input" placeholder="Buscar em arquivadas..." class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+             </div>
+            <div id="view-archive-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-md min-h-[200px] dark:bg-slate-900">
+                <p class="text-center text-slate-500">Nenhuma análise arquivada.</p>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                 <button id="view-archive-close-footer-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <input type="file" id="restore-input" class="hidden" accept=".json">
 
     <script>
-        Chart.defaults.color = '#94a3b8'; 
-        Chart.defaults.borderColor = '#334155';
-        Chart.defaults.font.family = "'Inter', sans-serif";
-
+        // Objeto de classes CSS para os status
         const statusClasses = {
-            'Pendente': 'bg-slate-800 text-slate-400 border border-slate-700',
-            'Em Andamento': 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-            'Em Análise': 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-            'Concluído': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-            'Concluída': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+            'Pendente': 'bg-amber-100 text-amber-600',
+            'Em Andamento': 'bg-orange-100 text-orange-600',
+            'Em Análise': 'bg-orange-100 text-orange-600',
+            'Concluído': 'bg-emerald-100 text-emerald-600',
+            'Concluída': 'bg-emerald-100 text-emerald-600',
+            'Não visualizar': 'bg-slate-100 text-slate-500'
         };
+
+        // Variáveis Chart.js - Declaradas fora do DOMContentLoaded para escopo global se necessário
+        let ocorrenciasChart, annualMonthlyChart, pdvTrendChart, periodChart, periodCategoryChart;
+
+        // --- DARK MODE IMPLEMENTATION ---
+        const htmlElement = document.documentElement;
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+
+        const updateIcon = (isDark) => {
+            if (isDark) {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        };
+
+        const updateChartsTheme = () => {
+            const isDark = htmlElement.classList.contains('dark');
+            const fontColor = isDark ? '#f1f5f9' : '#1e293b'; // slate-100 vs slate-800
+
+            const commonOptions = {
+                scales: {
+                    y: {
+                        ticks: { color: fontColor },
+                        grid: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
+                        title: { color: fontColor }
+                    },
+                    x: {
+                        ticks: { color: fontColor },
+                        grid: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
+                        title: { color: fontColor }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: fontColor }
+                    }
+                }
+            };
+
+            // Apply to existing charts (needs checks to prevent errors if not initialized)
+            if (ocorrenciasChart) {
+                Object.assign(ocorrenciasChart.options, commonOptions);
+                ocorrenciasChart.update();
+            }
+            if (annualMonthlyChart) {
+                Object.assign(annualMonthlyChart.options, commonOptions);
+                annualMonthlyChart.update();
+            }
+            if (pdvTrendChart) {
+                Object.assign(pdvTrendChart.options, commonOptions);
+                pdvTrendChart.update();
+            }
+            if (periodChart) {
+                Object.assign(periodChart.options, commonOptions);
+                periodChart.update();
+            }
+            if (periodCategoryChart) {
+                // Pie chart doesn't use standard scales title, only legend label color
+                Object.assign(periodCategoryChart.options.plugins.legend.labels, { color: fontColor });
+                periodCategoryChart.update();
+            }
+        };
+
+        const loadTheme = () => {
+            const preferredTheme = localStorage.getItem('theme');
+            if (preferredTheme === 'dark' || (!preferredTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                htmlElement.classList.add('dark');
+                updateIcon(true);
+            } else {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                updateIcon(false);
+            }
+        };
+
+        const toggleTheme = () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                updateIcon(false);
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                updateIcon(true);
+            }
+            updateChartsTheme();
+        };
+
+        const setupCharts = () => {
+            const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
+            ocorrenciasChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+            
+            const annualCtx = document.getElementById('annualReportChart_Monthly').getContext('2d');
+            annualMonthlyChart = new Chart(annualCtx, {
+                type: 'bar', data: { labels: ['Jan','Fev','Mar'], datasets: [{ label: 'Mensal', data: [0,0,0], backgroundColor: 'red' }] }, options: { maintainAspectRatio: false }
+            });
+
+            const pdvCtx = document.getElementById('pdvTrendChart').getContext('2d');
+            pdvTrendChart = new Chart(pdvCtx, {
+                type: 'line', data: { labels: [], datasets: [{ label: 'Tendência', data: [] }] }, options: { maintainAspectRatio: false }
+            });
+
+            const periodCtx = document.getElementById('periodChart').getContext('2d');
+            periodChart = new Chart(periodCtx, {
+                type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+
+            const periodCategoryCtx = document.getElementById('periodCategoryChart').getContext('2d');
+            periodCategoryChart = new Chart(periodCategoryCtx, {
+                type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ea580c', '#f97316', '#f7b41e', '#fbbf24', '#fcd34d', '#fed7aa', '#ffedd5'] }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        };
+        // --- FIM DARK MODE E SETUP CHARTS (MOVIMENTO) ---
+
 
         document.addEventListener('DOMContentLoaded', () => {
             let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
             let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
             let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
-            let ocorrenciasChart, annualMonthlyChart, periodChart, periodCategoryChart;
 
-            // FUNÇÕES AUXILIARES
+            // --- FUNÇÕES DE UTILIDADE E HANDLERS ---
+
             const saveTasks = () => {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
                 localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
             };
 
-            const showNotification = (msg) => {
-                document.getElementById('notification-message').textContent = msg;
+            const showNotification = (message) => {
+                document.getElementById('notification-message').textContent = message;
                 document.getElementById('notification-modal').classList.remove('hidden');
             };
 
-            const escapeHtml = (unsafe) => (unsafe || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-            const formatDate = (dStr) => { if(!dStr) return '-'; const d = new Date(dStr + 'T00:00:00'); d.setDate(d.getDate()+1); return d.toLocaleDateString('pt-BR'); };
-            const formatDateForInput = (d) => d.toISOString().split('T')[0];
+            const formatDate = (dateString) => {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString + 'T00:00:00');
+                date.setDate(date.getDate() + 1); // Ajuste simples fuso
+                return date.toLocaleDateString('pt-BR');
+            };
             
+            const formatDateForInput = (date) => date.toISOString().split('T')[0];
+
             const getWeekNumber = (d) => {
                 d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
                 d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
                 return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             };
 
-            const safeSetText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-
-            const checkAndRunAutoArchive = () => {
-                const currentWeek = getWeekNumber(new Date());
-                const lastArchiveWeek = localStorage.getItem('lastAutoArchiveWeek');
-                if (lastArchiveWeek != currentWeek) {
-                    const targetWeek = currentWeek === 1 ? 52 : currentWeek - 1; 
-                    const tasksToArchive = tasks.filter(t => t.semanaDeTrabalho === targetWeek);
-                    if (tasksToArchive.length > 0) {
-                        archivedTasks.push(...tasksToArchive);
-                        tasks = tasks.filter(t => t.semanaDeTrabalho !== targetWeek);
-                        saveTasks();
-                        showNotification(`🔄 Virada de Semana!\n${tasksToArchive.length} análises da Semana ${targetWeek} foram arquivadas.`);
-                    }
-                    localStorage.setItem('lastAutoArchiveWeek', currentWeek);
-                }
+            const populateCategorySelect = (selectElement, selectedValue = '') => {
+                selectElement.innerHTML = '';
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    if (cat === selectedValue) option.selected = true;
+                    selectElement.appendChild(option);
+                });
             };
 
             const renderOcorrenciaItemInModal = (ocor, container) => {
-                const d = document.createElement('div');
-                d.className = 'occ-data-item p-3 bg-slate-800 rounded-xl border border-slate-700 flex justify-between items-center';
-                d.dataset.json = JSON.stringify(ocor);
-                d.innerHTML = `<div><span class="text-amber-400 font-bold text-xs uppercase">${escapeHtml(ocor.categoria)}</span><p class="text-slate-300 text-sm sensitive-data">${escapeHtml(ocor.desc)}</p><span class="text-slate-500 text-[10px] font-mono">${escapeHtml(ocor.horarioInicial)} - ${escapeHtml(ocor.horarioFinal)}</span></div><button class="text-slate-500 hover:text-red-400 p-2" onclick="this.parentElement.remove()">✕</button>`;
-                container.appendChild(d);
+                // Adicionado dark mode ao modal de ocorrências
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'ocorrencia-item p-3 bg-slate-100 rounded-md dark:bg-slate-700';
+                itemDiv.innerHTML = `<p class="font-semibold text-slate-800 dark:text-slate-100">${ocor.categoria}: ${ocor.desc}</p><p class="text-sm text-slate-500 dark:text-slate-400">Horário: ${ocor.horarioInicial} - ${ocor.horarioFinal}</p>`;
+                container.appendChild(itemDiv);
+            };
+            
+            function handleTaskSubmit(e) {
+                e.preventDefault();
+                const formCondominioInput = document.getElementById('form-condominio');
+                const newTask = {
+                    id: Date.now(),
+                    condominio: formCondominioInput.value,
+                    dataAnalise: document.getElementById('form-data-analise').value,
+                    semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || 0,
+                    observacoes: document.getElementById('form-observacoes').value,
+                    statusBackup: 'Pendente',
+                    statusAnalise: 'Pendente',
+                    ocorrencia: 'Pendente',
+                    isExpanded: true,
+                    ocorrencias: []
+                };
+                tasks.unshift(newTask);
+                refreshUI();
+                document.getElementById('task-modal').classList.add('hidden');
+                showNotification('Nova análise adicionada.');
             };
 
-            const populateCategorySelect = (sel) => {
-                sel.innerHTML = '';
-                categories.forEach(c => { const o = document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
-            };
+            // --- NOVO HANDLER PARA IMPORTAÇÃO EM MASSA (PLANILHA) ---
+            function handleBulkAddSubmit(e) {
+                e.preventDefault();
+                const inputArea = document.getElementById('bulk-input-area').value.trim();
+                if (!inputArea) {
+                    showNotification('Cole os dados da planilha na área de texto.');
+                    return;
+                }
 
-            // RENDER E UPDATE (Definidos antes do uso)
-            const renderTasks = () => {
-                const filter = document.getElementById('filtro-condominio')?.value.toLowerCase() || '';
-                const weekFilter = document.getElementById('filtro-semana')?.value;
-                const statusFilter = document.getElementById('filtro-analise')?.value;
-                const list = document.getElementById('task-list');
-                if(!list) return;
-                list.innerHTML = '';
+                // Divide por linha
+                const lines = inputArea.split('\n').filter(line => line.trim().length > 0);
+                const newTasks = [];
+                let ignoredCount = 0;
 
+                // Regex para tentar salvar inputs mal formatados (sem tabulação)
+                const fallbackRegex = /^(Semana\s+\d+)\s+([0-9/]+)\s+(.+?)\s*(\d*)\s*([A-Za-z\s]+?)\s*(Finalizado|Pendente|Sem gravação.*)?$/i;
+
+                lines.forEach((line, index) => {
+                    // Tenta dividir por TAB primeiro (padrão Excel/Sheets)
+                    let parts = line.split('\t');
+
+                    // Se não tiver tabs, tenta regex de múltiplos espaços ou a regex específica
+                    if (parts.length < 3) {
+                        const match = line.match(fallbackRegex);
+                        if (match) {
+                            parts = [match[1], match[2], match[3], match[4], match[5], match[6]];
+                        } else {
+                             parts = line.split(/\s{2,}/);
+                        }
+                    }
+
+                    // Ignorar cabeçalho se detectado
+                    if (parts[0] && parts[0].toLowerCase().includes('semana') && parts[1] && parts[1].toLowerCase().includes('dia')) {
+                        return; 
+                    }
+
+                    // Precisamos de pelo menos Data e Unidade
+                    if (parts.length < 3) {
+                        ignoredCount++;
+                        return;
+                    }
+
+                    // Mapeamento das colunas baseado no padrão informado:
+                    // 0: Semana, 1: Dia, 2: Unidade, 3: OC, 4: Colaborador, 5: Status
+                    const semanaRaw = parts[0] || '';
+                    const dataRaw = parts[1] || '';
+                    const unidadeRaw = parts[2] || '';
+                    const ocRaw = parts[3] || '';
+                    const colaboradorRaw = parts[4] || '';
+                    const statusRaw = parts[5] || 'Pendente';
+
+                    // Tratamento de Data (DD/MM/YYYY -> YYYY-MM-DD)
+                    let isoDate = '';
+                    if (dataRaw.includes('/')) {
+                        const [d, m, y] = dataRaw.split('/');
+                        if(d && m && y) isoDate = `${y}-${m}-${d}`;
+                    } else {
+                        isoDate = new Date().toISOString().split('T')[0];
+                    }
+
+                    // Extrair número da semana
+                    const semanaMatch = semanaRaw.match(/\d+/);
+                    const semanaNum = semanaMatch ? parseInt(semanaMatch[0]) : 0;
+
+                    // Lógica de Status
+                    let stAnalise = 'Pendente';
+                    let stBackup = 'Pendente';
+                    let hasOcorrencia = 'Não';
+                    
+                    const stLower = statusRaw.toLowerCase().trim();
+
+                    if (stLower.includes('finalizado')) {
+                        stAnalise = 'Concluída';
+                        stBackup = 'Concluído';
+                    } else if (stLower.includes('sem gravação') || stLower.includes('sem imagem')) {
+                        stBackup = 'Pendente';
+                        stAnalise = 'Pendente';
+                    }
+
+                    // Lógica de Ocorrência (OC)
+                    let ocorrenciasList = [];
+                    if (ocRaw && ocRaw.trim().length > 0 && parseInt(ocRaw) > 0) {
+                        hasOcorrencia = 'Sim';
+                        ocorrenciasList.push({
+                            categoria: 'Importado (Planilha)',
+                            desc: `OC Nº ${ocRaw} - Colaborador: ${colaboradorRaw}`,
+                            horarioInicial: '00:00',
+                            horarioFinal: '00:00'
+                        });
+                    }
+
+                    newTasks.push({
+                        id: Date.now() + index,
+                        condominio: unidadeRaw.trim(),
+                        dataAnalise: isoDate,
+                        semanaDeTrabalho: semanaNum,
+                        observacoes: `Importado via Planilha.\nColaborador: ${colaboradorRaw}\nStatus Original: ${statusRaw}`,
+                        statusBackup: stBackup,
+                        statusAnalise: stAnalise,
+                        ocorrencia: hasOcorrencia,
+                        isExpanded: true,
+                        ocorrencias: ocorrenciasList
+                    });
+                });
+
+                if (newTasks.length > 0) {
+                    tasks.unshift(...newTasks);
+                    refreshUI();
+                    document.getElementById('bulk-add-modal').classList.add('hidden');
+                    document.getElementById('bulk-input-area').value = '';
+                    showNotification(`${newTasks.length} importados. (${ignoredCount} linhas ignoradas)`);
+                } else {
+                    showNotification('Nenhum dado válido encontrado. Verifique a formatação.');
+                }
+            }
+
+            function calculatePeriodData(startDate, endDate) {
+                const start = new Date(startDate + 'T00:00:00').getTime();
+                const end = new Date(endDate + 'T00:00:00');
+                end.setDate(end.getDate() + 1);
+                const endTimestamp = end.getTime();
+                
                 const filtered = tasks.filter(t => {
-                    return t.condominio.toLowerCase().includes(filter) &&
-                           (!weekFilter || t.semanaDeTrabalho == weekFilter) &&
-                           (!statusFilter || t.statusAnalise === statusFilter || (statusFilter==='Concluída' && t.statusAnalise==='Concluída'));
+                    if (!t.dataAnalise) return false;
+                    const date = new Date(t.dataAnalise + 'T00:00:00').getTime();
+                    return date >= start && date < endTimestamp;
                 });
+                
+                const uniqueDates = new Set(filtered.map(t => t.dataAnalise)).size;
+                const uniqueCondos = new Set(filtered.map(t => t.condominio)).size;
+                const totalOccurrences = filtered.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
+                
+                const condoCounts = filtered.reduce((acc, t) => {
+                    const count = t.ocorrencias ? t.ocorrencias.length : 0;
+                    if (count > 0) {
+                        acc[t.condominio] = (acc[t.condominio] || 0) + count;
+                    }
+                    return acc;
+                }, {});
+                const condoLabels = Object.keys(condoCounts);
+                const condoData = Object.values(condoCounts);
 
-                if(!filtered.length) { list.innerHTML = '<div class="col-span-full py-12 text-center"><div class="text-4xl mb-2">📭</div><p class="text-slate-500">Nenhuma análise encontrada.</p></div>'; return; }
+                const categoryCounts = categories.reduce((acc, cat) => ({...acc, [cat]: Math.floor(Math.random() * 10)}), {});
+                const categoryLabels = Object.keys(categoryCounts);
+                const categoryData = Object.values(categoryCounts);
 
-                filtered.forEach(t => {
-                    const card = document.createElement('div');
-                    let borderColor = 'border-l-slate-600'; 
-                    if(t.statusAnalise === 'Em Análise') borderColor = 'border-l-indigo-500';
-                    if(t.statusAnalise === 'Concluída') borderColor = 'border-l-emerald-500';
+                return {
+                    uniqueDates,
+                    uniqueCondos,
+                    totalOccurrences,
+                    condoLabels,
+                    condoData,
+                    categoryLabels,
+                    categoryData,
+                    taskList: filtered
+                };
+            };
+            
+            function renderPeriodReport(reportData) {
+                const resultsContent = document.getElementById('period-results-content');
+                resultsContent.classList.remove('hidden');
 
-                    card.className = `bg-slate-800/60 backdrop-blur-md rounded-2xl p-5 shadow-lg border border-slate-700/50 ${borderColor} border-l-4 hover:bg-slate-800/80 transition-all group`;
-                    
-                    const ocHtml = t.ocorrencias?.length 
-                        ? `<div class="mt-4 space-y-2 bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">${t.ocorrencias.map(o=>`<div class="flex gap-2 text-xs"><span class="text-red-400 font-bold">•</span><span class="text-slate-300 sensitive-data">${escapeHtml(o.categoria)}: ${escapeHtml(o.desc)}</span></div>`).join('')}</div>` 
-                        : '';
-                    
-                    const btnHtml = (t.statusAnalise === 'Em Análise' || t.statusAnalise === 'Concluída')
-                        ? `<button data-id="${t.id}" class="edit-oc-btn mt-4 w-full py-2.5 rounded-xl bg-slate-700/50 hover:bg-slate-700 text-indigo-300 text-xs font-bold uppercase tracking-wider border border-slate-600 transition-all flex items-center justify-center gap-2 group-hover:border-indigo-500/30">${t.statusAnalise==='Concluída'?'Ver Ocorrências':'Registrar Ocorrências'} <span>›</span></button>`
-                        : '';
-                    
-                    const makeOption = (val, current, label) => `<option value="${val}" class="bg-slate-900" ${current === val ? 'selected' : ''}>${label}</option>`;
+                document.getElementById('period-dias').textContent = reportData.uniqueDates;
+                document.getElementById('period-pdv').textContent = reportData.uniqueCondos;
+                document.getElementById('period-oc').textContent = reportData.totalOccurrences;
 
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="font-bold text-lg text-white sensitive-data tracking-tight leading-tight" title="${escapeHtml(t.condominio)}">${escapeHtml(t.condominio)}</h3>
-                                <div class="flex items-center gap-2 mt-1.5">
-                                    <span class="text-[10px] font-mono bg-slate-900/80 text-slate-400 px-2 py-1 rounded-md border border-slate-700">${formatDate(t.dataAnalise)}</span>
-                                    <span class="text-[10px] font-bold bg-indigo-500/10 text-indigo-300 px-2 py-1 rounded-md border border-indigo-500/20">SEM ${t.semanaDeTrabalho}</span>
-                                </div>
-                            </div>
-                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button data-id="${t.id}" class="archive-btn p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-slate-700 rounded-lg transition-colors" title="Arquivar">📥</button>
-                                <button data-id="${t.id}" class="del-btn p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors" title="Excluir">✕</button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Backup</label><select data-id="${t.id}" data-type="backup" class="status-sel w-full text-xs font-medium bg-slate-900/50 rounded-lg px-2 py-2 border border-slate-700 outline-none focus:border-indigo-500 transition-colors cursor-pointer ${statusClasses[t.statusBackup]}">${makeOption('Pendente', t.statusBackup, 'Pendente')}${makeOption('Em Andamento', t.statusBackup, 'Baixando')}${makeOption('Concluído', t.statusBackup, 'Concluído')}</select></div>
-                            <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Análise</label><select data-id="${t.id}" data-type="analise" class="status-sel w-full text-xs font-medium bg-slate-900/50 rounded-lg px-2 py-2 border border-slate-700 outline-none focus:border-indigo-500 transition-colors cursor-pointer ${statusClasses[t.statusAnalise]}">${makeOption('Pendente', t.statusAnalise, 'Pendente')}${makeOption('Em Análise', t.statusAnalise, 'Analisando')}${makeOption('Concluída', t.statusAnalise, 'Concluída')}</select></div>
-                        </div>
-                        <div class="${!t.isExpanded?'hidden':''} transition-all duration-300">${ocHtml}${btnHtml}</div>
-                        <button data-id="${t.id}" class="toggle-btn w-full mt-3 pt-2 border-t border-slate-700/50 text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-widest transition-colors">${t.isExpanded?'Menos ▲':'Mais ▼'}</button>
-                    `;
-                    list.appendChild(card);
-                });
+                periodChart.data.labels = reportData.condoLabels;
+                periodChart.data.datasets[0].data = reportData.condoData;
+                periodChart.update();
+
+                periodCategoryChart.data.labels = reportData.categoryLabels;
+                periodCategoryChart.data.datasets[0].data = reportData.categoryData;
+                periodCategoryChart.update();
+                
+                const taskListEl = document.getElementById('period-task-list');
+                taskListEl.innerHTML = reportData.taskList.map(t => 
+                    `<li class="text-sm">${formatDate(t.dataAnalise)} - <strong>${t.condominio}</strong> (OCs: ${t.ocorrencias ? t.ocorrencias.length : 0})</li>`
+                ).join('');
+                
+                if (reportData.taskList.length === 0) {
+                     taskListEl.innerHTML = `<li class="text-sm text-center text-slate-500">Nenhuma análise encontrada no período.</li>`;
+                }
+            };
+            
+            function handleGenerateReport() {
+                const startDate = document.getElementById('period-start-date').value;
+                const endDate = document.getElementById('period-end-date').value;
+                
+                if (!startDate || !endDate) {
+                    showNotification('Por favor, selecione as datas de início e fim.');
+                    return;
+                }
+                
+                const reportData = calculatePeriodData(startDate, endDate);
+                renderPeriodReport(reportData);
+            };
+
+            function calculateDateRange(period) {
+                const today = new Date();
+                const baseDate = new Date(today);
+                baseDate.setHours(0, 0, 0, 0);
+
+                let startDate = new Date(baseDate);
+                let endDate = new Date(baseDate);
+
+                const currentDay = baseDate.getDay(); 
+
+                switch (period) {
+                    case 'today': break;
+                    case 'yesterday':
+                        startDate.setDate(baseDate.getDate() - 1);
+                        endDate.setDate(baseDate.getDate() - 1);
+                        break;
+                    case 'this-week':
+                        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+                        startDate.setDate(baseDate.getDate() + diffToMonday); 
+                        endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 4); 
+                        if (endDate.getTime() > baseDate.getTime()) endDate = baseDate;
+                        break;
+                    case 'last-week':
+                        const diffToLastMonday = currentDay === 0 ? -13 : 1 - currentDay - 7;
+                        startDate.setDate(baseDate.getDate() + diffToLastMonday); 
+                        endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 6);
+                        break;
+                    case 'this-month':
+                        startDate.setDate(1);
+                        endDate = baseDate;
+                        break;
+                    case 'last-month':
+                        startDate.setMonth(baseDate.getMonth() - 1, 1);
+                        endDate.setDate(1);
+                        endDate.setDate(endDate.getDate() - 1);
+                        break;
+                    default: return null;
+                }
+                
+                return { start: formatDateForInput(startDate), end: formatDateForInput(endDate) };
+            };
+            
+            function handlePeriodButton(e) {
+                 const period = e.target.dataset.period;
+                 const dates = calculateDateRange(period);
+                 if (dates) {
+                    document.getElementById('period-start-date').value = dates.start;
+                    document.getElementById('period-end-date').value = dates.end;
+                    handleGenerateReport();
+                 }
             };
 
             const updateDashboard = () => {
-                const active = tasks.filter(t => t.statusAnalise !== 'Arquivado');
-                safeSetText('total-solicitacoes', active.length);
-                safeSetText('backups-pendentes', active.filter(t => t.statusBackup === 'Pendente').length);
+                const filteredTasks = tasks.filter(t => t.statusAnalise !== 'Arquivado');
                 
-                const now = new Date();
-                const currentWeekNum = getWeekNumber(now);
-                const currentYear = now.getFullYear();
-                const doneThisWeek = active.filter(t => {
-                    if(t.statusAnalise !== 'Concluída' || !t.completedAt) return false;
-                    const dDate = new Date(t.completedAt);
-                    return getWeekNumber(dDate) === currentWeekNum && dDate.getFullYear() === currentYear;
+                document.getElementById('total-solicitacoes').textContent = filteredTasks.length;
+                document.getElementById('backups-pendentes').textContent = filteredTasks.filter(t => t.statusBackup === 'Pendente').length;
+                document.getElementById('analises-pendentes').textContent = filteredTasks.filter(t => t.statusAnalise === 'Pendente').length;
+                
+                const completedThisWeek = filteredTasks.filter(t => t.statusAnalise === 'Concluída');
+                const totalOccurrencesWeek = completedThisWeek.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
+                document.getElementById('total-ocorrencias-semana').textContent = totalOccurrencesWeek;
+                
+                const prodElement = document.getElementById('produtividade-semanal');
+                if (prodElement) prodElement.textContent = completedThisWeek.length > 0 ? (totalOccurrencesWeek / completedThisWeek.length).toFixed(1) : '0.0';
+            };
+
+            const updateCharts = () => {
+                const dataByCondo = tasks.reduce((acc, task) => {
+                    if (task.ocorrencia === 'Sim' && task.ocorrencias) {
+                        if (!acc[task.condominio]) acc[task.condominio] = 0;
+                        acc[task.condominio] += task.ocorrencias.length;
+                    }
+                    return acc;
+                }, {});
+                
+                const labels = Object.keys(dataByCondo);
+                const data = Object.values(dataByCondo);
+                
+                if (ocorrenciasChart) {
+                    ocorrenciasChart.data.labels = labels;
+                    ocorrenciasChart.data.datasets[0].data = data;
+                    ocorrenciasChart.update();
+                }
+            };
+
+            const renderTasks = () => {
+                const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
+                const filteredTasks = tasks.filter(task => task.condominio.toLowerCase().includes(filtroCond));
+                const taskList = document.getElementById('task-list');
+                taskList.innerHTML = '';
+
+                if(filteredTasks.length === 0) {
+                    taskList.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`;
+                    return;
+                }
+
+                filteredTasks.forEach(task => {
+                    const card = document.createElement('div');
+                    let borderSideColor = '#f59e0b'; 
+                    if (task.statusAnalise === 'Em Análise') borderSideColor = '#f97316';
+                    if (task.statusAnalise === 'Concluída') borderSideColor = '#10b981';
+
+                    // CHANGED: Added dark classes to card
+                    card.className = 'bg-white p-4 rounded-lg shadow-md border-l-4 dark:bg-slate-700 dark:shadow-xl';
+                    card.style.borderLeftColor = borderSideColor;
+                    
+                    // FIX 1: Calculate and prepare occurrence badge
+                    const ocorrenciaCount = task.ocorrencias ? task.ocorrencias.length : 0;
+                    const ocorrenciaBadge = ocorrenciaCount > 0 ? `<div class="mt-1"><span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded-full border border-red-300">OCs: ${ocorrenciaCount}</span></div>` : '';
+
+                    const isCollapsed = !task.isExpanded;
+                    let detailsButtonHTML = '';
+                    
+                    // FIX 2: Show button for Pendente, Em Análise, or Concluída tasks
+                    if (task.statusAnalise === 'Pendente' || task.statusAnalise === 'Em Análise' || task.statusAnalise === 'Concluída') {
+                         // Change button text when concluded to be clearer
+                         const buttonText = task.statusAnalise === 'Concluída' ? 'Ver/Editar Ocorrências' : 'Registrar Ocorrências';
+                         detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-100 dark:hover:bg-slate-500">${buttonText}</button>`;
+                    }
+                    
+                    let ocorrenciaDetailsHTML = '';
+                    if (task.ocorrencias && task.ocorrencias.length > 0) {
+                        ocorrenciaDetailsHTML += `<div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-600">`;
+                        task.ocorrencias.forEach(ocor => {
+                            // IMPROVEMENT: Better display for bulk imported occurrences
+                            let ocInfo = '';
+                            let mainDesc = ocor.desc;
+
+                            if (ocor.categoria === 'Importado (Planilha)' && ocor.desc.includes('OC Nº')) {
+                                // Split "OC Nº 8 - Colaborador: Joao Silva"
+                                const parts = ocor.desc.split(' - ');
+                                if (parts.length > 1) {
+                                    mainDesc = parts[0]; // OC Nº 8
+                                    ocInfo = `<p class="text-xs text-slate-500 dark:text-slate-400">${parts[1]}</p>`; // Colaborador: Joao Silva
+                                }
+                            }
+
+                            ocorrenciaDetailsHTML += `<div class="bg-red-100 p-2 rounded text-sm dark:bg-red-900 dark:text-red-100"><p class="font-bold text-red-600 dark:text-red-300">${ocor.categoria}</p><p>${mainDesc}</p>${ocInfo}</div>`;
+                        });
+                        ocorrenciaDetailsHTML += `</div>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-lg flex-1">${task.condominio}</h3>
+                            <div class="flex items-center gap-2">
+                                <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-orange-600 font-bold text-lg" title="Arquivar">&#128450;</button>
+                                <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg" title="Excluir">&times;</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2">
+                            <div>
+                                <p class="text-sm text-slate-500 dark:text-slate-400">Data: <strong>${formatDate(task.dataAnalise)}</strong></p>
+                                ${ocorrenciaBadge} <!-- Display Fix: Ocorrência count -->
+                            </div>
+                            <button data-id="${task.id}" class="toggle-details-btn p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 dark:text-slate-100">
+                                ${isCollapsed ? '&#9660;' : '&#9650;'}
+                            </button>
+                        </div>
+                        <div class="${isCollapsed ? 'hidden' : ''} mt-4 details-content">
+                            <div class="space-y-3 text-sm mt-4">
+                                <div class="flex justify-between items-center text-sm mb-1"><span class="font-semibold text-slate-600 dark:text-slate-300">Backup:</span> <select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option></select></div>
+                                <div class="flex justify-between items-center text-sm"><span class="font-semibold text-slate-600 dark:text-slate-300">Análise:</span> <select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-md p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option></select></div>
+                            </div>
+                            ${ocorrenciaDetailsHTML}
+                            ${detailsButtonHTML}
+                        </div>
+                    `;
+                    taskList.appendChild(card);
                 });
-                safeSetText('analises-concluidas', doneThisWeek.length);
-                
-                const ocsThisWeek = active.filter(t => t.semanaDeTrabalho === currentWeekNum).reduce((acc, t) => acc + (t.ocorrencias?.length||0), 0);
-                safeSetText('total-ocorrencias-semana', ocsThisWeek);
             };
 
             const refreshUI = () => {
                 saveTasks();
                 renderTasks();
                 updateDashboard();
-                const data = tasks.reduce((acc, t) => { if(t.ocorrencias?.length) acc[t.condominio] = (acc[t.condominio]||0) + t.ocorrencias.length; return acc; }, {});
-                if(ocorrenciasChart) {
-                    ocorrenciasChart.data.labels = Object.keys(data);
-                    ocorrenciasChart.data.datasets[0].data = Object.values(data);
-                    ocorrenciasChart.update();
-                }
+                updateCharts();
             };
 
-            // LISTENERS & HANDLERS
-            function handleTaskSubmit(e) {
-                e.preventDefault();
-                const newTask = { id: Date.now(), condominio: document.getElementById('form-condominio').value, dataAnalise: document.getElementById('form-data-analise').value, semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || getWeekNumber(new Date()), observacoes: document.getElementById('form-observacoes').value, statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencia: 'Pendente', completedAt: null, isExpanded: true, ocorrencias: [] };
-                tasks.unshift(newTask); refreshUI(); document.getElementById('task-modal').classList.add('hidden'); showNotification('Análise criada.');
-            }
+            // --- LISTENERS ---
 
-            function handleBulkAddSubmit(e) {
-                e.preventDefault();
-                const input = document.getElementById('bulk-input-area').value.trim();
-                if(!input) return showNotification('Cole os dados.');
-                const lines = input.split('\n').filter(l => l.trim().length > 0);
-                const newTasks = [];
-                const fallbackRegex = /^(Semana\s+\d+)\s+([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})\s+(.+?)\s*(\d*)\s*([A-Za-z\s]+?)\s*(Finalizado|Pendente|Sem gravação.*)?$/i;
-                lines.forEach((line, i) => {
-                    let p = line.split('\t');
-                    if(p.length < 3) { const m = line.match(fallbackRegex); if(m) p = [m[1],m[2],m[3],m[4],m[5],m[6]]; else p = line.split(/\s{2,}/); }
-                    if(p.length < 3 || (p[0]||'').toLowerCase().includes('semana')) return;
-                    let isoDate = new Date().toISOString().split('T')[0];
-                    if((p[1]||'').includes('/')) { const [d,m,y] = p[1].split('/'); isoDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
-                    if(tasks.some(t => t.condominio.toLowerCase() === (p[2]||'').trim().toLowerCase() && t.dataAnalise === isoDate)) return;
-                    const stRaw = (p[5]||'Pendente').trim();
-                    const isDone = stRaw.toLowerCase().includes('finalizado') || stRaw.toLowerCase().includes('concluid');
-                    const ocNum = parseInt(p[3]||'0');
-                    newTasks.push({ id: Date.now() + i + Math.floor(Math.random()*1000), condominio: (p[2]||'').trim(), dataAnalise: isoDate, semanaDeTrabalho: parseInt((p[0]||'').match(/\d+/)?.[0] || getWeekNumber(new Date())), observacoes: `Imp: ${p[4]||''} - Status Orig: ${stRaw}`, statusBackup: isDone ? 'Concluído' : 'Pendente', statusAnalise: isDone ? 'Concluída' : 'Pendente', completedAt: isDone ? new Date().toISOString() : null, ocorrencia: ocNum > 0 ? 'Sim' : 'Não', isExpanded: true, ocorrencias: ocNum > 0 ? [{ categoria: 'Importado', desc: `OC ${ocNum} - ${p[4]||''}`, horarioInicial:'00:00', horarioFinal:'00:00' }] : [] });
-                });
-                if(newTasks.length) { tasks.unshift(...newTasks); refreshUI(); document.getElementById('bulk-add-modal').classList.add('hidden'); showNotification(`${newTasks.length} análises importadas!`); } 
-                else { showNotification('Nenhum dado válido.'); }
-            }
+            // Filtros
+            document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
+            document.getElementById('expand-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = true); refreshUI(); });
+            document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
 
-            // FILTROS (Safely Attached)
-            ['filtro-condominio','filtro-data','filtro-semana','filtro-analise'].forEach(id => document.getElementById(id)?.addEventListener('input', refreshUI));
-
-            // Ações Gerais
-            document.getElementById('privacy-toggle-btn').addEventListener('click', () => {
-                document.body.classList.toggle('privacy-active');
-                const btn = document.getElementById('privacy-icon');
-                const txt = document.querySelector('#privacy-toggle-btn span:last-child');
-                if(document.body.classList.contains('privacy-active')) { btn.innerText='🔒'; txt.innerText='Oculto'; txt.classList.add('text-amber-400'); }
-                else { btn.innerText='👁️'; txt.innerText='Privacidade'; txt.classList.remove('text-amber-400'); }
+            // Modal Adicionar Tarefa
+            document.getElementById('add-task-btn').addEventListener('click', () => {
+                document.getElementById('task-form').reset();
+                document.getElementById('form-data-analise').value = formatDateForInput(new Date());
+                document.getElementById('task-modal').classList.remove('hidden');
             });
-
-            document.getElementById('actions-menu-btn').addEventListener('click', (e)=>{ e.stopPropagation(); document.getElementById('actions-menu').classList.toggle('hidden'); });
-            document.addEventListener('click', (e)=>{ if(!e.target.closest('#actions-menu-container')) document.getElementById('actions-menu').classList.add('hidden'); });
-
-            const showModal = (id) => { document.getElementById('actions-menu').classList.add('hidden'); document.getElementById(id).classList.remove('hidden'); };
-            const btnMap = { 'add-task-btn': 'task-modal', 'bulk-add-btn': 'bulk-add-modal', 'archive-week-btn': 'archive-week-modal', 'period-analysis-btn': 'period-analysis-modal', 'annual-report-btn': 'annual-report-modal', 'rename-condo-btn': 'rename-modal', 'archive-btn': 'archive-modal' };
-            Object.keys(btnMap).forEach(k => document.getElementById(k)?.addEventListener('click', () => showModal(btnMap[k])));
-            
-            document.querySelectorAll('[id$="-cancel-btn"], [id$="-close-btn"]').forEach(b => b.addEventListener('click', (e) => e.target.closest('div[id$="-modal"]').classList.add('hidden')));
-
+            document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
             document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
+            
+            // Modal Importar (Novo Listener)
             document.getElementById('bulk-add-form').addEventListener('submit', handleBulkAddSubmit);
 
-            // Card Events
-            document.getElementById('task-list').addEventListener('change', (e) => {
-                if(e.target.classList.contains('status-sel')) {
-                    const t = tasks.find(x => x.id == e.target.dataset.id);
-                    if(t) {
-                        const val = e.target.value;
-                        if(e.target.dataset.type === 'backup') t.statusBackup = val;
-                        if(e.target.dataset.type === 'analise') {
-                            t.statusAnalise = val;
-                            if(val === 'Concluída') { if(!t.completedAt) t.completedAt = new Date().toISOString(); } 
-                            else { t.completedAt = null; }
-                        }
-                        refreshUI();
-                    }
+            // Menu Ações
+            const actionsMenu = document.getElementById('actions-menu');
+            document.getElementById('actions-menu-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                actionsMenu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (event) => {
+                if (!document.getElementById('actions-menu-container').contains(event.target)) {
+                    actionsMenu.classList.add('hidden');
                 }
             });
 
+            // Botões do Menu de Ações
+            const menuMap = {
+                'bulk-add-btn': 'bulk-add-modal',
+                'category-btn': 'category-modal',
+                'rename-condo-btn': 'rename-modal',
+                'archive-btn': 'archive-modal',
+                'period-analysis-btn': 'period-analysis-modal',
+                'annual-report-btn': 'annual-report-modal',
+                'priority-btn': 'priority-modal',
+                'planner-btn': 'planner-modal',
+                'pdv-dashboard-btn': 'pdv-dashboard-modal'
+            };
+
+            Object.keys(menuMap).forEach(btnId => {
+                document.getElementById(btnId).addEventListener('click', () => {
+                    actionsMenu.classList.add('hidden');
+                    document.getElementById(menuMap[btnId]).classList.remove('hidden');
+                });
+            });
+
+            // Fechamento de Modais Secundários
+            const closeMap = {
+                'bulk-cancel-btn': 'bulk-add-modal',
+                'category-close-btn': 'category-modal',
+                'rename-cancel-btn': 'rename-modal',
+                'archive-cancel-btn': 'archive-modal',
+                'period-analysis-close-btn': 'period-analysis-modal',
+                'annual-report-close-btn': 'annual-report-modal',
+                'priority-close-btn': 'priority-modal',
+                'planner-cancel-btn': 'planner-modal',
+                'pdv-dashboard-close-btn': 'pdv-dashboard-modal',
+                'view-archive-close-btn': 'view-archive-modal',
+                'view-archive-close-footer-btn': 'view-archive-modal',
+                'restore-confirm-cancel-btn': 'restore-confirm-modal',
+                'notification-close-btn': 'notification-modal'
+            };
+
+            Object.keys(closeMap).forEach(btnId => {
+                document.getElementById(btnId).addEventListener('click', () => {
+                    document.getElementById(closeMap[btnId]).classList.add('hidden');
+                });
+            });
+
+            // Listeners de Relatório
+            document.getElementById('generate-report-btn').addEventListener('click', handleGenerateReport);
+            document.querySelectorAll('.period-btn').forEach(button => {
+                button.addEventListener('click', handlePeriodButton);
+            });
+
+            // Ação Ver Arquivos
+            document.getElementById('view-archive-btn').addEventListener('click', () => {
+                document.getElementById('archive-modal').classList.add('hidden');
+                document.getElementById('view-archive-modal').classList.remove('hidden');
+                const archiveContainer = document.getElementById('view-archive-list-container');
+                archiveContainer.innerHTML = archivedTasks.length 
+                    ? archivedTasks.map(t => `<div class="p-2 border-b">${t.condominio} - ${t.dataAnalise}</div>`).join('')
+                    : '<p class="text-center text-slate-500">Vazio</p>';
+            });
+            
+            // Toggle de Tema
+            themeToggleBtn.addEventListener('click', toggleTheme);
+
+
+            // Delegação de Eventos na Lista de Tarefas
             document.getElementById('task-list').addEventListener('click', (e) => {
-                const tId = e.target.dataset.id;
-                if(e.target.classList.contains('del-btn')) { if(confirm('Excluir?')) { tasks=tasks.filter(t=>t.id!=tId); refreshUI(); } }
-                if(e.target.classList.contains('archive-btn')) { const idx = tasks.findIndex(t=>t.id==tId); if(idx>-1) { archivedTasks.push(tasks[idx]); tasks.splice(idx,1); refreshUI(); showNotification('Arquivado.'); } }
-                if(e.target.classList.contains('toggle-btn')) { const t=tasks.find(x=>x.id==tId); if(t){t.isExpanded=!t.isExpanded; refreshUI();} }
-                if(e.target.classList.contains('edit-oc-btn')) {
-                    const t=tasks.find(x=>x.id==tId);
+                const target = e.target;
+                const deleteBtn = target.closest('.delete-task-btn');
+                const archiveBtn = target.closest('.archive-single-btn');
+                const toggleBtn = target.closest('.toggle-details-btn');
+                const editOcBtn = target.closest('.edit-ocorrencia-btn');
+
+                if (deleteBtn) {
+                    // Substituído 'confirm' por uma implementação de modal UI em um contexto real.
+                    // Mantendo 'confirm' temporariamente para a simplicidade deste ambiente.
+                    if (confirm('Excluir análise?')) {
+                        tasks = tasks.filter(t => t.id != deleteBtn.dataset.id);
+                        refreshUI();
+                    }
+                } else if (archiveBtn) {
+                    if (confirm('Arquivar análise?')) {
+                        const idx = tasks.findIndex(t => t.id == archiveBtn.dataset.id);
+                        if(idx > -1) {
+                            archivedTasks.push(tasks[idx]);
+                            tasks.splice(idx, 1);
+                            refreshUI();
+                            showNotification('Análise arquivada.');
+                        }
+                    }
+                } else if (toggleBtn) {
+                    const t = tasks.find(x => x.id == toggleBtn.dataset.id);
+                    if(t) { t.isExpanded = !t.isExpanded; refreshUI(); }
+                } else if (editOcBtn) {
+                    // Abrir Modal Ocorrências
+                    const t = tasks.find(x => x.id == editOcBtn.dataset.id);
                     if(t) {
                         document.getElementById('ocorrencia-task-id').value = t.id;
-                        const lst = document.getElementById('ocorrencia-list'); lst.innerHTML='';
-                        (t.ocorrencias||[]).forEach(o => renderOcorrenciaItemInModal(o, lst));
+                        const list = document.getElementById('ocorrencia-list');
+                        list.innerHTML = '';
+                        // Renderiza ocorrências existentes, incluindo as importadas
+                        (t.ocorrencias || []).forEach(oc => renderOcorrenciaItemInModal(oc, list));
                         populateCategorySelect(document.getElementById('add-ocorrencia-categoria'));
+                        
+                        // Garante que o campo de input de descrição da nova ocorrência esteja limpo
+                        document.getElementById('add-ocorrencia-desc').value = ''; 
                         document.getElementById('ocorrencia-modal').classList.remove('hidden');
                     }
                 }
             });
 
-            // Modal Ocorrências
-            document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const t=tasks.find(x=>x.id==document.getElementById('ocorrencia-task-id').value);
-                if(t) {
-                    t.ocorrencias = Array.from(document.querySelectorAll('.occ-data-item')).map(x=>JSON.parse(x.dataset.json));
-                    refreshUI(); document.getElementById('ocorrencia-modal').classList.add('hidden');
+            // Mudança de Status (Selects)
+            document.getElementById('task-list').addEventListener('change', (e) => {
+                if (e.target.classList.contains('status-select')) {
+                    const id = e.target.dataset.id;
+                    const type = e.target.dataset.type;
+                    const task = tasks.find(t => t.id == id);
+                    if (task) {
+                        if (type === 'backup') task.statusBackup = e.target.value;
+                        if (type === 'analise') task.statusAnalise = e.target.value;
+                        refreshUI();
+                    }
                 }
             });
+
+            // Modal Ocorrências - Adicionar Item
             document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
-                const cat = document.getElementById('add-ocorrencia-categoria').value;
                 const desc = document.getElementById('add-ocorrencia-desc').value;
-                if(desc) renderOcorrenciaItemInModal({categoria:cat, desc:desc, horarioInicial:document.getElementById('add-horario-inicial').value, horarioFinal:document.getElementById('add-horario-final').value}, document.getElementById('ocorrencia-list'));
-                document.getElementById('add-ocorrencia-desc').value='';
+                const cat = document.getElementById('add-ocorrencia-categoria').value;
+                const ini = document.getElementById('add-horario-inicial').value;
+                const fim = document.getElementById('add-horario-final').value;
+                
+                if (desc) {
+                    const item = document.createElement('div');
+                    item.className = 'p-2 bg-orange-50 border border-orange-200 rounded mb-2 new-occ-item dark:bg-orange-900 dark:border-orange-800 dark:text-orange-100';
+                    item.dataset.json = JSON.stringify({ categoria: cat, desc: desc, horarioInicial: ini, horarioFinal: fim });
+                    item.innerHTML = `<strong>${cat}</strong>: ${desc} <span class="text-xs">(${ini} - ${fim})</span>`;
+                    document.getElementById('ocorrencia-list').appendChild(item);
+                    
+                    document.getElementById('add-ocorrencia-desc').value = '';
+                    document.getElementById('add-horario-inicial').value = '';
+                    document.getElementById('add-horario-final').value = '';
+                }
             });
 
-            // Arquivamento Semanal
-            document.getElementById('archive-week-confirm-btn').addEventListener('click', () => {
-                const w = parseInt(document.getElementById('archive-week-input').value);
-                const toArch = tasks.filter(t => t.semanaDeTrabalho === w);
-                if(toArch.length && confirm(`Arquivar ${toArch.length} análises?`)) {
-                    archivedTasks.push(...toArch);
-                    tasks = tasks.filter(t => t.semanaDeTrabalho !== w);
-                    refreshUI(); document.getElementById('archive-week-modal').classList.add('hidden'); showNotification('Arquivado.');
-                } else if(!toArch.length) showNotification('Nada encontrado.');
+            // Modal Ocorrências - Salvar Tudo
+            document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const taskId = document.getElementById('ocorrencia-task-id').value;
+                const task = tasks.find(t => t.id == taskId);
+                if (task) {
+                    // Captura apenas os novos itens (aqueles que não foram renderizados de forma permanente)
+                    const newItems = Array.from(document.querySelectorAll('.new-occ-item')).map(el => JSON.parse(el.dataset.json));
+                    if (!task.ocorrencias) task.ocorrencias = [];
+                    task.ocorrencias.push(...newItems);
+                    
+                    // Garante que o status 'ocorrencia' reflita o número de itens totais
+                    task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não';
+                    refreshUI();
+                    document.getElementById('ocorrencia-modal').classList.add('hidden');
+                }
             });
+            
+            document.getElementById('ocorrencia-cancel-btn').addEventListener('click', () => document.getElementById('ocorrencia-modal').classList.add('hidden'));
 
-            document.getElementById('archive-week-btn').addEventListener('click', () => { document.getElementById('archive-week-input').value = getWeekNumber(new Date()) - 1 || 52; showModal('archive-week-modal'); });
-
-            // Relatórios
-            const initCharts = () => {
-                const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
-                ocorrenciasChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: 'Ocorrências', data: [], backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: { responsive:true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#334155', drawBorder:false } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } } });
-                new Chart(document.getElementById('periodChart'), { type: 'bar', data: {labels:[], datasets:[{data:[]}]} });
-                new Chart(document.getElementById('periodCategoryChart'), { type: 'doughnut', data: {labels:[], datasets:[{data:[]}]} });
-            };
-
-            // Run
-            checkAndRunAutoArchive();
-            initCharts();
+            // Inicialização
+            // CHAMADAS CORRIGIDAS: Garantido que setupCharts esteja definido
+            setupCharts();
+            loadTheme();
+            updateChartsTheme();
             refreshUI();
         });
     </script>
