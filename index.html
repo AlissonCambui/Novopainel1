@@ -539,17 +539,13 @@
                 const newTasks = [];
                 let ignoredCount = 0;
 
-                // Regex para lidar com separação por tabulação ou múltiplos espaços
+                // Regex para lidar com separação por tabulação ou MÚLTIPLOS ESPAÇOS.
+                // Aumentando a flexibilidade para o formato colado.
                 const lineSeparatorRegex = /\s{2,}|\t/g;
 
                 lines.forEach((line, index) => {
-                    // Tenta dividir por tabulação primeiro (padrão de copy/paste de planilhas)
-                    let parts = line.split('\t');
-                    
-                    // Se a separação por tabulação não funcionar, tenta por múltiplos espaços
-                    if (parts.length < 5) { // Esperamos pelo menos Semana, Data, Unidade, Colaborador, Status
-                       parts = line.split(lineSeparatorRegex);
-                    }
+                    // Tenta dividir por tabulação (preferencial) ou múltiplos espaços
+                    let parts = line.split(lineSeparatorRegex);
                     
                     // Limpar espaços nas extremidades de cada parte
                     parts = parts.map(p => p.trim()).filter(p => p.length > 0);
@@ -560,61 +556,69 @@
                     }
                     
                     // Estrutura esperada: [Semana | Dia a visualizar | Unidade | OC | Colaborador | Status]
-                    // Índice 0: Semana
-                    // Índice 1: Data
-                    // Índice 2: Unidade (Condomínio)
-                    // Índice 3: OC (Opcional)
-                    // Índice 4: Colaborador
-                    // Índice 5: Status
 
-                    if (parts.length < 5) {
+                    if (parts.length < 5) { // Mínimo de 5 partes: Semana, Data, Unidade, Colaborador, Status (OC ausente)
                         ignoredCount++;
                         return;
                     }
 
                     const semanaRaw = parts[0] || '';
                     const dataRaw = parts[1] || '';
-                    const unidadeRaw = parts[2] || '';
-                    // OC é o terceiro ou o quarto campo, dependendo se Colaborador está junto
+                    let unidadeRaw = parts[2] || '';
                     let ocRaw = '';
                     let colaboradorRaw = '';
                     let statusRaw = 'Pendente';
                     
-                    if (parts.length === 6) { // Todos os 6 campos presentes
-                        ocRaw = parts[3] || '';
-                        colaboradorRaw = parts[4] || '';
-                        statusRaw = parts[5] || 'Pendente';
-                    } else if (parts.length === 5) { // OC está ausente ou fundido na Unidade
-                        // Se o campo 3 é um número (OC), assumimos 5 campos sendo: [Semana, Data, Unidade, Colaborador, Status]
-                        // Se o campo 3 NÃO é um número, é Colaborador, e 4 é Status
-                        
-                        // Dado o formato do seu paste, a Unidade pode ter fundido OC e Colaborador
-                        // Vamos tentar ser flexíveis, mas garantir os mais importantes: Condomínio, Data, Status.
-                        
-                        // Tentativa: Partes 3, 4 e 5 são OC, Colaborador e Status (pode haver deslocamento)
-                        // Para o seu padrão (Semana 47 16/11/2025 COLORS ALTO DA LAPA Alisson Desconectado) -> 5 campos:
-                        // [Semana 47] [16/11/2025] [COLORS ALTO DA LAPA] [Alisson] [Desconectado]
-                        // Aqui, OC está faltando e Colaborador está no índice 3 e Status no 4.
-                        
-                        // Para o seu padrão (Semana 47 24/10/2025 HIGH GARDEN COSMOPOLITAN 4 Alisson Finalizado) -> 6 campos:
-                        // [Semana 47] [24/10/2025] [HIGH GARDEN COSMOPOLITAN] [4] [Alisson] [Finalizado]
-                        
-                        // Ajustando a leitura para 5 ou 6 campos:
-                        if (parts.length >= 5) {
-                            if (parts.length === 6) {
-                                ocRaw = parts[3];
-                                colaboradorRaw = parts[4];
-                                statusRaw = parts[5];
-                            } else { // parts.length === 5
-                                // Assumindo que OC está vazio e Colaborador e Status estão no final
-                                ocRaw = ''; // O campo 3 (parts[3]) é o Colaborador
-                                colaboradorRaw = parts[3];
-                                statusRaw = parts[4];
-                            }
-                        }
-                    } else { // Caso não se encaixe em 5 ou 6 (ex: 4 campos)
-                         ignoredCount++;
-                         return;
+                    // Lógica para determinar OC, Colaborador e Status a partir do índice 3 em diante.
+                    if (parts.length === 6) { 
+                        // [0:Semana, 1:Data, 2:Unidade, 3:OC, 4:Colaborador, 5:Status]
+                        ocRaw = parts[3];
+                        colaboradorRaw = parts[4];
+                        statusRaw = parts[5];
+                    } else if (parts.length === 5) {
+                        // [0:Semana, 1:Data, 2:Unidade, 3:Colaborador, 4:Status] (OC ausente)
+                        colaboradorRaw = parts[3];
+                        statusRaw = parts[4];
+                    } else if (parts.length > 6) {
+                         // Lidar com nomes compostos na Unidade (índice 2) que foram divididos
+                         // Esta é a parte mais difícil sem uma regra clara.
+                         // Vamos priorizar a identificação de Status e OC se houverem, trabalhando de trás para frente.
+                         
+                         // Pelo seu novo paste, a Unidade pode ser tudo até encontrar a OC (número) ou o Colaborador (texto)
+                         // Ex: [Semana 47] [16/11/2025] [COLORS] [ALTO] [DA] [LAPA] [Alisson] [Desconectado]
+                         // Assumimos que o penúltimo é o Colaborador e o último é o Status
+                         
+                         statusRaw = parts[parts.length - 1];
+                         colaboradorRaw = parts[parts.length - 2];
+                         ocRaw = parts[parts.length - 3]; // Pode ser OC ou parte da Unidade
+                         
+                         // Recalcular Unidade: tudo entre a data (1) e o OC/Colaborador
+                         let unidadeParts = parts.slice(2, parts.length - 3);
+                         unidadeParts.push(parts[parts.length - 3]); // Adicionar o OC/Unidade de volta para testar
+                         
+                         let ocIndex = -1;
+                         for (let i = parts.length - 3; i >= 3; i--) {
+                             if (!isNaN(parseInt(parts[i])) && parts[i].length > 0) {
+                                 ocIndex = i;
+                                 break;
+                             }
+                         }
+
+                         if (ocIndex !== -1) { // OC foi encontrado
+                            ocRaw = parts[ocIndex];
+                            colaboradorRaw = parts[ocIndex + 1] || '';
+                            statusRaw = parts[ocIndex + 2] || 'Pendente';
+                            unidadeRaw = parts.slice(2, ocIndex).join(' ');
+                         } else { // OC não encontrado (apenas 5 campos)
+                            colaboradorRaw = parts[parts.length - 2];
+                            statusRaw = parts[parts.length - 1];
+                            unidadeRaw = parts.slice(2, parts.length - 2).join(' ');
+                            ocRaw = '';
+                         }
+                         
+                    } else {
+                        ignoredCount++;
+                        return;
                     }
                     
                     // Se o campo 'OC' for lido como Colaborador por engano, limpamos
@@ -654,7 +658,7 @@
                         stBackup = 'Concluído';
                     } else if (stLower.includes('desconectado') || stLower.includes('sem gravação') || stLower.includes('sem imagem')) {
                         stBackup = 'Pendente';
-                        stAnalise = 'Pendente'; // Ou um status específico se houver
+                        stAnalise = 'Pendente'; 
                     }
 
                     let ocorrenciasList = [];
@@ -689,7 +693,7 @@
                     refreshUI();
                     document.getElementById('bulk-add-modal').classList.add('hidden');
                     document.getElementById('bulk-input-area').value = '';
-                    showNotification(`${newTasks.length} importados. (${ignoredCount} linhas ignoradas)`);
+                    showNotification(`${newTasks.length} análises importadas. (${ignoredCount} linhas ignoradas)`);
                 } else {
                     showNotification('Nenhum dado válido encontrado. Verifique a formatação.');
                 }
