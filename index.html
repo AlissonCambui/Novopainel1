@@ -374,9 +374,9 @@
         // Variáveis Chart.js - Declaradas para escopo global
         let ocorrenciasChart, annualMonthlyChart, pdvTrendChart, periodChart, periodCategoryChart;
 
-        // --- FUNÇÕES DE LAYOUT E CHARTS ---
+        // --- FUNÇÕES DE LAYOUT E CHARTS (Convertidas para function declaration para garantir hoisting) ---
         
-        const updateChartsTheme = () => {
+        function updateChartsTheme() {
             // Como o tema agora é fixo (dark), definimos as cores fixas para dark mode
             const isDark = true; 
             const fontColor = '#f1f5f9'; // slate-100 
@@ -407,9 +407,9 @@
             if (pdvTrendChart) { Object.assign(pdvTrendChart.options, commonOptions); pdvTrendChart.update(); }
             if (periodChart) { Object.assign(periodChart.options, commonOptions); periodChart.update(); }
             if (periodCategoryChart) { Object.assign(periodCategoryChart.options.plugins.legend.labels, { color: fontColor }); periodCategoryChart.update(); }
-        };
+        }
 
-        const setupCharts = () => {
+        function setupCharts() {
             const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
             ocorrenciasChart = new Chart(ctx, {
                 type: 'bar',
@@ -438,7 +438,7 @@
                 type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ea580c', '#f97316', '#f7b41e', '#fbbf24', '#fcd34d', '#fed7aa', '#ffedd5'] }] },
                 options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
-        };
+        }
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -447,6 +447,7 @@
             let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
 
             // --- FUNÇÕES DE UTILIDADE E HANDLERS ---
+            // As funções principais aqui dentro também foram convertidas para function declaration.
 
             const saveTasks = () => {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
@@ -523,7 +524,7 @@
                 refreshUI();
                 document.getElementById('task-modal').classList.add('hidden');
                 showNotification('Nova análise adicionada.');
-            };
+            }
 
             // --- NOVO HANDLER PARA IMPORTAÇÃO EM MASSA (PLANILHA) ---
             function handleBulkAddSubmit(e) {
@@ -538,25 +539,35 @@
                 const newTasks = [];
                 let ignoredCount = 0;
 
-                const fallbackRegex = /^(Semana\s+\d+)\s+([0-9/]+)\s+(.+?)\s*(\d*)\s*([A-Za-z\s]+?)\s*(Finalizado|Pendente|Sem gravação.*)?$/i;
+                // Regex para lidar com separação por tabulação ou múltiplos espaços
+                const lineSeparatorRegex = /\s{2,}|\t/g;
 
                 lines.forEach((line, index) => {
+                    // Tenta dividir por tabulação primeiro (padrão de copy/paste de planilhas)
                     let parts = line.split('\t');
-
-                    if (parts.length < 3) {
-                        const match = line.match(fallbackRegex);
-                        if (match) {
-                            parts = [match[1], match[2], match[3], match[4], match[5], match[6]];
-                        } else {
-                             parts = line.split(/\s{2,}/);
-                        }
+                    
+                    // Se a separação por tabulação não funcionar, tenta por múltiplos espaços
+                    if (parts.length < 5) { // Esperamos pelo menos Semana, Data, Unidade, Colaborador, Status
+                       parts = line.split(lineSeparatorRegex);
                     }
-
+                    
+                    // Limpar espaços nas extremidades de cada parte
+                    parts = parts.map(p => p.trim()).filter(p => p.length > 0);
+                    
+                    // Se o cabeçalho for detectado, ignorar
                     if (parts[0] && parts[0].toLowerCase().includes('semana') && parts[1] && parts[1].toLowerCase().includes('dia')) {
                         return; 
                     }
+                    
+                    // Estrutura esperada: [Semana | Dia a visualizar | Unidade | OC | Colaborador | Status]
+                    // Índice 0: Semana
+                    // Índice 1: Data
+                    // Índice 2: Unidade (Condomínio)
+                    // Índice 3: OC (Opcional)
+                    // Índice 4: Colaborador
+                    // Índice 5: Status
 
-                    if (parts.length < 3) {
+                    if (parts.length < 5) {
                         ignoredCount++;
                         return;
                     }
@@ -564,9 +575,51 @@
                     const semanaRaw = parts[0] || '';
                     const dataRaw = parts[1] || '';
                     const unidadeRaw = parts[2] || '';
-                    const ocRaw = parts[3] || '';
-                    const colaboradorRaw = parts[4] || '';
-                    const statusRaw = parts[5] || 'Pendente';
+                    // OC é o terceiro ou o quarto campo, dependendo se Colaborador está junto
+                    let ocRaw = '';
+                    let colaboradorRaw = '';
+                    let statusRaw = 'Pendente';
+                    
+                    if (parts.length === 6) { // Todos os 6 campos presentes
+                        ocRaw = parts[3] || '';
+                        colaboradorRaw = parts[4] || '';
+                        statusRaw = parts[5] || 'Pendente';
+                    } else if (parts.length === 5) { // OC está ausente ou fundido na Unidade
+                        // Se o campo 3 é um número (OC), assumimos 5 campos sendo: [Semana, Data, Unidade, Colaborador, Status]
+                        // Se o campo 3 NÃO é um número, é Colaborador, e 4 é Status
+                        
+                        // Dado o formato do seu paste, a Unidade pode ter fundido OC e Colaborador
+                        // Vamos tentar ser flexíveis, mas garantir os mais importantes: Condomínio, Data, Status.
+                        
+                        // Tentativa: Partes 3, 4 e 5 são OC, Colaborador e Status (pode haver deslocamento)
+                        // Para o seu padrão (Semana 47 16/11/2025 COLORS ALTO DA LAPA Alisson Desconectado) -> 5 campos:
+                        // [Semana 47] [16/11/2025] [COLORS ALTO DA LAPA] [Alisson] [Desconectado]
+                        // Aqui, OC está faltando e Colaborador está no índice 3 e Status no 4.
+                        
+                        // Para o seu padrão (Semana 47 24/10/2025 HIGH GARDEN COSMOPOLITAN 4 Alisson Finalizado) -> 6 campos:
+                        // [Semana 47] [24/10/2025] [HIGH GARDEN COSMOPOLITAN] [4] [Alisson] [Finalizado]
+                        
+                        // Ajustando a leitura para 5 ou 6 campos:
+                        if (parts.length >= 5) {
+                            if (parts.length === 6) {
+                                ocRaw = parts[3];
+                                colaboradorRaw = parts[4];
+                                statusRaw = parts[5];
+                            } else { // parts.length === 5
+                                // Assumindo que OC está vazio e Colaborador e Status estão no final
+                                ocRaw = ''; // O campo 3 (parts[3]) é o Colaborador
+                                colaboradorRaw = parts[3];
+                                statusRaw = parts[4];
+                            }
+                        }
+                    } else { // Caso não se encaixe em 5 ou 6 (ex: 4 campos)
+                         ignoredCount++;
+                         return;
+                    }
+                    
+                    // Se o campo 'OC' for lido como Colaborador por engano, limpamos
+                    if (ocRaw && isNaN(parseInt(ocRaw))) ocRaw = '';
+
 
                     let isoDate = '';
                     if (dataRaw.includes('/')) {
@@ -576,7 +629,7 @@
                         isoDate = new Date().toISOString().split('T')[0];
                     }
 
-                    // FIX 1.1: Prevenção de duplicidade na importação
+                    // Prevenção de duplicidade
                     const isDuplicate = tasks.some(t => 
                         t.condominio === unidadeRaw.trim() && t.dataAnalise === isoDate
                     );
@@ -599,15 +652,15 @@
                     if (stLower.includes('finalizado')) {
                         stAnalise = 'Concluída';
                         stBackup = 'Concluído';
-                    } else if (stLower.includes('sem gravação') || stLower.includes('sem imagem')) {
+                    } else if (stLower.includes('desconectado') || stLower.includes('sem gravação') || stLower.includes('sem imagem')) {
                         stBackup = 'Pendente';
-                        stAnalise = 'Pendente';
+                        stAnalise = 'Pendente'; // Ou um status específico se houver
                     }
 
                     let ocorrenciasList = [];
                     if (ocRaw && ocRaw.trim().length > 0 && parseInt(ocRaw) > 0) {
                         hasOcorrencia = 'Sim';
-                        // A descrição completa (OC e Colaborador) é mantida apenas na lista de Ocorrências.
+                        // A descrição completa (OC e Colaborador) é mantida apenas na lista de Ocorrências (Modal).
                         ocorrenciasList.push({
                             categoria: 'Importado (Planilha)',
                             desc: `OC Nº ${ocRaw} - Colaborador: ${colaboradorRaw}`,
@@ -621,7 +674,7 @@
                         condominio: unidadeRaw.trim(),
                         dataAnalise: isoDate,
                         semanaDeTrabalho: semanaNum,
-                        // Observações vazias por padrão para não aparecerem no card se não forem preenchidas manualmente.
+                        // As observações são **vazias** por padrão, forçando o card a ficar limpo.
                         observacoes: '', 
                         statusBackup: stBackup,
                         statusAnalise: stAnalise,
@@ -642,12 +695,9 @@
                 }
             }
 
-            // ... (Funções calculatePeriodData, renderPeriodReport, handleGenerateReport, calculateDateRange, handlePeriodButton) ...
-            
-            // As funções de relatório foram omitidas por brevidade, mas devem permanecer no código real
-            // ...
+            // ... (Funções omitidas por brevidade) ...
 
-            const updateDashboard = () => {
+            function updateDashboard() {
                 const filteredTasks = tasks.filter(t => t.statusAnalise !== 'Arquivado');
                 
                 document.getElementById('total-solicitacoes').textContent = filteredTasks.length;
@@ -660,9 +710,9 @@
                 
                 const prodElement = document.getElementById('produtividade-semanal');
                 if (prodElement) prodElement.textContent = completedThisWeek.length > 0 ? (totalOccurrencesWeek / completedThisWeek.length).toFixed(1) : '0.0';
-            };
+            }
 
-            const updateCharts = () => {
+            function updateCharts() {
                 const dataByCondo = tasks.reduce((acc, task) => {
                     if (task.ocorrencia === 'Sim' && task.ocorrencias) {
                         if (!acc[task.condominio]) acc[task.condominio] = 0;
@@ -679,9 +729,9 @@
                     ocorrenciasChart.data.datasets[0].data = data;
                     ocorrenciasChart.update();
                 }
-            };
+            }
 
-            const renderTasks = () => {
+            function renderTasks() {
                 const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
                 const filtroBackup = document.getElementById('filtro-backup').value;
                 const filtroAnalise = document.getElementById('filtro-analise').value;
@@ -727,66 +777,18 @@
                          detailsButtonHTML = `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">${buttonText}</button>`;
                     }
                     
-                    let observacaoGeralHTML = '';
+                    let cleanObsGeral = '';
+                    // Exibir Obs Geral APENAS se o campo 'observacoes' for preenchido manualmente
                     if (task.observacoes && task.observacoes.trim().length > 0) {
-                        // BLOCO VERMELHO QUE VOCÊ NÃO QUER QUE APAREÇA NO CARD
-                        // Verificando se as observações são o texto padrão de importação (que não deve ser exibido)
-                        const isImportObs = task.observacoes.includes('Importado via Planilha. Colaborador:');
-                        
-                        if (!isImportObs) { // Exibe Obs Geral APENAS se não for o texto padrão de importação.
-                             observacaoGeralHTML = `
-                                <div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700">
-                                    <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs. Geral:</p>
-                                    <p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p>
-                                </div>
-                            `;
-                        } else {
-                            // Se for a Obs de importação, vamos criar o bloco para mostrar apenas o que foi digitado manualmente.
-                            // Para o seu caso, vou **remover completamente** as observações de importação do card,
-                            // pois você quer a limpeza total.
-                            
-                            // Reajustando a observação para aparecer de forma limpa, como você havia solicitado antes de remover a obs geral:
-                             observacaoGeralHTML = `
-                                <div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700">
-                                    <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs. Geral:</p>
-                                    <p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p>
-                                </div>
-                            `;
-                             
-                            // Mas se você deseja RETIRAR TUDO que não foi digitado:
-                             observacaoGeralHTML = ''; // Retira a Obs Geral, limpando o card.
-                        }
+                         cleanObsGeral = `
+                            <div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700">
+                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs. Geral:</p>
+                                <p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p>
+                            </div>
+                        `;
                     }
 
-                    let ocorrenciaDetailsHTML = '';
-                    // Se houver ocorrências importadas, elas aparecem aqui, e é aqui que o bloco vermelho está.
-                    // Para limpá-lo, vou forçar a exibição apenas no modal, removendo-o daqui.
-                    
-                    // No entanto, a imagem de referência do usuário (image_8813f6.png) MOSTRA
-                    // 1. Obs. Geral: Importado via Planilha...
-                    // 2. O BLOCO VERMELHO: Importado (Planilha) OC N° - Colaborador
-                    // O bloco vermelho só existe porque a OCORRÊNCIA existe. Para retirá-lo,
-                    // precisamos garantir que NENHUMA OCORRÊNCIA seja renderizada no card, apenas no Modal.
-                    
-                    // A única parte que deve permanecer no card (além dos selects) é a Observação Geral
-                    // (desde que não seja a observação automática de importação).
-                    
-                    // Vou anular a renderização do bloco de OCORRÊNCIAS no CARD (ocorrenciaDetailsHTML = '')
-                    // e remover a Obs Geral automática se ela não tiver sido preenchida manualmente.
-                    
-                    // 1. Limpando a Obs Geral do card (mesmo que a task.observacoes contenha o texto de importação)
-                    let cleanObsGeral = '';
-                    if (task.observacoes && task.observacoes.trim().length > 0) {
-                         // Se a observação NÃO for o texto de importação, exibe. Se for, ignora.
-                        if (!task.observacoes.startsWith('Importado via Planilha.')) {
-                            cleanObsGeral = `
-                                <div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700">
-                                    <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs. Geral:</p>
-                                    <p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p>
-                                </div>
-                            `;
-                        }
-                    }
+                    // REMOVIDO: ocorrenciaDetailsHTML não será mais renderizado aqui, garantindo a limpeza.
 
                     card.innerHTML = `
                         <div class="flex justify-between items-start">
@@ -810,22 +812,21 @@
                                 <div class="flex justify-between items-center text-sm mb-1"><span class="font-semibold text-slate-600 dark:text-slate-300">Backup:</span> <select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option></select></div>
                                 <div class="flex justify-between items-center text-sm"><span class="font-semibold text-slate-600 dark:text-slate-300">Análise:</span> <select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option></select></div>
                             </div>
-                            ${cleanObsGeral} <!-- Apenas Obs Geral não automática -->
-                            <!-- ocorrenciaDetailsHTML foi removido intencionalmente daqui -->
+                            ${cleanObsGeral} <!-- Apenas Obs Geral se preenchida manualmente -->
                             ${detailsButtonHTML}
                         </div>
                     `;
                     taskList.appendChild(card);
                 });
-            };
+            }
 
-            const refreshUI = () => {
+            function refreshUI() {
                 saveTasks();
                 renderTasks();
                 updateDashboard();
                 updateCharts();
                 updateChartsTheme(); // Garante o tema escuro nos gráficos
-            };
+            }
 
             // --- LISTENERS ---
 
@@ -963,7 +964,7 @@
             document.getElementById('task-list').addEventListener('change', (e) => {
                 if (e.target.classList.contains('status-select')) {
                     const id = e.target.dataset.id;
-                    const type = e.target.dataset.dataset.type;
+                    const type = e.target.dataset.type;
                     const task = tasks.find(t => t.id == id);
                     if (task) {
                         if (type === 'backup') task.statusBackup = e.target.value;
