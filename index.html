@@ -290,7 +290,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v17.9 (Correção de Arquivamento)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v18.0 (Correção Local Storage)</p>
             </footer>
         </div>
     </div>
@@ -604,7 +604,12 @@
                 addListener('excel-import-close-btn', 'click', () => App.closeModalUI('excel-import-modal'));
                 addListener('process-import-btn', 'click', () => App.processExcel());
                 
-                addListener('archive-btn', 'click', () => { App.renderArchiveList(); App.openModalUI('archive-modal'); });
+                // --- CORREÇÃO: LIMPAR CAMPO DE PESQUISA AO ABRIR O ARQUIVO MORTO ---
+                addListener('archive-btn', 'click', () => { 
+                    document.getElementById('archive-search').value = ''; 
+                    App.renderArchiveList(); 
+                    App.openModalUI('archive-modal'); 
+                });
                 addListener('archive-close-btn', 'click', () => App.closeModalUI('archive-modal'));
                 addListener('archive-search', 'input', () => App.renderArchiveList());
                 
@@ -778,8 +783,13 @@
                 }, (error) => { console.error("Firestore Error:", error); document.getElementById('db-error-banner').classList.remove('hidden'); });
             },
 
-            // --- AUTO ARQUIVAMENTO ---
+            // --- AUTO ARQUIVAMENTO (CORRIGIDO) ---
             autoArchive() {
+                // Lógica de Arquivamento Baseada em Semanas Completas (Segunda-feira)
+                // N = Semana Atual
+                // N-1 = Semana Passada (Visível)
+                // N-2 = Semana Retrasada (Arquivar tudo - Pendente ou Concluída)
+                
                 const now = new Date();
                 now.setHours(0,0,0,0);
                 
@@ -798,11 +808,13 @@
                 const active = [];
                 
                 this.data.tasks.forEach(t => {
+                    // SE ESTIVER MARCADA COMO RESTAURAÇÃO MANUAL (t.manualRestore == true), NÃO ARQUIVA.
                     if (t.manualRestore) {
                         active.push(t);
                         return;
                     }
 
+                    // Regra normal: Arquiva se for anterior à semana passada
                     if (t.dataAnalise < limitStr) {
                         this.data.archived.push(t);
                         changed = true;
@@ -996,7 +1008,19 @@
             },
             
             saveToLocalStorageCache() { localStorage.setItem('mon_tasks', JSON.stringify(this.data.tasks)); localStorage.setItem('mon_archived', JSON.stringify(this.data.archived)); },
-            loadDataLocal() { try { const t = localStorage.getItem('mon_tasks'); if(t) this.data.tasks = JSON.parse(t); this.render(); } catch(e){} },
+            
+            // --- CORREÇÃO: CARREGAR ARQUIVO MORTO DO LOCAL STORAGE ---
+            loadDataLocal() { 
+                try { 
+                    const t = localStorage.getItem('mon_tasks'); 
+                    if(t) this.data.tasks = JSON.parse(t); 
+                    
+                    const a = localStorage.getItem('mon_archived');
+                    if(a) this.data.archived = JSON.parse(a);
+                    
+                    this.render(); 
+                } catch(e){} 
+            },
             
             addTask(task) {
                 const t = { id: crypto.randomUUID(), ...task, statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencias: [], createdAt: new Date().toISOString() };
@@ -1254,7 +1278,8 @@
                  const list = document.getElementById('archive-list');
                  const search = document.getElementById('archive-search').value.toLowerCase();
                  
-                 const filtered = this.data.archived.filter(t => t.condominio.toLowerCase().includes(search));
+                 // CORREÇÃO: Evitar erro se condominio não existir
+                 const filtered = this.data.archived.filter(t => (t.condominio || '').toLowerCase().includes(search));
 
                  if (filtered.length === 0) {
                      list.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Nenhum item encontrado.</p>';
