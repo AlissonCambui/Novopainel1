@@ -205,12 +205,12 @@
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
                     <h3 class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">Análises Concluídas</h3>
                     <p id="analises-concluidas" class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">0</p>
-                    <p class="text-xs text-slate-400 text-right">Em Tela (N + N-1)</p>
+                    <p class="text-xs text-slate-400 text-right">Estatística Semanal</p>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
                     <h3 class="text-xs font-bold uppercase text-red-600 dark:text-red-400">Ocorrências</h3>
                     <p id="total-ocorrencias-semana" class="text-3xl font-bold text-red-500">0</p>
-                    <p class="text-xs text-slate-400 text-right">Total Geral</p>
+                    <p class="text-xs text-slate-400 text-right">Estatística Semanal</p>
                 </div>
                 <!-- CARD MÉDIA -->
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
@@ -255,9 +255,6 @@
                                 <button id="archive-btn" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                                     <i class="ph ph-archive-box text-lg text-purple-500"></i> Arquivo Morto
                                 </button>
-                                <button id="recycle-bin-btn" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                    <i class="ph ph-trash text-lg"></i> Lixeira / Excluídos
-                                </button>
                                 <div class="border-t border-slate-100 dark:border-slate-700 my-0"></div>
                                 <button id="export-data-btn" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                                     <i class="ph ph-download-simple text-lg text-slate-500"></i> Backup Local (JSON)
@@ -293,7 +290,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v17.0 (Stable Release)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v17.8 (Carimbo Inteligente)</p>
             </footer>
         </div>
     </div>
@@ -374,25 +371,6 @@
         </div>
     </div>
 
-    <!-- Modal Ajuda Esqueci Senha -->
-    <div id="forgot-password-help-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[70]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-sm border border-orange-200 dark:border-slate-700 shadow-2xl relative">
-             <button onclick="document.getElementById('forgot-password-help-modal').classList.add('hidden')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-xl">&times;</button>
-             <div class="text-center mb-4">
-                 <div class="w-12 h-12 bg-orange-100 text-brand-orange rounded-full flex items-center justify-center mx-auto mb-2 text-2xl"><i class="ph ph-warning-circle"></i></div>
-                 <h2 class="text-lg font-bold dark:text-white">Recuperação de Senha</h2>
-             </div>
-             <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 text-center leading-relaxed">
-                 Para recuperar a senha, contacte o Administrador do sistema.
-             </p>
-             <div class="bg-slate-50 dark:bg-slate-700 p-3 rounded text-xs text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-600">
-                 <strong>Procedimento:</strong><br>
-                 O Administrador deve remover o utilizador da lista de autorizações e adicioná-lo novamente para que uma nova senha possa ser criada.
-             </div>
-             <button onclick="document.getElementById('forgot-password-help-modal').classList.add('hidden')" class="w-full mt-4 bg-brand-orange text-white py-2 rounded text-sm font-bold hover:bg-orange-700">Entendi</button>
-        </div>
-    </div>
-
     <!-- Modal Troca de Senha -->
     <div id="change-password-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[65]">
         <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-sm border dark:border-slate-700 shadow-2xl">
@@ -453,68 +431,37 @@
         </div>
     </div>
 
-    <!-- Modal Ocorrências -->
+    <!-- Modal Ocorrências (ATUALIZADO) -->
     <div id="ocorrencia-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl h-[90vh] flex flex-col border dark:border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold dark:text-white">Ocorrências: <span id="modal-condo-name" class="text-brand-orange"></span></h2>
                 <button id="ocorrencia-cancel-btn" class="text-slate-400 hover:text-red-500 text-2xl transition-colors">&times;</button>
             </div>
-            <div id="ocorrencia-list" class="flex-grow overflow-y-auto mb-4 space-y-2 p-2 bg-slate-50 dark:bg-slate-900 rounded border dark:border-slate-700 shadow-inner"></div>
+            
+            <div id="ocorrencia-list" class="flex-grow overflow-y-auto mb-4 space-y-2 p-2 bg-slate-50 dark:bg-slate-900 rounded border dark:border-slate-700 shadow-inner">
+                <!-- Lista de Ocorrências aqui -->
+            </div>
+            
             <div class="pt-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
-                <!-- NOVO BOTÃO DE COLAR DA ÁREA DE TRANSFERÊNCIA -->
-                <div class="mb-3 flex justify-end">
-                    <button onclick="App.pasteFromClipboard()" class="text-xs font-bold bg-blue-100 text-blue-600 hover:bg-blue-200 py-1.5 px-3 rounded flex items-center gap-2 transition-colors">
-                        <i class="ph ph-clipboard-text text-lg"></i> Colar da Área de Transferência
-                    </button>
-                </div>
-
+                <!-- LINHA 1: Categoria e Descrição -->
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
-                    <select id="add-ocorrencia-categoria" class="md:col-span-4 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600"></select>
-                    <input type="text" id="add-ocorrencia-desc" placeholder="Descrição da ocorrência..." class="md:col-span-8 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600">
+                    <select id="add-ocorrencia-categoria" class="md:col-span-4 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none"></select>
+                    <input type="text" id="add-ocorrencia-desc" placeholder="Descrição da ocorrência..." class="md:col-span-8 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
                 </div>
+                
+                <!-- LINHA 2: Horário Inicial e Final -->
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <div class="flex flex-col">
                         <label class="text-[10px] text-slate-500 uppercase font-bold mb-1">Início</label>
-                        <input type="time" id="add-horario-inicial" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600">
+                        <input type="time" id="add-horario-inicial" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
                     </div>
                     <div class="flex flex-col">
                          <label class="text-[10px] text-slate-500 uppercase font-bold mb-1">Fim</label>
-                         <input type="time" id="add-horario-final" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600">
+                         <input type="time" id="add-horario-final" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
                     </div>
                 </div>
-
-                <!-- CÂMERAS E HORÁRIOS (SINCRONIA) -->
-                <div class="mt-2 border-t dark:border-slate-700 pt-2">
-                    <p class="text-[10px] font-bold uppercase text-slate-500 mb-2">Câmeras e Horários (Sincronia)</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <!-- Camera 1 -->
-                        <div class="flex items-center gap-2 bg-white dark:bg-slate-700 p-2 rounded border dark:border-slate-600">
-                            <input type="checkbox" id="check-cam-1" class="accent-brand-orange" onchange="App.toggleCamInput(1)">
-                            <span class="text-xs font-bold dark:text-white">CAM 01</span>
-                            <input type="time" id="time-cam-1" step="1" class="ml-auto w-24 text-xs border rounded p-1 dark:bg-slate-800 dark:text-white" disabled>
-                        </div>
-                        <!-- Camera 2 -->
-                        <div class="flex items-center gap-2 bg-white dark:bg-slate-700 p-2 rounded border dark:border-slate-600">
-                            <input type="checkbox" id="check-cam-2" class="accent-brand-orange" onchange="App.toggleCamInput(2)">
-                            <span class="text-xs font-bold dark:text-white">CAM 02</span>
-                            <input type="time" id="time-cam-2" step="1" class="ml-auto w-24 text-xs border rounded p-1 dark:bg-slate-800 dark:text-white" disabled>
-                        </div>
-                        <!-- Camera 3 -->
-                        <div class="flex items-center gap-2 bg-white dark:bg-slate-700 p-2 rounded border dark:border-slate-600">
-                            <input type="checkbox" id="check-cam-3" class="accent-brand-orange" onchange="App.toggleCamInput(3)">
-                            <span class="text-xs font-bold dark:text-white">CAM 03</span>
-                            <input type="time" id="time-cam-3" step="1" class="ml-auto w-24 text-xs border rounded p-1 dark:bg-slate-800 dark:text-white" disabled>
-                        </div>
-                        <!-- Camera 4 -->
-                        <div class="flex items-center gap-2 bg-white dark:bg-slate-700 p-2 rounded border dark:border-slate-600">
-                            <input type="checkbox" id="check-cam-4" class="accent-brand-orange" onchange="App.toggleCamInput(4)">
-                            <span class="text-xs font-bold dark:text-white">CAM 04</span>
-                            <input type="time" id="time-cam-4" step="1" class="ml-auto w-24 text-xs border rounded p-1 dark:bg-slate-800 dark:text-white" disabled>
-                        </div>
-                    </div>
-                </div>
-
+                
                 <div class="flex gap-2 mt-3">
                     <button id="add-ocorrencia-btn" class="flex-1 bg-orange-100 text-brand-orange font-bold py-2 rounded hover:bg-orange-200 transition-colors border border-orange-200">+ Adicionar Item</button>
                     <button id="save-ocorrencias-btn" class="flex-1 bg-brand-orange text-white font-bold py-2 rounded hover:bg-orange-700 transition-colors shadow-lg shadow-orange-500/20">Salvar Alterações</button>
@@ -527,31 +474,11 @@
     <div id="excel-import-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl border dark:border-slate-700 shadow-2xl">
             <h2 class="text-xl font-bold mb-2 dark:text-white">Importar Dados (Excel)</h2>
-            
-            <!-- Link Configuration Area -->
-            <div class="mb-4 p-3 bg-blue-50 dark:bg-slate-900/50 rounded-lg border border-blue-100 dark:border-slate-600">
-                <label class="block text-[10px] font-bold uppercase text-blue-500 dark:text-blue-400 mb-1">Link da Planilha Mestra (Excel Online)</label>
-                <div class="flex gap-2">
-                    <input type="text" id="spreadsheet-link-input" class="flex-1 text-xs p-2 rounded border dark:bg-slate-800 dark:border-slate-600 dark:text-white outline-none" placeholder="Cole o link do Excel Online aqui...">
-                    <button onclick="App.openSpreadsheetLink()" class="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded hover:bg-blue-700 transition flex items-center gap-1">
-                        <i class="ph ph-arrow-square-out"></i> Abrir
-                    </button>
-                </div>
-                <p class="text-[10px] text-slate-400 mt-1">Configure uma vez. Depois basta clicar em "Abrir", copiar os dados (Ctrl+A, Ctrl+C) e colar abaixo.</p>
-            </div>
-
-            <p class="text-xs text-slate-500 mb-2">Cole as linhas do Excel aqui para importar em massa.</p>
-            <textarea id="excel-paste-area" rows="8" class="w-full p-3 text-sm font-mono bg-slate-100 dark:bg-slate-900 border rounded dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Cole os dados aqui..."></textarea>
-            
-            <div class="flex justify-between items-center mt-4">
-                <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
-                    <input type="checkbox" id="filter-by-name-check" checked class="w-4 h-4 text-brand-orange rounded focus:ring-brand-orange">
-                    <span class="select-none">Filtrar apenas minhas tarefas (Separação Inteligente)</span>
-                </label>
-                <div class="flex gap-2">
-                    <button id="excel-import-close-btn" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white transition-colors">Cancelar</button>
-                    <button id="process-import-btn" class="px-4 py-2 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors">Processar Dados</button>
-                </div>
+            <p class="text-xs text-slate-500 mb-4">Cole as linhas do Excel aqui para importar em massa.</p>
+            <textarea id="excel-paste-area" rows="10" class="w-full p-3 text-sm font-mono bg-slate-100 dark:bg-slate-900 border rounded dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Cole os dados aqui..."></textarea>
+            <div class="flex justify-end gap-2 mt-4">
+                <button id="excel-import-close-btn" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white transition-colors">Cancelar</button>
+                <button id="process-import-btn" class="px-4 py-2 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors">Processar Dados</button>
             </div>
         </div>
     </div>
@@ -562,29 +489,12 @@
                 <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2"><i class="ph ph-archive-box"></i> Arquivo Morto</h2>
                 <button id="archive-close-btn" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
             </div>
-            <!-- SEARCH BAR FOR ARCHIVE -->
-            <div class="mb-3">
-                <input type="text" id="archive-search" placeholder="Buscar no arquivo..." class="w-full text-sm p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-1 focus:ring-brand-orange outline-none">
-            </div>
+            
+            <input type="text" id="archive-search" placeholder="Pesquisar no arquivo..." class="mb-3 w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-brand-orange">
+            
             <div id="archive-list" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
             <div class="mt-4 pt-2 border-t dark:border-slate-700 text-right">
                 <p class="text-xs text-slate-400 text-left mb-2">Itens arquivados não aparecem nas estatísticas principais.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Lixeira -->
-    <div id="recycle-bin-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl border border-red-100 dark:border-red-900">
-            <div class="flex justify-between mb-4 border-b dark:border-slate-700 pb-2">
-                <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2 text-red-500"><i class="ph ph-trash"></i> Lixeira (Excluídos)</h2>
-                <button onclick="App.closeModalUI('recycle-bin-modal')" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
-            </div>
-            <div id="recycle-bin-list" class="flex-grow overflow-y-auto space-y-2 pr-2">
-                <!-- JS Preenche -->
-            </div>
-            <div class="mt-4 pt-2 border-t dark:border-slate-700 text-right">
-                <p class="text-xs text-slate-400 text-left mb-2">Itens excluídos que podem ser recuperados.</p>
             </div>
         </div>
     </div>
@@ -631,8 +541,7 @@
                 adminEmail: 'alisson.cambui@vendperto.local',
                 editingId: null,
                 pendingDeleteId: null,
-                editingTaskId: null,
-                spreadsheetUrl: '' 
+                editingTaskId: null
             },
             charts: {},
             statusColors: {
@@ -691,37 +600,14 @@
                 addListener('cloud-config-btn', 'click', () => App.openModalUI('cloud-config-modal'));
                 addListener('reset-cloud-btn', 'click', () => { if(confirm('Redefinir configuração?')) App.resetToLocal(); });
                 
-                addListener('excel-import-btn', 'click', () => {
-                    const savedLink = localStorage.getItem('mon_spreadsheet_link');
-                    if (savedLink) {
-                        App.data.spreadsheetUrl = savedLink;
-                        document.getElementById('spreadsheet-link-input').value = savedLink;
-                    }
-                    App.openModalUI('excel-import-modal');
-                });
+                addListener('excel-import-btn', 'click', () => App.openModalUI('excel-import-modal'));
                 addListener('excel-import-close-btn', 'click', () => App.closeModalUI('excel-import-modal'));
                 addListener('process-import-btn', 'click', () => App.processExcel());
                 
-                const linkInput = document.getElementById('spreadsheet-link-input');
-                if (linkInput) {
-                    linkInput.addEventListener('input', (e) => {
-                        App.data.spreadsheetUrl = e.target.value;
-                        localStorage.setItem('mon_spreadsheet_link', e.target.value);
-                    });
-                }
-
                 addListener('archive-btn', 'click', () => { App.renderArchiveList(); App.openModalUI('archive-modal'); });
                 addListener('archive-close-btn', 'click', () => App.closeModalUI('archive-modal'));
+                addListener('archive-search', 'input', () => App.renderArchiveList());
                 
-                // Search Archive
-                const archiveSearch = document.getElementById('archive-search');
-                if(archiveSearch) {
-                    archiveSearch.addEventListener('input', () => App.renderArchiveList());
-                }
-
-                // Recycle Bin
-                addListener('recycle-bin-btn', 'click', () => { App.openRecycleBin(); });
-
                 addListener('export-data-btn', 'click', () => App.exportData());
                 addListener('import-data-btn', 'click', () => document.getElementById('file-input').click());
                 addListener('file-input', 'change', (e) => { 
@@ -732,7 +618,6 @@
                                 const j = JSON.parse(ev.target.result); 
                                 App.data.tasks=j.tasks||[]; 
                                 App.data.archived=j.archived||[]; 
-                                if(j.deletedHistory) App.data.deletedHistory = j.deletedHistory;
                                 App.saveData(); 
                                 App.showToast('Restaurado'); 
                                 setTimeout(()=>window.location.reload(), 500); 
@@ -780,6 +665,65 @@
                 if (!this.data.user) this.toggleAuthMode('login');
             },
 
+            getTodayString() {
+                const now = new Date();
+                const offset = now.getTimezoneOffset();
+                const local = new Date(now.getTime() - (offset * 60 * 1000));
+                return local.toISOString().split('T')[0];
+            },
+            
+            updateCharts() {
+                 if(!this.charts.oc) return;
+                 const counts = {}; this.data.tasks.forEach(t => { if(t.ocorrencias?.length) counts[t.condominio] = (counts[t.condominio]||0)+t.ocorrencias.length; });
+                 const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+                 this.charts.oc.data.labels = sorted.map(x=>x[0]); this.charts.oc.data.datasets[0].data = sorted.map(x=>x[1]); this.charts.oc.update();
+            },
+
+            toggleAuthMode(mode) {
+                this.data.authMode = mode;
+                const loginBtn = document.getElementById('tab-login');
+                const regBtn = document.getElementById('tab-register');
+                const actionBtn = document.getElementById('action-btn');
+                const title = document.getElementById('auth-title');
+                const errorMsg = document.getElementById('auth-error-msg');
+                const passLabel = document.getElementById('lbl-password');
+                
+                if (errorMsg) errorMsg.classList.add('hidden');
+
+                if (mode === 'login') {
+                    loginBtn.className = "flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-600 text-brand-orange shadow-sm transition-all";
+                    regBtn.className = "flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-all";
+                    actionBtn.textContent = "Acessar Painel";
+                    title.textContent = "Entrar no Sistema";
+                    if (passLabel) passLabel.textContent = "Sua Senha"; 
+                    actionBtn.onclick = () => App.loginWithUser();
+                } else {
+                    regBtn.className = "flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-600 text-brand-orange shadow-sm transition-all";
+                    loginBtn.className = "flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-all";
+                    actionBtn.textContent = "Criar Minha Senha";
+                    title.textContent = "Primeiro Acesso";
+                    if (passLabel) passLabel.textContent = "Crie uma Senha"; 
+                    actionBtn.onclick = () => App.registerWithUser();
+                }
+            },
+
+            openModalUI(id) { document.getElementById(id).classList.remove('hidden'); },
+            closeModalUI(id) { document.getElementById(id).classList.add('hidden'); },
+            openMyAccountModal() { document.getElementById('my-account-modal').classList.remove('hidden'); },
+            openForgotPasswordHelp() { document.getElementById('forgot-password-help-modal').classList.remove('hidden'); },
+            openAdminPanel() { 
+                if (this.data.user && this.data.user.isAdmin) {
+                     this.openModalUI('admin-panel-modal');
+                     this.loadAuthorizedUsers();
+                } else {
+                    alert("Acesso restrito a administradores.");
+                }
+            },
+            
+            switchToLoginView() { document.getElementById('login-view').classList.remove('hidden'); document.getElementById('dashboard-view').classList.add('hidden'); },
+            switchToDashboardView() { document.getElementById('login-view').classList.add('hidden'); document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('dashboard-view').classList.add('flex'); setTimeout(() => this.updateCharts(), 100); },
+            parseConfig(str) { try { return JSON.parse(str); } catch (e) { try { const jsonStr = str.replace(/(\w+):/g, '"$1":'); return JSON.parse(jsonStr); } catch (e2) { return null; } } },
+            
             // FIREBASE INIT
             async initFirebase(config) {
                 try {
@@ -834,8 +778,13 @@
                 }, (error) => { console.error("Firestore Error:", error); document.getElementById('db-error-banner').classList.remove('hidden'); });
             },
 
-            // --- AUTO ARQUIVAMENTO ---
+            // --- AUTO ARQUIVAMENTO (CORRIGIDO) ---
             autoArchive() {
+                // Lógica de Arquivamento Baseada em Semanas Completas (Segunda-feira)
+                // N = Semana Atual
+                // N-1 = Semana Passada (Visível)
+                // N-2 = Semana Retrasada (Arquivar tudo - Pendente ou Concluída)
+                
                 const now = new Date();
                 now.setHours(0,0,0,0);
                 
@@ -854,11 +803,13 @@
                 const active = [];
                 
                 this.data.tasks.forEach(t => {
+                    // SE ESTIVER MARCADA COMO RESTAURAÇÃO MANUAL (t.manualRestore == true), NÃO ARQUIVA.
                     if (t.manualRestore) {
                         active.push(t);
                         return;
                     }
 
+                    // Regra normal: Arquiva se for anterior à semana passada
                     if (t.dataAnalise < limitStr) {
                         this.data.archived.push(t);
                         changed = true;
@@ -876,7 +827,7 @@
             
             generateEmail(name) { return `${name.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '')}@vendperto.local`; },
             
-            // LOGIN
+            // LOGIN CORRIGIDO
             async loginWithUser() { 
                 const errorMsg = document.getElementById('auth-error-msg');
                 errorMsg.classList.add('hidden'); 
@@ -914,7 +865,7 @@
                 }
             },
 
-            // REGISTRO
+            // REGISTRO CORRIGIDO
             async registerWithUser() {
                 const name = document.getElementById('login-username').value.trim().toUpperCase();
                 const pass = document.getElementById('login-password').value;
@@ -954,7 +905,7 @@
                 }
             },
 
-            // ADMIN
+            // ADMIN: AUTORIZAR USUÁRIO
             async authorizeNewUser() {
                 const nameInput = document.getElementById('new-user-name');
                 const name = nameInput.value.trim().toUpperCase();
@@ -1005,38 +956,183 @@
                 }
             },
 
-            toggleCamInput(id) {
-                const check = document.getElementById(`check-cam-${id}`);
-                const input = document.getElementById(`time-cam-${id}`);
-                if (check && input) {
-                    input.disabled = !check.checked;
-                    if (check.checked && !input.value) {
-                        const mainStart = document.getElementById('add-horario-inicial').value;
-                        if (mainStart) input.value = mainStart;
-                    } else if (!check.checked) {
-                        input.value = '';
+            openChangePasswordModal() { document.getElementById('change-password-modal').classList.remove('hidden'); },
+            
+            async changeUserPassword() {
+                const newPass = document.getElementById('new-password-input').value;
+                if (!newPass || newPass.length < 6) return alert("Mínimo 6 caracteres.");
+                
+                try {
+                    const safeId = this.data.user.uid;
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId);
+                    await updateDoc(docRef, { password: newPass });
+                    alert("Senha alterada com sucesso.");
+                    this.closeModalUI('change-password-modal');
+                } catch(e) {
+                    alert("Erro ao alterar senha.");
+                }
+            },
+            
+            async logout() { this.data.user = null; localStorage.removeItem('mon_user'); this.switchToLoginView(); },
+            
+            updateUserInfo(u) { 
+                let displayName = u.name || 'Utilizador';
+                if (u.isAdmin) displayName += ' (ADMIN)';
+                document.getElementById('user-display-name').textContent = displayName; 
+                document.getElementById('account-modal-name').textContent = displayName;
+                if (u.isAdmin) document.getElementById('admin-panel-btn').classList.remove('hidden');
+            },
+            
+            resetToLocal() { localStorage.removeItem('mon_firebase_config'); window.location.reload(); },
+            updateUIMode() { /* ... */ },
+            
+            async saveData() { 
+                 const cleanTasks = JSON.parse(JSON.stringify(this.data.tasks));
+                 const cleanArchived = JSON.parse(JSON.stringify(this.data.archived));
+                 this.saveToLocalStorageCache();
+                 
+                 if (this.data.mode === 'cloud' && this.data.user) {
+                    try {
+                        const safeId = this.data.user.uid;
+                        const dataRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + safeId);
+                        await setDoc(dataRef, { tasks: cleanTasks, archived: cleanArchived, deletedHistory: this.data.deletedHistory, lastUpdate: new Date().toISOString(), ownerEmail: this.data.user.email }, { merge: true });
+                    } catch(e) { console.error("Erro save cloud", e); }
+                 }
+                 this.render(); 
+                 this.updateCharts();
+            },
+            
+            saveToLocalStorageCache() { localStorage.setItem('mon_tasks', JSON.stringify(this.data.tasks)); localStorage.setItem('mon_archived', JSON.stringify(this.data.archived)); },
+            loadDataLocal() { try { const t = localStorage.getItem('mon_tasks'); if(t) this.data.tasks = JSON.parse(t); this.render(); } catch(e){} },
+            
+            addTask(task) {
+                const t = { id: crypto.randomUUID(), ...task, statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencias: [], createdAt: new Date().toISOString() };
+                this.data.tasks.unshift(t);
+                this.saveData();
+                this.showToast('Análise criada!');
+            },
+
+            editTask(id) {
+                const task = this.data.tasks.find(t => t.id === id);
+                if (!task) return;
+
+                this.data.editingTaskId = id;
+                document.getElementById('task-modal-title').textContent = "Editar Análise";
+                document.getElementById('form-condominio').value = task.condominio;
+                document.getElementById('form-data-analise').value = task.dataAnalise;
+                document.getElementById('form-semana').value = task.semana || '';
+                document.getElementById('form-observacoes').value = task.observacoes || '';
+                App.openModalUI('task-modal');
+            },
+
+            saveTaskFromForm() {
+                const id = this.data.editingTaskId;
+                const newData = {
+                    condominio: document.getElementById('form-condominio').value,
+                    dataAnalise: document.getElementById('form-data-analise').value,
+                    semana: document.getElementById('form-semana').value,
+                    observacoes: document.getElementById('form-observacoes').value
+                };
+
+                if (id) {
+                    // Editing existing task
+                    const task = this.data.tasks.find(t => t.id === id);
+                    if (task) {
+                        Object.assign(task, newData);
+                        this.showToast('Análise atualizada!');
                     }
+                } else {
+                    // Creating new task
+                    this.addTask(newData);
+                }
+                
+                this.saveData();
+                this.closeModalUI('task-modal');
+            },
+            
+            // --- NOVA FUNÇÃO DE OCORRÊNCIA SIMPLIFICADA (SEM CAMERA, COM INICIO/FIM) ---
+            addOccurrence() {
+                const cat = document.getElementById('add-ocorrencia-categoria').value;
+                const desc = document.getElementById('add-ocorrencia-desc').value;
+                // REMOVIDO: const cam = document.getElementById('add-camera').value || 'GERAL';
+                // REVERTIDO:
+                const ini = document.getElementById('add-horario-inicial').value;
+                const fim = document.getElementById('add-horario-final').value;
+                
+                if (!desc) return alert("Descreva a ocorrência.");
+                
+                const taskId = document.getElementById('ocorrencia-current-task-id').value;
+                const task = this.data.tasks.find(t => t.id === taskId);
+                
+                if (task) {
+                    if (!task.ocorrencias) task.ocorrencias = [];
+
+                    if (this.data.editingId) {
+                        const oc = task.ocorrencias.find(o => o.id === this.data.editingId);
+                        if (oc) {
+                            oc.categoria = cat;
+                            oc.descricao = desc;
+                            oc.inicio = ini;
+                            oc.fim = fim;
+                            this.showToast('Item atualizado!');
+                        }
+                        this.data.editingId = null; 
+                        this.resetOcorrenciaFormUI();
+                    } else {
+                        task.ocorrencias.push({ 
+                            id: crypto.randomUUID(), 
+                            categoria: cat, 
+                            descricao: desc, 
+                            inicio: ini,
+                            fim: fim
+                        });
+                        this.showToast('Item adicionado!');
+                    }
+                    
+                    this.saveData(); 
+                    this.renderOcorrenciasList(task);
+                    
+                    document.getElementById('add-ocorrencia-desc').value = '';
+                    document.getElementById('add-horario-inicial').value = '';
+                    document.getElementById('add-horario-final').value = '';
                 }
             },
 
-            openSpreadsheetLink() {
-                const url = this.data.spreadsheetUrl;
-                if (url) {
-                    window.open(url, '_blank');
-                } else {
-                    alert("Cole o link da planilha primeiro.");
-                }
+            prepareEditOcorrencia(taskId, ocId) {
+                const task = this.data.tasks.find(t => t.id === taskId);
+                if (!task) return;
+                const oc = task.ocorrencias.find(o => o.id === ocId);
+                if (!oc) return;
+
+                document.getElementById('add-ocorrencia-categoria').value = oc.categoria;
+                document.getElementById('add-ocorrencia-desc').value = oc.descricao;
+                document.getElementById('add-horario-inicial').value = oc.inicio || '';
+                document.getElementById('add-horario-final').value = oc.fim || '';
+
+                this.data.editingId = ocId;
+
+                const btn = document.getElementById('add-ocorrencia-btn');
+                btn.innerHTML = `<i class="ph ph-floppy-disk text-lg"></i> Salvar Edição`;
+                btn.className = "flex-1 bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition-colors shadow-lg";
+            },
+
+            resetOcorrenciaForm() {
+                 this.data.editingId = null;
+                 document.getElementById('add-ocorrencia-desc').value = '';
+                 document.getElementById('add-horario-inicial').value = '';
+                 document.getElementById('add-horario-final').value = '';
+                 this.resetOcorrenciaFormUI();
+            },
+
+            resetOcorrenciaFormUI() {
+                const btn = document.getElementById('add-ocorrencia-btn');
+                btn.innerHTML = `+ Adicionar Item`;
+                btn.className = "flex-1 bg-orange-100 text-brand-orange font-bold py-2 rounded hover:bg-orange-200 transition-colors border border-orange-200";
             },
 
             processExcel() {
                 const text = document.getElementById('excel-paste-area').value;
                 if (!text) return alert("Cole os dados do Excel.");
-
-                const filterByName = document.getElementById('filter-by-name-check').checked;
-                let userName = "";
-                if (this.data.user && this.data.user.name) {
-                    userName = this.data.user.name.split(' ')[0].trim().toUpperCase();
-                }
 
                 const regex = /Semana\s*(\d{1,2})\s*?(\d{2}\/\d{2}\/\d{4})(.*?)(?=Semana\s*\d+|$)/gs;
                 
@@ -1044,14 +1140,6 @@
                 let count = 0;
                 
                 while ((match = regex.exec(text)) !== null) {
-                    const fullRowText = match[0]; 
-
-                    if (filterByName && userName) {
-                        if (!fullRowText.toUpperCase().includes(userName)) {
-                            continue;
-                        }
-                    }
-
                     const semanaNum = match[1].trim();
                     const dataRaw = match[2].trim();
                     const resto = match[3].trim(); 
@@ -1090,6 +1178,7 @@
                         condominio = resto;
                     }
 
+                    // ---- LÓGICA DE RESTAURAÇÃO E PROTEÇÃO ----
                     const historyIndex = this.data.deletedHistory.findIndex(t => t.condominio.toLowerCase() === condominio.toLowerCase() && t.dataAnalise === finalDate);
                     
                     if (historyIndex > -1) {
@@ -1146,10 +1235,9 @@
                 this.closeModalUI('excel-import-modal'); 
                 
                 if (count === 0) {
-                    const msg = filterByName ? `Nenhum dado encontrado para "${userName}".` : "Nenhum dado novo encontrado.";
-                    alert(msg);
+                    alert("Nenhum dado novo encontrado.");
                 } else {
-                    this.showToast(`${count} análises processadas para ${userName || 'você'}.`);
+                    this.showToast(`${count} análises processadas.`);
                 }
             },
 
@@ -1161,7 +1249,7 @@
             },
             
             exportData() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({tasks: this.data.tasks, archived: this.data.archived, deletedHistory: this.data.deletedHistory}));
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({tasks: this.data.tasks, archived: this.data.archived}));
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href",     dataStr);
                 downloadAnchorNode.setAttribute("download", "backup_painel_" + new Date().toISOString().split('T')[0] + ".json");
@@ -1170,14 +1258,15 @@
                 downloadAnchorNode.remove();
             },
 
+            // --- LISTAGEM DE ARQUIVOS (COM PESQUISA) ---
             renderArchiveList() {
                  const list = document.getElementById('archive-list');
-                 const term = document.getElementById('archive-search').value.toLowerCase();
+                 const search = document.getElementById('archive-search').value.toLowerCase();
                  
-                 const filtered = this.data.archived.filter(t => t.condominio.toLowerCase().includes(term));
-                 
+                 const filtered = this.data.archived.filter(t => t.condominio.toLowerCase().includes(search));
+
                  if (filtered.length === 0) {
-                     list.innerHTML = `<p class="text-center text-xs text-slate-400 py-4">Nenhum item arquivado encontrado.</p>`;
+                     list.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Nenhum item encontrado.</p>';
                      return;
                  }
 
@@ -1185,85 +1274,34 @@
                     `<div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded border dark:border-slate-700">
                         <div>
                             <p class="font-bold text-sm dark:text-white">${t.condominio}</p>
-                            <p class="text-xs text-slate-500">${t.dataAnalise}</p>
+                            <p class="text-xs text-slate-500">${this.formatDate(t.dataAnalise)} • ${t.semana||'-'}</p>
                         </div>
-                        <button onclick="App.restoreTask('${t.id}')" class="text-green-500 hover:text-green-700 text-xs font-bold">Restaurar</button>
+                        <button onclick="App.restoreTask('${t.id}')" class="text-green-500 hover:text-green-700 text-xs font-bold border border-green-200 px-2 py-1 rounded">Restaurar</button>
                     </div>`
                  ).join('');
             },
-
-            // --- RECYCLE BIN LOGIC ---
-            openRecycleBin() {
-                this.renderRecycleBin();
-                this.openModalUI('recycle-bin-modal');
-            },
-
-            renderRecycleBin() {
-                const list = document.getElementById('recycle-bin-list');
-                if (!this.data.deletedHistory || this.data.deletedHistory.length === 0) {
-                    list.innerHTML = `<p class="text-center text-xs text-slate-400 py-4">Lixeira vazia.</p>`;
-                    return;
-                }
-                list.innerHTML = this.data.deletedHistory.map(t => 
-                   `<div class="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/10 rounded border border-red-100 dark:border-red-900">
-                       <div>
-                           <p class="font-bold text-sm dark:text-white">${t.condominio}</p>
-                           <p class="text-xs text-slate-500">${t.dataAnalise} (Excluído)</p>
-                       </div>
-                       <button onclick="App.restoreFromRecycleBin('${t.id}')" class="text-blue-500 hover:text-blue-700 text-xs font-bold">Restaurar</button>
-                   </div>`
-                ).join('');
-            },
-
-            restoreFromRecycleBin(id) {
-                const idx = this.data.deletedHistory.findIndex(t => t.id === id);
-                if (idx > -1) {
-                    const t = this.data.deletedHistory.splice(idx, 1)[0];
-                    
-                    // Apply same date restoration logic if needed
-                    const now = new Date();
-                    now.setHours(0,0,0,0);
-                    const day = now.getDay(); 
-                    const diffToMon = (day + 6) % 7; 
-                    const mondayCurrentWeek = new Date(now);
-                    mondayCurrentWeek.setDate(now.getDate() - diffToMon);
-                    const mondayLastWeek = new Date(mondayCurrentWeek);
-                    mondayLastWeek.setDate(mondayLastWeek.getDate() - 7);
-                    const limitStr = mondayLastWeek.toISOString().split('T')[0];
-
-                    if (t.dataAnalise < limitStr) {
-                        t.manualRestore = true; 
-                    }
-
-                    this.data.tasks.push(t);
-                    this.saveData();
-                    this.renderRecycleBin();
-                    this.showToast('Item restaurado da lixeira.');
-                    this.render(); // Update main view
-                }
-            },
-
+            
+            // --- ATUALIZAÇÃO: RESTAURAÇÃO INTELIGENTE ---
             restoreTask(id) {
                 const idx = this.data.archived.findIndex(t => t.id === id);
                 if (idx > -1) {
                     const t = this.data.archived.splice(idx, 1)[0];
                     
-                    const now = new Date();
-                    now.setHours(0,0,0,0);
-                    const day = now.getDay(); 
-                    const diffToMon = (day + 6) % 7; 
-                    const mondayCurrentWeek = new Date(now);
-                    mondayCurrentWeek.setDate(now.getDate() - diffToMon);
-                    const mondayLastWeek = new Date(mondayCurrentWeek);
-                    mondayLastWeek.setDate(mondayLastWeek.getDate() - 7);
-                    const limitStr = mondayLastWeek.toISOString().split('T')[0];
-
-                    if (t.dataAnalise < limitStr) {
-                        t.manualRestore = true; 
-                        this.showToast('Restaurado (Mantido temporariamente)');
+                    t.manualRestore = true; // Impede arquivamento automático
+                    
+                    // Lógica: Se JÁ ESTAVA CONCLUÍDA, não ganha carimbo (apenas consulta).
+                    // Se NÃO ESTAVA CONCLUÍDA (Pendente), ganha carimbo (reprocessamento).
+                    if (t.statusAnalise === 'Concluída') {
+                        t.carimboSemanaAtual = false;
+                        this.showToast('Restaurado para Consulta (Sem Impacto na Meta)');
+                    } else {
+                        t.carimboSemanaAtual = true;
+                        this.showToast('Restaurado: Contabilizando na Meta');
                     }
 
-                    this.data.tasks.push(t);
+                    // Adiciona ao início da lista (prioridade)
+                    this.data.tasks.unshift(t);
+                    
                     this.saveData();
                     this.renderArchiveList();
                 }
@@ -1320,29 +1358,32 @@
                     list.innerHTML = '<p class="text-center text-xs text-slate-400 py-4">Nenhuma ocorrência registrada.</p>';
                     return;
                 }
-                list.innerHTML = task.ocorrencias.map((o, idx) => {
-                    let camTags = '';
-                    if (o.camerasRecorded && o.camerasRecorded.length > 0) {
-                        camTags = o.camerasRecorded.map(c => 
-                            `<span class="text-[10px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600 mr-1">CAM ${c.id}: ${c.time || '--:--'}</span>`
-                        ).join('');
-                        camTags = `<div class="mt-1 flex flex-wrap gap-1">${camTags}</div>`;
-                    }
+                
+                // ORDENAR POR HORÁRIO INICIAL
+                const sortedOcs = [...task.ocorrencias].sort((a,b) => (a.inicio || '').localeCompare(b.inicio || ''));
 
-                    return `
-                    <div class="p-2 bg-white dark:bg-slate-800 rounded border dark:border-slate-700 mb-2 shadow-sm flex justify-between items-start">
-                        <div>
-                            <span class="text-[10px] font-bold uppercase text-brand-orange bg-orange-50 dark:bg-orange-900/30 px-1 rounded border border-orange-100 dark:border-orange-900">${o.categoria}</span>
-                            <p class="text-sm dark:text-white mt-1">${o.descricao}</p>
-                            <p class="text-[10px] text-slate-400 font-mono mt-1">${o.inicio || '--:--'} às ${o.fim || '--:--'}</p>
-                            ${camTags}
+                list.innerHTML = sortedOcs.map((o, idx) => `
+                    <div class="p-3 bg-white dark:bg-slate-800 rounded border dark:border-slate-700 mb-2 shadow-sm flex justify-between items-center group hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                             <div class="flex flex-col items-center min-w-[60px]">
+                                 <span class="text-xs font-bold text-slate-700 dark:text-white font-mono bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded border dark:border-slate-600">${o.inicio || '--:--'}</span>
+                                 <span class="text-[9px] font-bold text-slate-400 mt-0.5">até ${o.fim || '--:--'}</span>
+                             </div>
+                             
+                             <div class="border-l pl-3 dark:border-slate-700">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-bold uppercase text-brand-orange bg-orange-50 dark:bg-orange-900/30 px-1.5 py-0.5 rounded border border-orange-100 dark:border-orange-900">${o.categoria}</span>
+                                </div>
+                                <p class="text-sm dark:text-white truncate max-w-[200px] md:max-w-xs text-slate-600" title="${o.descricao}">${o.descricao}</p>
+                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="App.prepareEditOcorrencia('${task.id}', '${o.id}')" class="text-blue-400 hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
-                            <button onclick="App.removeOcorrencia('${task.id}', '${o.id}')" class="text-red-400 hover:text-red-600"><i class="ph ph-trash text-lg"></i></button>
+
+                        <div class="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onclick="App.prepareEditOcorrencia('${task.id}', '${o.id}')" class="p-2 text-blue-400 hover:bg-blue-50 rounded hover:text-blue-600"><i class="ph ph-pencil-simple text-lg"></i></button>
+                            <button onclick="App.removeOcorrencia('${task.id}', '${o.id}')" class="p-2 text-red-400 hover:bg-red-50 rounded hover:text-red-600"><i class="ph ph-trash text-lg"></i></button>
                         </div>
                     </div>
-                `}).join('');
+                `).join('');
             },
             
             removeOcorrencia(taskId, ocId) {
@@ -1371,294 +1412,6 @@
                 return `${d}/${m}/${y} • ${weekCap}`;
             },
 
-            getTodayString() {
-                const now = new Date();
-                const offset = now.getTimezoneOffset();
-                const local = new Date(now.getTime() - (offset * 60 * 1000));
-                return local.toISOString().split('T')[0];
-            },
-            
-            updateCharts() {
-                 if(!this.charts.oc) return;
-                 const counts = {}; this.data.tasks.forEach(t => { if(t.ocorrencias?.length) counts[t.condominio] = (counts[t.condominio]||0)+t.ocorrencias.length; });
-                 const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-                 this.charts.oc.data.labels = sorted.map(x=>x[0]); this.charts.oc.data.datasets[0].data = sorted.map(x=>x[1]); this.charts.oc.update();
-            },
-
-            toggleAuthMode(mode) {
-                this.data.authMode = mode;
-                const loginBtn = document.getElementById('tab-login');
-                const regBtn = document.getElementById('tab-register');
-                const actionBtn = document.getElementById('action-btn');
-                const title = document.getElementById('auth-title');
-                const errorMsg = document.getElementById('auth-error-msg');
-                const passLabel = document.getElementById('lbl-password');
-                
-                if (errorMsg) errorMsg.classList.add('hidden');
-
-                if (mode === 'login') {
-                    loginBtn.className = "flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-600 text-brand-orange shadow-sm transition-all";
-                    regBtn.className = "flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-all";
-                    actionBtn.textContent = "Acessar Painel";
-                    title.textContent = "Entrar no Sistema";
-                    if (passLabel) passLabel.textContent = "Sua Senha"; 
-                    actionBtn.onclick = () => App.loginWithUser();
-                } else {
-                    regBtn.className = "flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-600 text-brand-orange shadow-sm transition-all";
-                    loginBtn.className = "flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-all";
-                    actionBtn.textContent = "Criar Minha Senha";
-                    title.textContent = "Primeiro Acesso";
-                    if (passLabel) passLabel.textContent = "Crie uma Senha"; 
-                    actionBtn.onclick = () => App.registerWithUser();
-                }
-            },
-
-            openModalUI(id) { document.getElementById(id).classList.remove('hidden'); },
-            closeModalUI(id) { document.getElementById(id).classList.add('hidden'); },
-            openMyAccountModal() { document.getElementById('my-account-modal').classList.remove('hidden'); },
-            openForgotPasswordHelp() { document.getElementById('forgot-password-help-modal').classList.remove('hidden'); },
-            
-            openAdminPanel() { 
-                if (this.data.user && this.data.user.isAdmin) {
-                     this.openModalUI('admin-panel-modal');
-                     this.loadAuthorizedUsers();
-                } else {
-                    alert("Acesso restrito a administradores.");
-                }
-            },
-            
-            switchToLoginView() { document.getElementById('login-view').classList.remove('hidden'); document.getElementById('dashboard-view').classList.add('hidden'); },
-            switchToDashboardView() { document.getElementById('login-view').classList.add('hidden'); document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('dashboard-view').classList.add('flex'); setTimeout(() => this.updateCharts(), 100); },
-            parseConfig(str) { try { return JSON.parse(str); } catch (e) { try { const jsonStr = str.replace(/(\w+):/g, '"$1":'); return JSON.parse(jsonStr); } catch (e2) { return null; } } },
-
-            openChangePasswordModal() { document.getElementById('change-password-modal').classList.remove('hidden'); },
-
-            async changeUserPassword() {
-                const newPass = document.getElementById('new-password-input').value;
-                if (!newPass || newPass.length < 6) return alert("Mínimo 6 caracteres.");
-                
-                try {
-                    const safeId = this.data.user.uid;
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId);
-                    await updateDoc(docRef, { password: newPass });
-                    alert("Senha alterada com sucesso.");
-                    this.closeModalUI('change-password-modal');
-                } catch(e) {
-                    alert("Erro ao alterar senha.");
-                }
-            },
-            
-            async logout() { this.data.user = null; localStorage.removeItem('mon_user'); this.switchToLoginView(); },
-
-            updateUserInfo(u) { 
-                let displayName = u.name || 'Utilizador';
-                if (u.isAdmin) displayName += ' (ADMIN)';
-                document.getElementById('user-display-name').textContent = displayName; 
-                document.getElementById('account-modal-name').textContent = displayName;
-                if (u.isAdmin) document.getElementById('admin-panel-btn').classList.remove('hidden');
-            },
-
-            resetToLocal() { localStorage.removeItem('mon_firebase_config'); window.location.reload(); },
-
-            updateUIMode() { /* ... */ },
-
-            async saveData() { 
-                 const cleanTasks = JSON.parse(JSON.stringify(this.data.tasks));
-                 const cleanArchived = JSON.parse(JSON.stringify(this.data.archived));
-                 const cleanDeleted = JSON.parse(JSON.stringify(this.data.deletedHistory));
-                 this.saveToLocalStorageCache();
-                 
-                 if (this.data.mode === 'cloud' && this.data.user) {
-                    try {
-                        const safeId = this.data.user.uid;
-                        const dataRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + safeId);
-                        await setDoc(dataRef, { tasks: cleanTasks, archived: cleanArchived, deletedHistory: cleanDeleted, lastUpdate: new Date().toISOString(), ownerEmail: this.data.user.email }, { merge: true });
-                    } catch(e) { console.error("Erro save cloud", e); }
-                 }
-                 this.render(); 
-                 this.updateCharts();
-            },
-
-            saveToLocalStorageCache() { localStorage.setItem('mon_tasks', JSON.stringify(this.data.tasks)); localStorage.setItem('mon_archived', JSON.stringify(this.data.archived)); },
-            loadDataLocal() { try { const t = localStorage.getItem('mon_tasks'); if(t) this.data.tasks = JSON.parse(t); this.render(); } catch(e){} },
-
-            addTask(task) {
-                const t = { id: crypto.randomUUID(), ...task, statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencias: [], createdAt: new Date().toISOString() };
-                this.data.tasks.unshift(t);
-                this.saveData();
-                this.showToast('Análise criada!');
-            },
-
-            editTask(id) {
-                const task = this.data.tasks.find(t => t.id === id);
-                if (!task) return;
-
-                this.data.editingTaskId = id;
-                document.getElementById('task-modal-title').textContent = "Editar Análise";
-                document.getElementById('form-condominio').value = task.condominio;
-                document.getElementById('form-data-analise').value = task.dataAnalise;
-                document.getElementById('form-semana').value = task.semana || '';
-                document.getElementById('form-observacoes').value = task.observacoes || '';
-                App.openModalUI('task-modal');
-            },
-
-            saveTaskFromForm() {
-                const id = this.data.editingTaskId;
-                const newData = {
-                    condominio: document.getElementById('form-condominio').value,
-                    dataAnalise: document.getElementById('form-data-analise').value,
-                    semana: document.getElementById('form-semana').value,
-                    observacoes: document.getElementById('form-observacoes').value
-                };
-
-                if (id) {
-                    const task = this.data.tasks.find(t => t.id === id);
-                    if (task) {
-                        Object.assign(task, newData);
-                        this.showToast('Análise atualizada!');
-                    }
-                } else {
-                    this.addTask(newData);
-                }
-                
-                this.saveData();
-                this.closeModalUI('task-modal');
-            },
-
-            addOccurrence() {
-                const cat = document.getElementById('add-ocorrencia-categoria').value;
-                const desc = document.getElementById('add-ocorrencia-desc').value;
-                const ini = document.getElementById('add-horario-inicial').value;
-                const fim = document.getElementById('add-horario-final').value;
-                
-                // Check cameras
-                const camerasRecorded = [];
-                for(let i=1; i<=4; i++) {
-                    const check = document.getElementById(`check-cam-${i}`);
-                    const time = document.getElementById(`time-cam-${i}`);
-                    if(check && check.checked) {
-                        camerasRecorded.push({ id: i, time: time.value || ini });
-                    }
-                }
-
-                if (!desc) return alert("Descreva a ocorrência.");
-                
-                const taskId = document.getElementById('ocorrencia-current-task-id').value;
-                const task = this.data.tasks.find(t => t.id === taskId);
-                
-                if (task) {
-                    if (!task.ocorrencias) task.ocorrencias = [];
-
-                    if (this.data.editingId) {
-                        const oc = task.ocorrencias.find(o => o.id === this.data.editingId);
-                        if (oc) {
-                            oc.categoria = cat;
-                            oc.descricao = desc;
-                            oc.inicio = ini;
-                            oc.fim = fim;
-                            if (camerasRecorded.length > 0) oc.camerasRecorded = camerasRecorded;
-                            this.showToast('Item atualizado!');
-                        }
-                        this.data.editingId = null; 
-                        this.resetOcorrenciaFormUI();
-                    } else {
-                        const newOc = { id: crypto.randomUUID(), categoria: cat, descricao: desc, inicio: ini, fim: fim };
-                        if (camerasRecorded.length > 0) newOc.camerasRecorded = camerasRecorded;
-                        task.ocorrencias.push(newOc);
-                        this.showToast('Item adicionado!');
-                    }
-                    
-                    this.saveData(); 
-                    this.renderOcorrenciasList(task);
-                    
-                    document.getElementById('add-ocorrencia-desc').value = '';
-                    document.getElementById('add-horario-inicial').value = '';
-                    document.getElementById('add-horario-final').value = '';
-                    
-                    // Reset cams
-                    for(let i=1; i<=4; i++) {
-                        document.getElementById(`check-cam-${i}`).checked = false;
-                        document.getElementById(`time-cam-${i}`).value = '';
-                        document.getElementById(`time-cam-${i}`).disabled = true;
-                    }
-                }
-            },
-
-            prepareEditOcorrencia(taskId, ocId) {
-                const task = this.data.tasks.find(t => t.id === taskId);
-                if (!task) return;
-                const oc = task.ocorrencias.find(o => o.id === ocId);
-                if (!oc) return;
-
-                document.getElementById('add-ocorrencia-categoria').value = oc.categoria;
-                document.getElementById('add-ocorrencia-desc').value = oc.descricao;
-                document.getElementById('add-horario-inicial').value = oc.inicio;
-                document.getElementById('add-horario-final').value = oc.fim;
-                
-                // Set cameras if any
-                if (oc.camerasRecorded) {
-                     oc.camerasRecorded.forEach(c => {
-                         const check = document.getElementById(`check-cam-${c.id}`);
-                         const input = document.getElementById(`time-cam-${c.id}`);
-                         if(check && input) {
-                             check.checked = true;
-                             input.disabled = false;
-                             input.value = c.time;
-                         }
-                     });
-                }
-
-                this.data.editingId = ocId;
-
-                const btn = document.getElementById('add-ocorrencia-btn');
-                btn.innerHTML = `<i class="ph ph-floppy-disk text-lg"></i> Salvar Edição`;
-                btn.className = "flex-1 bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition-colors shadow-lg";
-            },
-
-            resetOcorrenciaForm() {
-                 this.data.editingId = null;
-                 document.getElementById('add-ocorrencia-desc').value = '';
-                 document.getElementById('add-horario-inicial').value = '';
-                 document.getElementById('add-horario-final').value = '';
-                 for(let i=1; i<=4; i++) {
-                    const check = document.getElementById(`check-cam-${i}`);
-                    const input = document.getElementById(`time-cam-${i}`);
-                    if(check) check.checked = false;
-                    if(input) { input.value = ''; input.disabled = true; }
-                 }
-                 this.resetOcorrenciaFormUI();
-            },
-
-            resetOcorrenciaFormUI() {
-                const btn = document.getElementById('add-ocorrencia-btn');
-                btn.innerHTML = `+ Adicionar Item`;
-                btn.className = "flex-1 bg-orange-100 text-brand-orange font-bold py-2 rounded hover:bg-orange-200 transition-colors border border-orange-200";
-            },
-
-            async pasteFromClipboard() {
-                try {
-                    const text = await navigator.clipboard.readText();
-                    if (!text) return this.showToast("Área de transferência vazia!");
-
-                    const timeRegex = /\b([01]?[0-9]|2[0-3]):[0-5][0-9]\b/g;
-                    const times = text.match(timeRegex);
-
-                    if (times && times.length > 0) {
-                        document.getElementById('add-horario-inicial').value = times[0];
-                        if (times.length > 1) {
-                            document.getElementById('add-horario-final').value = times[times.length - 1];
-                        }
-                    }
-
-                    document.getElementById('add-ocorrencia-desc').value = text.trim();
-                    this.showToast("Dados colados!");
-
-                } catch (err) {
-                    console.error('Falha ao ler clipboard: ', err);
-                    alert('Permissão negada ou erro ao acessar a área de transferência. Tente copiar e colar manualmente (Ctrl+V).');
-                }
-            },
-
             render() { 
                 const list = document.getElementById('task-list');
                 const fCondo = document.getElementById('filtro-condominio').value.toLowerCase();
@@ -1671,32 +1424,25 @@
                            (fBackup === '' || t.statusBackup === fBackup);
                 });
                 
-                // KPIs
-                document.getElementById('total-solicitacoes').textContent = this.data.tasks.length;
+                // KPIs - Lógica Inteligente para Estatísticas
+                document.getElementById('total-solicitacoes').textContent = this.data.tasks.length; // Total Visível (Ativas + Restauradas)
                 document.getElementById('backups-pendentes').textContent = this.data.tasks.filter(t => t.statusBackup === 'Pendente').length;
                 
-                const now = new Date();
-                now.setHours(0,0,0,0);
-                const day = now.getDay(); 
-                const diffToMon = (day + 6) % 7; 
-                const mondayCurrentWeek = new Date(now);
-                mondayCurrentWeek.setDate(now.getDate() - diffToMon);
-                const mondayString = mondayCurrentWeek.toISOString().split('T')[0];
+                // FILTRO PARA ESTATÍSTICAS DE PRODUTIVIDADE E OCORRÊNCIAS:
+                // Conta apenas se: (NÃO for restaurado manualmente) OU (Tiver o Carimbo da Semana)
+                // Isso exclui os itens restaurados para "Apenas Consulta".
+                const statTasks = this.data.tasks.filter(t => !t.manualRestore || t.carimboSemanaAtual);
 
-                const concluidasAtual = this.data.tasks.filter(t => 
-                    t.statusAnalise === 'Concluída' && 
-                    t.dataAnalise >= mondayString
-                ).length;
-
-                document.getElementById('analises-concluidas').textContent = concluidasAtual;
+                const concluidasStat = statTasks.filter(t => t.statusAnalise === 'Concluída').length;
+                document.getElementById('analises-concluidas').textContent = concluidasStat;
                 
-                const totalOc = this.data.tasks.reduce((acc, t) => acc + (t.ocorrencias?.length||0), 0);
-                document.getElementById('total-ocorrencias-semana').textContent = totalOc;
+                const totalOcStat = statTasks.reduce((acc, t) => acc + (t.ocorrencias?.length||0), 0);
+                document.getElementById('total-ocorrencias-semana').textContent = totalOcStat;
                 
-                const conc = this.data.tasks.filter(t => t.statusAnalise === 'Concluída').length;
-                document.getElementById('media-ocorrencias').textContent = conc > 0 ? (totalOc / conc).toFixed(1) : "0.0";
+                const concStat = statTasks.filter(t => t.statusAnalise === 'Concluída').length;
+                document.getElementById('media-ocorrencias').textContent = concStat > 0 ? (totalOcStat / concStat).toFixed(1) : "0.0";
                 
-                document.getElementById('produtividade-total').textContent = conc + this.data.archived.length;
+                document.getElementById('produtividade-total').textContent = concStat + this.data.archived.length;
 
                 list.innerHTML = filtered.map(t => {
                     const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
@@ -1716,10 +1462,14 @@
                             <div>
                                 <div class="flex items-center gap-2">
                                     <h3 class="font-bold text-lg text-slate-800 dark:text-white uppercase tracking-tight">${t.condominio}</h3>
-                                    ${t.manualRestore ? `<span class="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold uppercase">RESTAURADO</span>` : ''}
+                                    ${t.manualRestore ? `<span class="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-200" title="Restaurado Manualmente">RESTAURADO</span>` : ''}
                                     <button onclick="App.editTask('${t.id}')" class="text-blue-400 hover:text-blue-600" title="Editar Dados"><i class="ph ph-pencil-simple"></i></button>
                                 </div>
                                 <p class="text-xs text-slate-500 flex items-center gap-1"><i class="ph ph-calendar"></i> ${this.formatDate(t.dataAnalise)} <span class="bg-slate-100 dark:bg-slate-700 px-1.5 rounded ml-2">${t.semana||'-'}</span></p>
+                                
+                                <!-- CARIMBO VISUAL SE FOR REPROCESSAMENTO -->
+                                ${t.carimboSemanaAtual ? `<div class="mt-2 inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 font-bold uppercase w-full"><i class="ph ph-stamp text-lg"></i> Contabilizar na Semana Atual</div>` : ''}
+
                             </div>
                             <div class="flex gap-1">
                                 <button onclick="App.openOcorrenciaModal('${t.id}')" class="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-brand-orange hover:bg-orange-100 dark:hover:bg-orange-900/40 transition relative">
