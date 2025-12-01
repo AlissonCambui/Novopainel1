@@ -140,7 +140,9 @@
                         <i class="ph ph-video-camera text-brand-orange"></i>
                         <span class="hidden md:inline text-brand-orange">Painel de Monitoramento</span>
                     </div>
-                    <span id="app-mode-badge" class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold uppercase tracking-wider">ONLINE</span>
+                    <span id="app-mode-badge" class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse"></div> Conectando...
+                    </span>
                 </div>
                 <div class="flex items-center gap-3 md:gap-4">
                     <!-- DATA -->
@@ -188,7 +190,7 @@
                     <p id="welcome-msg" class="text-slate-600 dark:text-slate-400 mt-1 text-sm">Gerencie as suas ocorrências com segurança.</p>
                 </div>
                 <div id="sync-status" class="text-xs font-mono text-slate-400 flex items-center gap-1 hidden">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> <span id="sync-text" class="hidden md:inline">Guardado na Nuvem</span>
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> <span id="sync-text" class="hidden md:inline">Sincronizando...</span>
                 </div>
             </header>
 
@@ -290,7 +292,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v18.0 (Correção Local Storage)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v20.1 (Smart Weekly Clean)</p>
             </footer>
         </div>
     </div>
@@ -483,11 +485,22 @@
         </div>
     </div>
     
-    <div id="archive-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <!-- FIX: Z-INDEX AUMENTADO PARA 75 E BOTÃO DE RECUPERAÇÃO FORÇADA -->
+    <div id="archive-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[75]">
         <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl border dark:border-slate-700">
-            <div class="flex justify-between mb-4 border-b dark:border-slate-700 pb-2">
-                <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2"><i class="ph ph-archive-box"></i> Arquivo Morto</h2>
-                <button id="archive-close-btn" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2">
+                        <i class="ph ph-archive-box"></i> Arquivo Morto
+                        <span id="archive-count-badge" class="text-sm bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-white px-2 py-0.5 rounded-full ml-2">0</span>
+                    </h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="App.recoverLostData()" class="text-xs font-bold text-blue-500 hover:text-white hover:bg-blue-500 border border-blue-500 px-3 py-1.5 rounded transition-all flex items-center gap-1 shadow-sm" title="Buscar em backups locais">
+                        <i class="ph ph-magnifying-glass"></i> Buscar em Backups
+                    </button>
+                    <button id="archive-close-btn" class="text-2xl text-slate-400 hover:text-slate-600 ml-2">&times;</button>
+                </div>
             </div>
             
             <input type="text" id="archive-search" placeholder="Pesquisar no arquivo..." class="mb-3 w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-brand-orange">
@@ -495,6 +508,28 @@
             <div id="archive-list" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
             <div class="mt-4 pt-2 border-t dark:border-slate-700 text-right">
                 <p class="text-xs text-slate-400 text-left mb-2">Itens arquivados não aparecem nas estatísticas principais.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Recuperação Avançada -->
+    <div id="recovery-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[90]">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl border-2 border-blue-500 dark:border-blue-700">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <h2 class="text-xl font-bold dark:text-white flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                    <i class="ph ph-shield-check text-2xl"></i> Cofre de Segurança
+                </h2>
+                <button onclick="App.closeModalUI('recovery-modal')" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4 text-xs text-blue-800 dark:text-blue-200 border border-blue-100 dark:border-blue-800">
+                <i class="ph ph-info"></i> Estes itens foram encontrados nos backups internos do seu navegador mas não estão na lista principal.
+            </div>
+
+            <input type="text" id="recovery-search" placeholder="Pesquisar no cofre (Nome do condomínio...)" class="mb-3 w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <div id="recovery-list" class="flex-grow overflow-y-auto space-y-2 pr-2">
+                <!-- Lista preenchida via JS -->
             </div>
         </div>
     </div>
@@ -512,7 +547,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged, initializeAuth, browserLocalPersistence, updatePassword, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        // --- ADICIONADO: enableIndexedDbPersistence para SUPORTE OFFLINE NATIVO ---
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc, collection, getDocs, updateDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         // CONFIG
         const myConfig = {
@@ -531,6 +567,7 @@
             data: {
                 tasks: [],
                 archived: [],
+                recoveryList: [],
                 deletedHistory: [],
                 categories: ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Defeito Técnico', 'Procedimento Incorreto', 'Outros'],
                 mode: 'cloud', 
@@ -604,8 +641,10 @@
                 addListener('excel-import-close-btn', 'click', () => App.closeModalUI('excel-import-modal'));
                 addListener('process-import-btn', 'click', () => App.processExcel());
                 
-                // --- CORREÇÃO: LIMPAR CAMPO DE PESQUISA AO ABRIR O ARQUIVO MORTO ---
-                addListener('archive-btn', 'click', () => { 
+                // --- FIX: STOP PROPAGATION NO ARQUIVO MORTO ---
+                addListener('archive-btn', 'click', (e) => { 
+                    if(e) e.stopPropagation(); // Impede que o clique feche o menu imediatamente
+                    document.getElementById('actions-menu').classList.add('hidden'); // Fecha o menu manualmente
                     document.getElementById('archive-search').value = ''; 
                     App.renderArchiveList(); 
                     App.openModalUI('archive-modal'); 
@@ -613,6 +652,9 @@
                 addListener('archive-close-btn', 'click', () => App.closeModalUI('archive-modal'));
                 addListener('archive-search', 'input', () => App.renderArchiveList());
                 
+                // --- NOVA PESQUISA DO COFRE ---
+                addListener('recovery-search', 'input', () => App.renderRecoveryList());
+
                 addListener('export-data-btn', 'click', () => App.exportData());
                 addListener('import-data-btn', 'click', () => document.getElementById('file-input').click());
                 addListener('file-input', 'change', (e) => { 
@@ -736,6 +778,18 @@
                     auth = getAuth(appFirebase);
                     db = getFirestore(appFirebase);
                     
+                    // --- ATIVAÇÃO DE PERSISTÊNCIA OFFLINE ---
+                    try {
+                        await enableIndexedDbPersistence(db);
+                        console.log("Persistência offline ativada com sucesso!");
+                    } catch (err) {
+                        if (err.code == 'failed-precondition') {
+                            console.warn("Múltiplas abas abertas. Persistência offline pode falhar.");
+                        } else if (err.code == 'unimplemented') {
+                            console.warn("Seu navegador não suporta persistência offline.");
+                        }
+                    }
+                    
                     const isCustomProject = config.projectId === "painel-de-monitoramento-411b7";
                     
                     if (!isCustomProject && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -769,14 +823,45 @@
             
             subscribeToUserData(uid) {
                 const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + uid);
-                onSnapshot(userDocRef, (docSnap) => {
+                
+                // USANDO includeMetadataChanges: true PARA DETECTAR MUDANÇAS LOCAIS/CACHE
+                onSnapshot(userDocRef, { includeMetadataChanges: true }, (docSnap) => {
+                    const syncStatusEl = document.getElementById('app-mode-badge');
+                    
+                    if (docSnap.metadata.fromCache) {
+                        syncStatusEl.className = "text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1";
+                        syncStatusEl.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> Modo Offline (Cache)`;
+                    } else {
+                        syncStatusEl.className = "text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1";
+                        syncStatusEl.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online (Nuvem)`;
+                    }
+
                     if (docSnap.exists()) {
                         const d = docSnap.data();
+                        
+                        // BLINDAGEM: Se o cloud vier vazio mas tivermos shadow local, preferir local
+                        const localShadow = localStorage.getItem('mon_shadow_archive_latest');
+                        let cloudArchived = d.archived || [];
+                        
+                        // Mesclar inteligente para evitar que o cloud antigo apague o novo
+                        if (localShadow) {
+                            try {
+                                const shadowArr = JSON.parse(localShadow);
+                                if (shadowArr.length > cloudArchived.length) {
+                                    // Local é mais rico, vamos mesclar
+                                    // (Simplificado: mantemos local para evitar perda imediata, save força push depois)
+                                    cloudArchived = shadowArr;
+                                }
+                            } catch(e){}
+                        }
+
                         if (d.tasks) this.data.tasks = d.tasks;
-                        if (d.archived) this.data.archived = d.archived;
+                        this.data.archived = cloudArchived;
                         if (d.deletedHistory) this.data.deletedHistory = d.deletedHistory;
+                        
                         this.saveToLocalStorageCache();
                         document.getElementById('sync-status').classList.remove('hidden');
+                        document.getElementById('sync-text').textContent = "Sincronizado";
                         this.autoArchive();
                         this.render(); 
                     }
@@ -785,49 +870,79 @@
 
             // --- AUTO ARQUIVAMENTO (CORRIGIDO) ---
             autoArchive() {
-                // Lógica de Arquivamento Baseada em Semanas Completas (Segunda-feira)
-                // N = Semana Atual
-                // N-1 = Semana Passada (Visível)
-                // N-2 = Semana Retrasada (Arquivar tudo - Pendente ou Concluída)
+                // Nova Lógica: Limpeza Semanal (Começou a semana nova, arquiva a anterior se concluída)
                 
+                // 1. Definir o "Hoje" ajustado ao fuso horário local para evitar erro de UTC
                 const now = new Date();
-                now.setHours(0,0,0,0);
+                const offset = now.getTimezoneOffset();
+                const localNow = new Date(now.getTime() - (offset * 60 * 1000));
                 
-                const day = now.getDay(); 
-                const diffToMon = (day + 6) % 7; 
+                // 2. Encontrar a Segunda-feira da semana ATUAL
+                const day = localNow.getUTCDay(); // 0 (Dom) a 6 (Sab)
+                const diffToMon = (day + 6) % 7; // Quanto voltar para chegar na seg
                 
-                const mondayCurrentWeek = new Date(now);
-                mondayCurrentWeek.setDate(now.getDate() - diffToMon);
+                const mondayCurrentWeek = new Date(localNow);
+                mondayCurrentWeek.setUTCDate(localNow.getUTCDate() - diffToMon);
+                mondayCurrentWeek.setUTCHours(0,0,0,0);
                 
-                const mondayLastWeek = new Date(mondayCurrentWeek);
-                mondayLastWeek.setDate(mondayLastWeek.getDate() - 7);
+                const limitCurrentWeekStr = mondayCurrentWeek.toISOString().split('T')[0];
                 
-                const limitStr = mondayLastWeek.toISOString().split('T')[0];
-                
+                // 3. Encontrar a Segunda-feira da semana RETRASADA (Para forçar arquivamento de tudo, mesmo pendente)
+                const mondayRetrasada = new Date(mondayCurrentWeek);
+                mondayRetrasada.setUTCDate(mondayRetrasada.getUTCDate() - 14); // 2 semanas atrás
+                const limitOldStr = mondayRetrasada.toISOString().split('T')[0];
+
                 let changed = false;
                 const active = [];
                 
                 this.data.tasks.forEach(t => {
-                    // SE ESTIVER MARCADA COMO RESTAURAÇÃO MANUAL (t.manualRestore == true), NÃO ARQUIVA.
+                    // Proteção de restauração manual
                     if (t.manualRestore) {
                         active.push(t);
                         return;
                     }
 
-                    // Regra normal: Arquiva se for anterior à semana passada
-                    if (t.dataAnalise < limitStr) {
+                    // Regra 1: Se for muito antigo (2 semanas+), arquiva tudo (limpeza geral)
+                    if (t.dataAnalise < limitOldStr) {
                         this.data.archived.push(t);
+                        // Safe Backup do Item no Cofre
+                        this.backupToShadow(t); 
                         changed = true;
-                    } else {
-                        active.push(t);
+                        return;
                     }
+
+                    // Regra 2: Se for da semana passada (anterior à atual) E estiver Concluída -> Arquiva
+                    if (t.dataAnalise < limitCurrentWeekStr && t.statusAnalise === 'Concluída') {
+                        this.data.archived.push(t);
+                        // Safe Backup do Item no Cofre
+                        this.backupToShadow(t); 
+                        changed = true;
+                        return;
+                    }
+
+                    // Caso contrário, mantem no painel (Ex: Semana Atual ou Pendente da Semana Passada)
+                    active.push(t);
                 });
                 
                 if (changed) {
                     this.data.tasks = active;
                     this.saveData();
-                    this.showToast('Auto-arquivamento: Semanas antigas limpas.');
+                    this.showToast('Auto-arquivamento: Painel limpo.');
                 }
+            },
+            
+            // Helper para salvar no cofre individualmente
+            backupToShadow(item) {
+                 try {
+                     const raw = localStorage.getItem('mon_shadow_archive_latest');
+                     let arr = raw ? JSON.parse(raw) : [];
+                     if(!Array.isArray(arr)) arr = [];
+                     // Evitar duplicatas
+                     if(!arr.find(x => x.id === item.id)) {
+                         arr.push(item);
+                         localStorage.setItem('mon_shadow_archive_latest', JSON.stringify(arr));
+                     }
+                 } catch(e) {}
             },
             
             generateEmail(name) { return `${name.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '')}@vendperto.local`; },
@@ -996,10 +1111,16 @@
                  const cleanArchived = JSON.parse(JSON.stringify(this.data.archived));
                  this.saveToLocalStorageCache();
                  
+                 // BLINDAGEM DE DADOS VAZIOS
+                 if (cleanTasks.length > 0 || cleanArchived.length > 0) {
+                     localStorage.setItem('mon_safe_backup', JSON.stringify({t: cleanTasks, a: cleanArchived}));
+                 }
+
                  if (this.data.mode === 'cloud' && this.data.user) {
                     try {
                         const safeId = this.data.user.uid;
                         const dataRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + safeId);
+                        // EVITA SALVAR VAZIO SE JÁ TIVER COISA (Lógica simples, o Firestore merge ajuda, mas vamos garantir)
                         await setDoc(dataRef, { tasks: cleanTasks, archived: cleanArchived, deletedHistory: this.data.deletedHistory, lastUpdate: new Date().toISOString(), ownerEmail: this.data.user.email }, { merge: true });
                     } catch(e) { console.error("Erro save cloud", e); }
                  }
@@ -1017,6 +1138,8 @@
                     
                     const a = localStorage.getItem('mon_archived');
                     if(a) this.data.archived = JSON.parse(a);
+                    
+                    if (!this.data.archived) this.data.archived = []; // Garantia extra
                     
                     this.render(); 
                 } catch(e){} 
@@ -1273,28 +1396,161 @@
                 downloadAnchorNode.remove();
             },
 
-            // --- LISTAGEM DE ARQUIVOS (COM PESQUISA) ---
+            // --- LISTAGEM DE ARQUIVOS BLINDADA COM RECUPERAÇÃO ---
             renderArchiveList() {
+                 if (!Array.isArray(this.data.archived)) this.data.archived = []; // SEGURANÇA
+
                  const list = document.getElementById('archive-list');
-                 const search = document.getElementById('archive-search').value.toLowerCase();
+                 const searchInput = document.getElementById('archive-search');
+                 const search = searchInput ? searchInput.value.toLowerCase() : '';
                  
+                 // Atualizar contador
+                 const countBadge = document.getElementById('archive-count-badge');
+                 if(countBadge) countBadge.textContent = this.data.archived.length;
+
                  // CORREÇÃO: Evitar erro se condominio não existir
                  const filtered = this.data.archived.filter(t => (t.condominio || '').toLowerCase().includes(search));
 
                  if (filtered.length === 0) {
-                     list.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Nenhum item encontrado.</p>';
+                     list.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-8 text-slate-400">
+                            <i class="ph ph-tray text-3xl mb-2 opacity-50"></i>
+                            <p class="text-xs mb-4">Nenhum item encontrado.</p>
+                            
+                            <button onclick="App.recoverLostData()" class="bg-blue-100 text-blue-700 px-4 py-2 rounded text-xs font-bold hover:bg-blue-200 transition flex items-center gap-2">
+                                <i class="ph ph-life-buoy"></i> Tentar Recuperar Dados Perdidos
+                            </button>
+                            <p class="text-[9px] text-slate-300 mt-2 max-w-xs text-center">Busca de emergência no cache local do navegador.</p>
+                        </div>`;
                      return;
                  }
 
-                 list.innerHTML = filtered.map(t => 
-                    `<div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded border dark:border-slate-700">
+                 list.innerHTML = filtered.map(t => {
+                    // BLINDAGEM CONTRA ERROS DE DATA
+                    let dateDisplay = '-';
+                    try {
+                        if (t.dataAnalise && t.dataAnalise.includes('-')) {
+                            dateDisplay = this.formatDate(t.dataAnalise);
+                        } else {
+                            dateDisplay = t.dataAnalise || 'Data n/d';
+                        }
+                    } catch(e) { dateDisplay = 'Erro Data'; }
+
+                    return `
+                    <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded border dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         <div>
-                            <p class="font-bold text-sm dark:text-white">${t.condominio}</p>
-                            <p class="text-xs text-slate-500">${this.formatDate(t.dataAnalise)} • ${t.semana||'-'}</p>
+                            <p class="font-bold text-sm dark:text-white uppercase">${t.condominio || 'Sem Nome'}</p>
+                            <p class="text-[10px] text-slate-500 flex items-center gap-1">
+                                <i class="ph ph-calendar"></i> ${dateDisplay} 
+                                <span class="mx-1">•</span> 
+                                ${t.semana || '-'}
+                            </p>
                         </div>
-                        <button onclick="App.restoreTask('${t.id}')" class="text-green-500 hover:text-green-700 text-xs font-bold border border-green-200 px-2 py-1 rounded">Restaurar</button>
+                        <button onclick="App.restoreTask('${t.id}')" class="flex items-center gap-1 text-green-600 hover:text-white hover:bg-green-600 text-[10px] font-bold border border-green-200 dark:border-green-900 px-3 py-1.5 rounded transition-all shadow-sm">
+                            <i class="ph ph-arrow-u-up-left"></i> Restaurar
+                        </button>
                     </div>`
-                 ).join('');
+                 }).join('');
+            },
+            
+            // --- NOVA FUNÇÃO DE RECUPERAÇÃO SELETIVA ---
+            recoverLostData() {
+                // 1. Gather all unique items from all storage sources
+                const candidates = new Map(); // Use Map to dedup by ID easily
+
+                // Helper to process raw string
+                const process = (key) => {
+                    try {
+                        const raw = localStorage.getItem(key);
+                        if (!raw) return;
+                        const parsed = JSON.parse(raw);
+                        let arr = [];
+                        if (Array.isArray(parsed)) arr = parsed;
+                        else if (parsed.a) arr = parsed.a.concat(parsed.t || []); // Safe backup format
+                        
+                        arr.forEach(t => {
+                            if (t && t.id) candidates.set(t.id, t);
+                        });
+                    } catch(e) { console.error("Error reading " + key, e); }
+                };
+
+                process('mon_archived');
+                process('mon_tasks'); // Also check old tasks cache just in case
+                process('mon_safe_backup');
+                process('mon_shadow_archive_latest');
+
+                // 2. Filter out items that ALREADY exist in the app
+                const currentIds = new Set([
+                    ...this.data.tasks.map(t => t.id), 
+                    ...this.data.archived.map(t => t.id)
+                ]);
+
+                this.data.recoveryList = [];
+                for (const [id, task] of candidates) {
+                    if (!currentIds.has(id)) {
+                        this.data.recoveryList.push(task);
+                    }
+                }
+
+                // 3. Show UI
+                if (this.data.recoveryList.length === 0) {
+                    alert("Nenhum dado perdido foi encontrado nos backups locais.");
+                } else {
+                    this.openModalUI('recovery-modal');
+                    this.renderRecoveryList();
+                }
+            },
+
+            renderRecoveryList() {
+                const list = document.getElementById('recovery-list');
+                const search = document.getElementById('recovery-search').value.toLowerCase();
+                
+                const filtered = this.data.recoveryList.filter(t => (t.condominio || '').toLowerCase().includes(search));
+
+                if (filtered.length === 0) {
+                    list.innerHTML = '<p class="text-center text-xs text-slate-400 py-4">Nenhum item correspondente encontrado.</p>';
+                    return;
+                }
+
+                list.innerHTML = filtered.map(t => `
+                    <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded border border-blue-100 dark:border-blue-900 hover:shadow-md transition-all">
+                        <div>
+                            <p class="font-bold text-sm dark:text-white uppercase text-blue-900 dark:text-blue-100">${t.condominio || 'Sem Nome'}</p>
+                            <p class="text-[10px] text-slate-500 flex items-center gap-1">
+                                <i class="ph ph-calendar"></i> ${this.formatDate(t.dataAnalise)} 
+                                <span class="mx-1">•</span> 
+                                ${t.semana || '-'}
+                            </p>
+                        </div>
+                        <button onclick="App.restoreSingleFromRecovery('${t.id}')" class="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded shadow-lg transition-colors">
+                            <i class="ph ph-download-simple"></i> Recuperar Este
+                        </button>
+                    </div>
+                `).join('');
+            },
+
+            restoreSingleFromRecovery(id) {
+                const idx = this.data.recoveryList.findIndex(t => t.id === id);
+                if (idx > -1) {
+                    const item = this.data.recoveryList[idx];
+                    
+                    // Remove from recovery list
+                    this.data.recoveryList.splice(idx, 1);
+                    
+                    // Add to active tasks with manual flag
+                    item.manualRestore = true;
+                    item.carimboSemanaAtual = true; // Assume they want to work on it
+                    this.data.tasks.unshift(item);
+                    
+                    this.saveData();
+                    this.renderRecoveryList(); // Re-render the modal list
+                    this.render(); // Update background dashboard
+                    this.showToast('Item recuperado com sucesso!');
+                    
+                    if (this.data.recoveryList.length === 0) {
+                        this.closeModalUI('recovery-modal');
+                    }
+                }
             },
             
             restoreTask(id) {
@@ -1318,7 +1574,7 @@
                     this.data.tasks.unshift(t);
                     
                     this.saveData();
-                    this.renderArchiveList();
+                    this.renderArchiveList(); // Atualiza a lista para remover o item visualmente
                 }
             },
             
@@ -1344,13 +1600,17 @@
                 this.showToast('Análise excluída (pode ser restaurada)');
             },
             
-            // --- CORREÇÃO: ARQUIVAMENTO MANUAL NÃO FORÇA CONCLUSÃO ---
+            // --- CORREÇÃO: ARQUIVAMENTO MANUAL BLINDADO ---
             archiveTask(id) {
                 const idx = this.data.tasks.findIndex(t => t.id === id);
                 if (idx > -1) {
                     const t = this.data.tasks.splice(idx, 1)[0];
-                    // t.statusAnalise = 'Concluída'; // REMOVIDO: Preserva status original (Pendente/Em Análise)
+                    if (!this.data.archived) this.data.archived = []; // SEGURANÇA
                     this.data.archived.push(t);
+                    
+                    // COFRE BLINDADO: Salva uma cópia independente que a nuvem não toca
+                    localStorage.setItem('mon_shadow_archive_latest', JSON.stringify(this.data.archived));
+                    
                     this.saveData();
                 }
             },
@@ -1428,11 +1688,15 @@
 
             formatDate(dateStr) {
                 if(!dateStr) return '-';
-                const [y, m, d] = dateStr.split('-');
-                const date = new Date(y, m - 1, d);
-                const week = date.toLocaleDateString('pt-BR', { weekday: 'long' });
-                const weekCap = week.charAt(0).toUpperCase() + week.slice(1);
-                return `${d}/${m}/${y} • ${weekCap}`;
+                try {
+                    const [y, m, d] = dateStr.split('-');
+                    const date = new Date(y, m - 1, d);
+                    const week = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+                    const weekCap = week.charAt(0).toUpperCase() + week.slice(1);
+                    return `${d}/${m}/${y} • ${weekCap}`;
+                } catch(e) {
+                    return dateStr;
+                }
             },
 
             render() { 
