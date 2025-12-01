@@ -290,7 +290,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v17.8 (Carimbo Inteligente)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v17.9 (Correção de Arquivamento)</p>
             </footer>
         </div>
     </div>
@@ -778,13 +778,8 @@
                 }, (error) => { console.error("Firestore Error:", error); document.getElementById('db-error-banner').classList.remove('hidden'); });
             },
 
-            // --- AUTO ARQUIVAMENTO (CORRIGIDO) ---
+            // --- AUTO ARQUIVAMENTO ---
             autoArchive() {
-                // Lógica de Arquivamento Baseada em Semanas Completas (Segunda-feira)
-                // N = Semana Atual
-                // N-1 = Semana Passada (Visível)
-                // N-2 = Semana Retrasada (Arquivar tudo - Pendente ou Concluída)
-                
                 const now = new Date();
                 now.setHours(0,0,0,0);
                 
@@ -803,13 +798,11 @@
                 const active = [];
                 
                 this.data.tasks.forEach(t => {
-                    // SE ESTIVER MARCADA COMO RESTAURAÇÃO MANUAL (t.manualRestore == true), NÃO ARQUIVA.
                     if (t.manualRestore) {
                         active.push(t);
                         return;
                     }
 
-                    // Regra normal: Arquiva se for anterior à semana passada
                     if (t.dataAnalise < limitStr) {
                         this.data.archived.push(t);
                         changed = true;
@@ -1054,8 +1047,6 @@
             addOccurrence() {
                 const cat = document.getElementById('add-ocorrencia-categoria').value;
                 const desc = document.getElementById('add-ocorrencia-desc').value;
-                // REMOVIDO: const cam = document.getElementById('add-camera').value || 'GERAL';
-                // REVERTIDO:
                 const ini = document.getElementById('add-horario-inicial').value;
                 const fim = document.getElementById('add-horario-final').value;
                 
@@ -1281,7 +1272,6 @@
                  ).join('');
             },
             
-            // --- ATUALIZAÇÃO: RESTAURAÇÃO INTELIGENTE ---
             restoreTask(id) {
                 const idx = this.data.archived.findIndex(t => t.id === id);
                 if (idx > -1) {
@@ -1293,7 +1283,7 @@
                     // Se NÃO ESTAVA CONCLUÍDA (Pendente), ganha carimbo (reprocessamento).
                     if (t.statusAnalise === 'Concluída') {
                         t.carimboSemanaAtual = false;
-                        this.showToast('Restaurado para Consulta (Sem Impacto na Meta)');
+                        this.showToast('Restaurado para Consulta');
                     } else {
                         t.carimboSemanaAtual = true;
                         this.showToast('Restaurado: Contabilizando na Meta');
@@ -1329,11 +1319,12 @@
                 this.showToast('Análise excluída (pode ser restaurada)');
             },
             
+            // --- CORREÇÃO: ARQUIVAMENTO MANUAL NÃO FORÇA CONCLUSÃO ---
             archiveTask(id) {
                 const idx = this.data.tasks.findIndex(t => t.id === id);
                 if (idx > -1) {
                     const t = this.data.tasks.splice(idx, 1)[0];
-                    t.statusAnalise = 'Concluída';
+                    // t.statusAnalise = 'Concluída'; // REMOVIDO: Preserva status original (Pendente/Em Análise)
                     this.data.archived.push(t);
                     this.saveData();
                 }
@@ -1395,9 +1386,16 @@
                 }
             },
 
+            // --- CORREÇÃO: DETECTA REABERTURA DE TAREFA ---
             updateStatus(id, field, val) {
                 const t = this.data.tasks.find(x => x.id === id);
                 if (t) { 
+                    // Se for uma tarefa restaurada MANUALMENTE e o usuário mudar status de Concluída -> Pendente/Em Análise
+                    // O sistema entende que foi REABERTA para trabalho e aplica o carimbo.
+                    if (field === 'statusAnalise' && t.manualRestore && val !== 'Concluída') {
+                        t.carimboSemanaAtual = true;
+                    }
+                    
                     t[field] = val; 
                     this.saveData(); 
                 }
