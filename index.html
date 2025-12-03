@@ -320,8 +320,8 @@
                             </h2>
                             <form onsubmit="App.addProductivityEntry(event)" class="space-y-4">
                                 <div>
-                                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Referência (Data/Nome)</label>
-                                    <input type="text" id="prod-input-ref" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Ex: Semana 42 ou 02/12" required>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Semana</label>
+                                    <input type="text" id="prod-input-ref" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Ex: 42" required>
                                 </div>
                                 <div class="grid grid-cols-3 gap-2">
                                     <div>
@@ -354,7 +354,7 @@
                             <table class="w-full text-sm text-left">
                                 <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                                     <tr>
-                                        <th scope="col" class="px-4 py-3">Ref.</th>
+                                        <th scope="col" class="px-4 py-3">Semana</th>
                                         <th scope="col" class="px-2 py-3 text-center">Dias</th>
                                         <th scope="col" class="px-2 py-3 text-center">PDV</th>
                                         <th scope="col" class="px-2 py-3 text-center">OC</th>
@@ -398,7 +398,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v21.2 (Produtividade + Edição)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v21.3 (Produtividade Ordenada)</p>
             </footer>
         </div>
     </div>
@@ -960,6 +960,29 @@
                 }
             },
 
+            // --- NOVO: MÉTODO AUXILIAR PARA ORDENAÇÃO POR SEMANA ---
+            getSortedProductivity() {
+                // Cria uma cópia para não alterar a ordem original de inserção
+                return [...this.data.productivity].sort((a, b) => {
+                    const getVal = (str) => {
+                        // Extrai apenas números da string (ex: "Semana 42" -> 42)
+                        const num = parseInt(str.replace(/\D/g, ''));
+                        // Se não tiver número, retorna 0 (ou usa localeCompare para strings puras)
+                        return isNaN(num) ? 0 : num;
+                    };
+                    
+                    const valA = getVal(a.ref);
+                    const valB = getVal(b.ref);
+                    
+                    if (valA === 0 && valB === 0) {
+                        // Se nenhum for número, usa ordem alfabética
+                        return a.ref.localeCompare(b.ref);
+                    }
+                    
+                    return valA - valB; // Ordem Crescente (1, 2, 3...)
+                });
+            },
+
             renderProductivityTable() {
                 const tbody = document.getElementById('productivity-table-body');
                 if(!tbody) return;
@@ -969,7 +992,10 @@
                     return;
                 }
 
-                tbody.innerHTML = this.data.productivity.map(p => `
+                // USA A LISTA ORDENADA PARA RENDERIZAR
+                const sortedData = this.getSortedProductivity();
+
+                tbody.innerHTML = sortedData.map(p => `
                     <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 transition ${this.data.editingProductivityId === p.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}">
                         <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${p.ref}</td>
                         <td class="px-2 py-3 text-center text-blue-600 font-bold">${p.dias}</td>
@@ -1010,13 +1036,13 @@
                 // Atualiza também os números do painel
                 this.updateProductivityStats();
 
-                // Inverter ordem para o gráfico (Mais antigo -> Mais novo)
-                const dataReversed = [...this.data.productivity].reverse();
+                // USA A LISTA ORDENADA PARA O GRÁFICO (Crescente: Esquerda -> Direita)
+                const sortedData = this.getSortedProductivity();
                 
-                this.charts.prod.data.labels = dataReversed.map(p => p.ref);
-                this.charts.prod.data.datasets[0].data = dataReversed.map(p => p.dias); // Line (Dias)
-                this.charts.prod.data.datasets[1].data = dataReversed.map(p => p.oc);   // Bar (OC)
-                this.charts.prod.data.datasets[2].data = dataReversed.map(p => p.pdv);  // Bar (PDV)
+                this.charts.prod.data.labels = sortedData.map(p => p.ref);
+                this.charts.prod.data.datasets[0].data = sortedData.map(p => p.dias); // Line (Dias)
+                this.charts.prod.data.datasets[1].data = sortedData.map(p => p.oc);   // Bar (OC)
+                this.charts.prod.data.datasets[2].data = sortedData.map(p => p.pdv);  // Bar (PDV)
                 
                 this.charts.prod.update();
             },
