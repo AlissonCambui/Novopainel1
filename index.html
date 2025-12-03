@@ -398,7 +398,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v21.3 (Produtividade Ordenada)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v21.5 (Correção Arquivamento)</p>
             </footer>
         </div>
     </div>
@@ -653,7 +653,7 @@
                 editingId: null,
                 pendingDeleteId: null,
                 editingTaskId: null,
-                editingProductivityId: null // NOVO: Controle de Edição de Produtividade
+                editingProductivityId: null 
             },
             charts: {},
             statusColors: {
@@ -760,7 +760,8 @@
                     App.data.editingTaskId = null;
                     document.getElementById('task-modal-title').textContent = "Nova Análise";
                     document.getElementById('task-form').reset(); 
-                    document.getElementById('form-data-analise').valueAsDate=new Date(); 
+                    // FIX: Define a data de hoje como padrão se estiver vazia
+                    document.getElementById('form-data-analise').value = new Date().toISOString().split('T')[0];
                     App.openModalUI('task-modal'); 
                 });
                 addListener('cancel-btn', 'click', () => App.closeModalUI('task-modal'));
@@ -1235,24 +1236,25 @@
                 
                 const limitCurrentWeekStr = mondayCurrentWeek.toISOString().split('T')[0];
                 
+                // AJUSTE: Definir limite para N-2 (Manter Semana Atual e Anterior)
                 const mondayRetrasada = new Date(mondayCurrentWeek);
-                mondayRetrasada.setUTCDate(mondayRetrasada.getUTCDate() - 14); 
+                mondayRetrasada.setUTCDate(mondayRetrasada.getUTCDate() - 7); // Alterado de 14 para 7 (Mantém N e N-1)
                 const limitOldStr = mondayRetrasada.toISOString().split('T')[0];
 
                 let changed = false;
                 const active = [];
                 
                 this.data.tasks.forEach(t => {
-                    if (t.manualRestore) { active.push(t); return; }
-
-                    if (t.dataAnalise < limitOldStr) {
-                        this.data.archived.push(t);
-                        this.backupToShadow(t); 
-                        changed = true;
+                    // FIX: Proteção contra itens sem data definida (evita arquivamento acidental de "vazios")
+                    if (!t.dataAnalise) {
+                        active.push(t);
                         return;
                     }
 
-                    if (t.dataAnalise < limitCurrentWeekStr && t.statusAnalise === 'Concluída') {
+                    if (t.manualRestore) { active.push(t); return; }
+
+                    // Regra Única: Arquivar tudo que for anterior à semana passada (N-2)
+                    if (t.dataAnalise < limitOldStr) {
                         this.data.archived.push(t);
                         this.backupToShadow(t); 
                         changed = true;
@@ -1494,7 +1496,16 @@
             },
             
             addTask(task) {
-                const t = { id: crypto.randomUUID(), ...task, statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencias: [], createdAt: new Date().toISOString() };
+                const t = { 
+                    id: crypto.randomUUID(), 
+                    ...task, 
+                    // FIX: Garante que sempre tenha uma data (evita arquivamento acidental de "vazios")
+                    dataAnalise: task.dataAnalise || new Date().toISOString().split('T')[0],
+                    statusBackup: 'Pendente', 
+                    statusAnalise: 'Pendente', 
+                    ocorrencias: [], 
+                    createdAt: new Date().toISOString() 
+                };
                 this.data.tasks.unshift(t);
                 this.saveData();
                 this.showToast('Análise criada!');
