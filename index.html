@@ -391,7 +391,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v22.0 (Interface Limpa)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v23.0 (Charts Refined)</p>
             </footer>
         </div>
     </div>
@@ -676,43 +676,121 @@
 
             setupCharts() {
                  if (typeof Chart === 'undefined') return; 
-                 Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#475569';
                  
-                 // Gráfico 1: Ocorrências
-                 const c1 = document.getElementById('ocorrenciasChart');
-                 if(c1) this.charts.oc = new Chart(c1.getContext('2d'), { type: 'bar', data: {labels:[], datasets:[{label:'Ocs', data:[], backgroundColor:'#f26324', borderRadius:4}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
+                 // Configurações Globais para visual Pro
+                 const isDark = document.documentElement.classList.contains('dark');
+                 Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+                 Chart.defaults.font.family = "'Inter', sans-serif";
+                 Chart.defaults.scale.grid.color = isDark ? '#334155' : '#e2e8f0'; // Slate-700 : Slate-200
+                 Chart.defaults.scale.grid.borderColor = 'transparent'; // Remove borda feia dos eixos
 
-                 // --- NOVO: Gráfico de Produtividade ---
+                 // --- GRÁFICO 1: Ocorrências por Local (Refinado) ---
+                 const c1 = document.getElementById('ocorrenciasChart');
+                 if(c1) {
+                     const ctx1 = c1.getContext('2d');
+                     // Gradiente Laranja
+                     const grad1 = ctx1.createLinearGradient(0, 0, 0, 300);
+                     grad1.addColorStop(0, '#f97316'); // Orange-500
+                     grad1.addColorStop(1, '#ea580c'); // Orange-600
+
+                     this.charts.oc = new Chart(ctx1, { 
+                        type: 'bar', 
+                        data: {
+                            labels:[], 
+                            datasets:[{
+                                label: 'Ocorrências', 
+                                data:[], 
+                                backgroundColor: grad1, 
+                                borderRadius: 6,
+                                barPercentage: 0.6, // Barras mais elegantes
+                                categoryPercentage: 0.8
+                            }]
+                        }, 
+                        options: {
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                                    titleColor: isDark ? '#ffffff' : '#0f172a',
+                                    bodyColor: isDark ? '#cbd5e1' : '#334155',
+                                    borderColor: isDark ? '#334155' : '#e2e8f0',
+                                    borderWidth: 1,
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    displayColors: false, // Remove quadradinho de cor
+                                    callbacks: {
+                                        title: (items) => items[0].label.toUpperCase(),
+                                        label: (item) => `${item.raw} Ocorrências`
+                                    }
+                                }
+                            }, 
+                            scales: {
+                                y: {
+                                    beginAtZero: true, 
+                                    ticks: { font: { size: 11 } },
+                                    grid: { borderDash: [4, 4] } // Grid pontilhado
+                                },
+                                x: {
+                                    grid: { display: false }, // Remove grid vertical
+                                    ticks: { font: { size: 10, weight: 'bold' } }
+                                }
+                            }
+                        }
+                     });
+                 }
+
+                 // --- GRÁFICO 2: Produtividade (Refinado e Profissional) ---
                  const c2 = document.getElementById('productivityChart');
                  if(c2) {
-                     this.charts.prod = new Chart(c2.getContext('2d'), {
+                     const ctx2 = c2.getContext('2d');
+                     
+                     // Gradiente Azul (Dias) - Suave
+                     const gradLine = ctx2.createLinearGradient(0, 0, 0, 400);
+                     gradLine.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Blue-500
+                     gradLine.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+                     this.charts.prod = new Chart(ctx2, {
                         type: 'bar',
                         data: {
                             labels: [],
                             datasets: [
                                 {
-                                    label: 'Dias (Vis.)',
+                                    label: 'Dias Visualizados',
                                     data: [],
-                                    borderColor: '#3b82f6', // Blue
-                                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
                                     type: 'line',
+                                    borderColor: '#3b82f6', // Blue-500
+                                    backgroundColor: gradLine,
+                                    borderWidth: 3,
+                                    pointBackgroundColor: '#ffffff',
+                                    pointBorderColor: '#3b82f6',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    fill: true, // Preenchimento de área
+                                    tension: 0.4, // Curva suave
                                     yAxisID: 'y',
-                                    tension: 0.3,
-                                    borderWidth: 3
+                                    order: 1
                                 },
                                 {
-                                    label: 'OC',
+                                    label: 'Ocorrências (OC)',
                                     data: [],
-                                    backgroundColor: '#f26324', // Orange
+                                    backgroundColor: '#ef4444', // Red-500
                                     borderRadius: 4,
-                                    yAxisID: 'y1'
+                                    barPercentage: 0.5,
+                                    yAxisID: 'y1',
+                                    order: 2
                                 },
                                 {
                                     label: 'PDV',
                                     data: [],
-                                    backgroundColor: '#10b981', // Green
+                                    backgroundColor: '#10b981', // Emerald-500
                                     borderRadius: 4,
-                                    hidden: true // Oculto por padrão para não poluir, usuário pode clicar
+                                    barPercentage: 0.5,
+                                    hidden: true, // Oculto por padrão
+                                    yAxisID: 'y1',
+                                    order: 3
                                 }
                             ]
                         },
@@ -723,20 +801,47 @@
                                 mode: 'index',
                                 intersect: false,
                             },
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        usePointStyle: true,
+                                        boxWidth: 8,
+                                        font: { size: 11, weight: 600 }
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                                    titleColor: isDark ? '#ffffff' : '#0f172a',
+                                    bodyColor: isDark ? '#cbd5e1' : '#334155',
+                                    borderColor: isDark ? '#334155' : '#e2e8f0',
+                                    borderWidth: 1,
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    usePointStyle: true
+                                }
+                            },
                             scales: {
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { font: { weight: 'bold' } }
+                                },
                                 y: {
                                     type: 'linear',
                                     display: true,
                                     position: 'left',
-                                    title: { display: true, text: 'Dias Visualizados' },
-                                    grid: { display: false }
+                                    title: { display: true, text: 'Dias', color: '#3b82f6', font:{size:10, weight:'bold'} },
+                                    grid: { borderDash: [4, 4] },
+                                    suggestedMax: 10 // Dá respiro no gráfico
                                 },
                                 y1: {
                                     type: 'linear',
                                     display: true,
                                     position: 'right',
-                                    title: { display: true, text: 'Ocorrências' },
-                                    grid: { color: document.documentElement.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
+                                    title: { display: true, text: 'Qtd. Itens', color: '#64748b', font:{size:10, weight:'bold'} },
+                                    grid: { display: false },
+                                    suggestedMax: 5
                                 }
                             }
                         }
