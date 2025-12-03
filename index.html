@@ -289,17 +289,10 @@
                 </main>
                 
                 <!-- Gráficos -->
-                <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <section class="mb-8">
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                         <h2 class="text-lg font-bold mb-4 dark:text-white flex items-center gap-2"><i class="ph ph-map-pin"></i> Ocorrências por Local</h2>
                         <div class="chart-container"><canvas id="ocorrenciasChart"></canvas></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center items-center">
-                        <h2 class="text-lg font-bold mb-2 dark:text-white flex items-center gap-2"><i class="ph ph-lightning"></i> Produtividade</h2>
-                        <div class="text-center py-8">
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-semibold">Total de Análises Concluídas</p>
-                            <p id="produtividade-total" class="text-6xl font-extrabold text-emerald-500 mt-4">0</p>
-                        </div>
                     </div>
                 </section>
             </div>
@@ -398,7 +391,7 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v21.5 (Correção Arquivamento)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v22.0 (Interface Limpa)</p>
             </footer>
         </div>
     </div>
@@ -1236,9 +1229,8 @@
                 
                 const limitCurrentWeekStr = mondayCurrentWeek.toISOString().split('T')[0];
                 
-                // AJUSTE: Definir limite para N-2 (Manter Semana Atual e Anterior)
                 const mondayRetrasada = new Date(mondayCurrentWeek);
-                mondayRetrasada.setUTCDate(mondayRetrasada.getUTCDate() - 7); // Alterado de 14 para 7 (Mantém N e N-1)
+                mondayRetrasada.setUTCDate(mondayRetrasada.getUTCDate() - 7); 
                 const limitOldStr = mondayRetrasada.toISOString().split('T')[0];
 
                 let changed = false;
@@ -1496,16 +1488,7 @@
             },
             
             addTask(task) {
-                const t = { 
-                    id: crypto.randomUUID(), 
-                    ...task, 
-                    // FIX: Garante que sempre tenha uma data (evita arquivamento acidental de "vazios")
-                    dataAnalise: task.dataAnalise || new Date().toISOString().split('T')[0],
-                    statusBackup: 'Pendente', 
-                    statusAnalise: 'Pendente', 
-                    ocorrencias: [], 
-                    createdAt: new Date().toISOString() 
-                };
+                const t = { id: crypto.randomUUID(), ...task, statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencias: [], createdAt: new Date().toISOString() };
                 this.data.tasks.unshift(t);
                 this.saveData();
                 this.showToast('Análise criada!');
@@ -2054,7 +2037,9 @@
                 const concStat = statTasks.filter(t => t.statusAnalise === 'Concluída').length;
                 document.getElementById('media-ocorrencias').textContent = concStat > 0 ? (totalOcStat / concStat).toFixed(1) : "0.0";
                 
-                document.getElementById('produtividade-total').textContent = concStat + this.data.archived.length;
+                // NOVO: Adicionado verificação para prodTotalEl
+                const prodTotalEl = document.getElementById('produtividade-total');
+                if(prodTotalEl) prodTotalEl.textContent = concStat + this.data.archived.length;
 
                 list.innerHTML = filtered.map(t => {
                     const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
