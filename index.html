@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -56,7 +57,11 @@
     <!-- TELA DE LOGIN (PORTARIA) -->
     <!-- ================================================================== -->
     <section id="login-view" class="fixed inset-0 z-50 bg-slate-100 dark:bg-slate-900 flex flex-col items-center justify-center p-4 transition-opacity duration-500">
-        <!-- Engrenagem removida daqui -->
+        <div class="absolute top-4 right-4 flex gap-2">
+             <button onclick="App.openModalUI('cloud-config-modal')" class="text-slate-400 hover:text-brand-orange transition p-2" title="Configuração Técnica">
+                <i class="ph ph-gear text-2xl"></i>
+            </button>
+        </div>
 
         <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border-t-4 border-brand-orange animate-fade-in flex flex-col">
             <div class="mb-6 flex justify-center">
@@ -137,18 +142,7 @@
                         <div class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse"></div> Conectando...
                     </span>
                 </div>
-
-                <!-- BUSCA GLOBAL (NOVO) -->
-                <div class="hidden md:flex flex-grow max-w-md mx-4 relative">
-                    <input type="text" id="global-search-input" placeholder="Pesquisar em tudo (tarefas, arquivo...)" class="w-full pl-10 pr-4 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 border-none text-sm focus:ring-2 focus:ring-brand-orange outline-none dark:text-white transition-all">
-                    <i class="ph ph-magnifying-glass absolute left-3 top-2 text-slate-400"></i>
-                </div>
-
                 <div class="flex items-center gap-3 md:gap-4">
-                    <button id="global-search-mobile-btn" class="md:hidden text-slate-500 dark:text-slate-300" onclick="App.openGlobalSearchMobile()">
-                        <i class="ph ph-magnifying-glass text-xl"></i>
-                    </button>
-
                     <div class="text-right hidden lg:block mr-2">
                         <p class="text-xs text-slate-500 dark:text-slate-400 capitalize" id="current-date">...</p>
                     </div>
@@ -198,7 +192,7 @@
                     </div>
                 </div>
 
-                <!-- MENU DE ABAS -->
+                <!-- MENU DE ABAS (NOVO) -->
                 <div class="mt-6 flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-full md:w-auto inline-flex overflow-x-auto">
                     <button onclick="App.switchMainView('monitoring')" id="btn-view-monitoring" class="flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all bg-white dark:bg-slate-600 text-brand-orange shadow-sm flex items-center gap-2 justify-center whitespace-nowrap">
                         <i class="ph ph-video-camera"></i> Monitoramento
@@ -206,6 +200,7 @@
                     <button onclick="App.switchMainView('productivity')" id="btn-view-productivity" class="flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center gap-2 justify-center whitespace-nowrap">
                         <i class="ph ph-chart-line-up"></i> Produtividade
                     </button>
+                    <!-- NOVA ABA RELATÓRIOS -->
                     <button onclick="App.switchMainView('reports')" id="btn-view-reports" class="flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center gap-2 justify-center whitespace-nowrap">
                         <i class="ph ph-file-text"></i> Relatórios
                     </button>
@@ -213,7 +208,7 @@
             </header>
 
             <!-- ======================================================= -->
-            <!-- VIEW: MONITORAMENTO -->
+            <!-- VIEW: MONITORAMENTO (Telas originais) -->
             <!-- ======================================================= -->
             <div id="view-monitoring" class="flex-col gap-6">
                 
@@ -311,9 +306,11 @@
             <!-- VIEW: PRODUTIVIDADE -->
             <!-- ======================================================= -->
             <div id="view-productivity" class="hidden flex-col gap-6 animate-fade-in">
+                
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Coluna da Esquerda: Formulário e Tabela -->
                     <div class="lg:col-span-1 flex flex-col gap-6">
+                        
                         <!-- Card de Input -->
                         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                             <h2 class="text-lg font-bold mb-4 dark:text-white flex items-center gap-2 text-brand-orange">
@@ -349,6 +346,7 @@
                                 </div>
                             </form>
                         </div>
+
                         <!-- Tabela de Dados -->
                         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden flex-grow">
                             <table class="w-full text-sm text-left">
@@ -361,14 +359,19 @@
                                         <th scope="col" class="px-2 py-3"></th>
                                     </tr>
                                 </thead>
-                                <tbody id="productivity-table-body" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                                <tbody id="productivity-table-body" class="divide-y divide-slate-100 dark:divide-slate-700">
+                                    <!-- Preenchido via JS -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
+
                     <!-- Coluna da Direita: Gráfico e Estatísticas -->
                     <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
                          <h2 class="text-lg font-bold mb-4 dark:text-white flex items-center gap-2"><i class="ph ph-chart-line-up"></i> Evolução da Produtividade</h2>
                          <p class="text-xs text-slate-500 mb-4">Acompanhamento de Dias Visualizados vs. Ocorrências Geradas.</p>
+                         
+                         <!-- NOVO PAINEL DE ESTATÍSTICAS -->
                          <div class="grid grid-cols-3 gap-4 mb-6">
                             <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 text-center">
                                 <p class="text-[10px] uppercase font-bold text-blue-500">Total Dias</p>
@@ -383,10 +386,10 @@
                                 <p id="kpi-media" class="text-2xl font-extrabold text-purple-700 dark:text-purple-400">0.00</p>
                             </div>
                          </div>
+
                          <div class="chart-container flex-grow relative" style="height: 400px;">
                              <canvas id="productivityChart"></canvas>
                          </div>
-                         <p class="text-xs text-slate-400 text-center mt-4 hidden" id="produtividade-total"></p>
                     </div>
                 </div>
             </div>
@@ -400,22 +403,17 @@
                         <h2 class="text-lg font-bold dark:text-white flex items-center gap-2"><i class="ph ph-files text-brand-orange"></i> Relatórios Detalhados</h2>
                         <p class="text-xs text-slate-500">Análise profunda por PDV/Condomínio</p>
                     </div>
-                    <div class="flex gap-2 flex-col md:flex-row w-full md:w-auto">
-                        <!-- NOVO: Filtro de Data -->
-                        <select id="report-date-filter" onchange="App.updateReport()" class="w-full md:w-40 p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none">
-                            <option value="all">Todo o Período</option>
-                            <option value="30">Últimos 30 dias</option>
-                            <option value="currMonth">Mês Atual</option>
-                            <option value="currYear">Ano Atual</option>
-                        </select>
-                        <select id="report-condo-select" onchange="App.generateReport(this.value)" class="w-full md:w-64 p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none">
+                    <div class="w-full md:w-72">
+                        <select id="report-condo-select" onchange="App.generateReport(this.value)" class="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none">
                             <option value="">Selecione um Condomínio...</option>
+                            <!-- Preenchido via JS -->
                         </select>
                     </div>
                 </div>
 
                 <!-- Conteúdo do Relatório (Inicialmente Oculto) -->
                 <div id="report-content" class="hidden flex-col gap-6">
+                    <!-- KPIs do Relatório - SIMPLIFICADO -->
                     <div class="flex justify-center mb-4">
                         <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 text-center w-full max-w-md transform hover:scale-105 transition-transform duration-300">
                             <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -423,9 +421,11 @@
                             </div>
                             <h3 class="text-sm font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">Total de Ocorrências</h3>
                             <p id="rep-total-oc" class="text-5xl font-extrabold text-red-600 dark:text-red-500">0</p>
-                            <p class="text-xs text-slate-400 mt-2">No período selecionado</p>
+                            <p class="text-xs text-slate-400 mt-2">Histórico acumulado neste local</p>
                         </div>
                     </div>
+
+                    <!-- Gráfico Único -->
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                         <h3 class="text-lg font-bold mb-6 dark:text-white flex items-center gap-2"><i class="ph ph-calendar-check text-brand-orange"></i> Mapa de Calor: Ocorrências por Dia da Semana</h3>
                         <div class="chart-container h-80">
@@ -434,6 +434,7 @@
                     </div>
                 </div>
                 
+                <!-- Estado Vazio -->
                 <div id="report-empty" class="flex flex-col items-center justify-center py-12 text-slate-400">
                     <i class="ph ph-magnifying-glass text-6xl mb-4 opacity-20"></i>
                     <p class="text-sm">Selecione um condomínio acima para gerar o relatório.</p>
@@ -442,25 +443,8 @@
 
             <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700">
                 <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Local. Seus dados estão salvos apenas neste dispositivo.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v26.0 (Busca Global + Filtros)</p>
+                <p class="mt-1">© 2025 Painel de Monitoramento - Sistema Seguro - v25.1 (Relatórios Simplificados)</p>
             </footer>
-        </div>
-    </div>
-
-    <!-- MODAL DE BUSCA GLOBAL (NOVO) -->
-    <div id="global-search-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[90]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl border dark:border-slate-700">
-            <div class="p-4 border-b dark:border-slate-700 flex items-center gap-3">
-                <i class="ph ph-magnifying-glass text-xl text-slate-400"></i>
-                <input type="text" id="global-search-modal-input" placeholder="Digite para pesquisar..." class="flex-grow bg-transparent border-none outline-none text-lg dark:text-white" autofocus>
-                <button onclick="App.closeModalUI('global-search-modal')" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
-            </div>
-            <div id="global-search-results" class="flex-grow overflow-y-auto p-4 space-y-2">
-                <!-- Resultados aqui -->
-            </div>
-            <div class="p-2 bg-slate-50 dark:bg-slate-900 text-center text-xs text-slate-400 border-t dark:border-slate-700">
-                ESC para fechar
-            </div>
         </div>
     </div>
 
@@ -476,15 +460,6 @@
              </div>
              
              <div class="space-y-2">
-                 <!-- Botão Engrenagem MOVIDO PARA CÁ -->
-                 <button onclick="App.openModalUI('cloud-config-modal')" class="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition text-slate-700 dark:text-white border border-dashed border-slate-300 dark:border-slate-600">
-                     <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300"><i class="ph ph-gear"></i></div>
-                     <div class="text-left">
-                         <p class="text-sm font-bold">Configuração Técnica</p>
-                         <p class="text-[10px] text-slate-500">Banco de dados e conexões</p>
-                     </div>
-                 </button>
-
                  <button onclick="App.openChangePasswordModal()" class="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition text-slate-700 dark:text-white">
                      <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="ph ph-key"></i></div>
                      <div class="text-left">
@@ -506,7 +481,7 @@
         </div>
     </div>
     
-    <!-- Outros Modais (Admin, Cloud, etc) mantidos -->
+    <!-- Modais restantes (Admin, Cloud, Task, Ocorrencia, etc) mantidos -->
     <div id="admin-panel-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[60]">
         <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl border dark:border-slate-700 shadow-2xl flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-4">
@@ -571,6 +546,114 @@
         </div>
     </div>
 
+    <div id="task-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md border dark:border-slate-700 shadow-2xl">
+            <h2 class="text-2xl font-bold mb-4 dark:text-white" id="task-modal-title">Nova Análise</h2>
+            <form id="task-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Condomínio</label>
+                    <input type="text" id="form-condominio" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Data</label>
+                    <input type="date" id="form-data-analise" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Semana (Opcional)</label>
+                    <input type="text" id="form-semana" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Ex: Semana 47">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Observações</label>
+                    <textarea id="form-observacoes" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" rows="2"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" id="cancel-btn" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded bg-brand-orange text-white font-bold hover:bg-orange-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="ocorrencia-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl h-[90vh] flex flex-col border dark:border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold dark:text-white">Ocorrências: <span id="modal-condo-name" class="text-brand-orange"></span></h2>
+                <button id="ocorrencia-cancel-btn" class="text-slate-400 hover:text-red-500 text-2xl transition-colors">&times;</button>
+            </div>
+            <div id="ocorrencia-list" class="flex-grow overflow-y-auto mb-4 space-y-2 p-2 bg-slate-50 dark:bg-slate-900 rounded border dark:border-slate-700 shadow-inner"></div>
+            <div class="pt-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
+                    <select id="add-ocorrencia-categoria" class="md:col-span-4 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none"></select>
+                    <input type="text" id="add-ocorrencia-desc" placeholder="Descrição da ocorrência..." class="md:col-span-8 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold mb-1">Início</label>
+                        <input type="time" id="add-horario-inicial" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
+                    </div>
+                    <div class="flex flex-col">
+                         <label class="text-[10px] text-slate-500 uppercase font-bold mb-1">Fim</label>
+                         <input type="time" id="add-horario-final" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-3">
+                    <button id="add-ocorrencia-btn" class="flex-1 bg-orange-100 text-brand-orange font-bold py-2 rounded hover:bg-orange-200 transition-colors border border-orange-200">+ Adicionar Item</button>
+                    <button id="save-ocorrencias-btn" class="flex-1 bg-brand-orange text-white font-bold py-2 rounded hover:bg-orange-700 transition-colors shadow-lg shadow-orange-500/20">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="excel-import-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl border dark:border-slate-700 shadow-2xl">
+            <h2 class="text-xl font-bold mb-2 dark:text-white">Importar Dados (Excel)</h2>
+            <p class="text-xs text-slate-500 mb-4">Cole as linhas do Excel aqui para importar em massa.</p>
+            <textarea id="excel-paste-area" rows="10" class="w-full p-3 text-sm font-mono bg-slate-100 dark:bg-slate-900 border rounded dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Cole os dados aqui..."></textarea>
+            <div class="flex justify-end gap-2 mt-4">
+                <button id="excel-import-close-btn" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white transition-colors">Cancelar</button>
+                <button id="process-import-btn" class="px-4 py-2 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors">Processar Dados</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="archive-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[75]">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl border dark:border-slate-700">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2">
+                        <i class="ph ph-archive-box"></i> Arquivo Morto
+                        <span id="archive-count-badge" class="text-sm bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-white px-2 py-0.5 rounded-full ml-2">0</span>
+                    </h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="App.recoverLostData()" class="text-xs font-bold text-blue-500 hover:text-white hover:bg-blue-500 border border-blue-500 px-3 py-1.5 rounded transition-all flex items-center gap-1 shadow-sm" title="Buscar em backups locais">
+                        <i class="ph ph-magnifying-glass"></i> Buscar em Backups
+                    </button>
+                    <button id="archive-close-btn" class="text-2xl text-slate-400 hover:text-slate-600 ml-2">&times;</button>
+                </div>
+            </div>
+            
+            <input type="text" id="archive-search" placeholder="Pesquisar no arquivo..." class="mb-3 w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-brand-orange">
+            <div id="archive-list" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
+        </div>
+    </div>
+
+    <div id="recovery-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[90]">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl border-2 border-blue-500 dark:border-blue-700">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <h2 class="text-xl font-bold dark:text-white flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                    <i class="ph ph-shield-check text-2xl"></i> Cofre de Segurança
+                </h2>
+                <button onclick="App.closeModalUI('recovery-modal')" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4 text-xs text-blue-800 dark:text-blue-200 border border-blue-100 dark:border-blue-800">
+                <i class="ph ph-info"></i> Estes itens foram encontrados nos backups internos do seu navegador mas não estão na lista principal.
+            </div>
+            <input type="text" id="recovery-search" placeholder="Pesquisar no cofre (Nome do condomínio...)" class="mb-3 w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+            <div id="recovery-list" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
+        </div>
+    </div>
+
     <!-- Toast Notificação -->
     <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-[70] flex items-center gap-2">
         <i class="ph ph-check-circle text-green-400 text-xl"></i>
@@ -616,8 +699,7 @@
                 editingId: null,
                 pendingDeleteId: null,
                 editingTaskId: null,
-                editingProductivityId: null,
-                reportDateFilter: 'all' // NOVO: Filtro de data padrão
+                editingProductivityId: null
             },
             charts: {},
             statusColors: {
@@ -786,15 +868,6 @@
                 
                 ['filtro-condominio', 'filtro-backup', 'filtro-analise'].forEach(id => addListener(id, 'input', () => App.render()));
                 
-                // --- BUSCA GLOBAL (NOVO) ---
-                addListener('global-search-input', 'click', () => App.openGlobalSearchModal());
-                addListener('global-search-input', 'focus', () => App.openGlobalSearchModal());
-                addListener('global-search-modal-input', 'input', (e) => App.performGlobalSearch(e.target.value));
-                document.addEventListener('keydown', (e) => { 
-                    if (e.key === 'Escape') App.closeModalUI('global-search-modal'); 
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); App.openGlobalSearchModal(); }
-                });
-
                 addListener('add-task-btn', 'click', () => { 
                     App.data.editingTaskId = null;
                     document.getElementById('task-modal-title').textContent = "Nova Análise";
@@ -860,76 +933,6 @@
                 });
             },
 
-            // --- BUSCA GLOBAL (NOVO) ---
-            openGlobalSearchModal() {
-                this.openModalUI('global-search-modal');
-                setTimeout(() => document.getElementById('global-search-modal-input').focus(), 100);
-                this.performGlobalSearch('');
-            },
-
-            openGlobalSearchMobile() {
-                this.openGlobalSearchModal();
-            },
-
-            performGlobalSearch(query) {
-                const resultsContainer = document.getElementById('global-search-results');
-                const q = query.toLowerCase().trim();
-                
-                if (!q) {
-                    resultsContainer.innerHTML = '<p class="text-center text-xs text-slate-400">Comece a digitar para buscar...</p>';
-                    return;
-                }
-
-                // Busca em Ativos e Arquivados
-                const allTasks = [...this.data.tasks.map(t=>({...t, _source:'active'})), ...this.data.archived.map(t=>({...t, _source:'archived'}))];
-                
-                const matches = allTasks.filter(t => {
-                    return t.condominio.toLowerCase().includes(q) || 
-                           (t.observacoes && t.observacoes.toLowerCase().includes(q)) ||
-                           (t.semana && t.semana.toLowerCase().includes(q));
-                }).slice(0, 10); // Limite de 10
-
-                if (matches.length === 0) {
-                    resultsContainer.innerHTML = '<p class="text-center text-xs text-slate-400">Nenhum resultado encontrado.</p>';
-                    return;
-                }
-
-                resultsContainer.innerHTML = matches.map(t => {
-                    const badge = t._source === 'active' 
-                        ? '<span class="bg-green-100 text-green-700 text-[10px] px-2 rounded-full">Ativo</span>' 
-                        : '<span class="bg-purple-100 text-purple-700 text-[10px] px-2 rounded-full">Arquivado</span>';
-                    
-                    return `
-                    <div onclick="App.locateTask('${t.id}', '${t._source}')" class="p-3 bg-slate-50 dark:bg-slate-700/30 rounded border dark:border-slate-600 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition flex justify-between items-center">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="font-bold text-sm dark:text-white">${t.condominio}</span>
-                                ${badge}
-                            </div>
-                            <p class="text-xs text-slate-500">${t.dataAnalise} • ${t.semana || '-'}</p>
-                        </div>
-                        <i class="ph ph-caret-right text-slate-400"></i>
-                    </div>`;
-                }).join('');
-            },
-
-            locateTask(id, source) {
-                this.closeModalUI('global-search-modal');
-                if (source === 'active') {
-                    // Vai para monitoramento e filtra
-                    this.switchMainView('monitoring');
-                    document.getElementById('filtro-condominio').value = this.data.tasks.find(t=>t.id===id).condominio;
-                    this.render();
-                } else {
-                    // Abre arquivo morto e filtra
-                    this.switchMainView('monitoring'); // Arquivo morto é overlay do monitoring
-                    const task = this.data.archived.find(t=>t.id===id);
-                    document.getElementById('archive-search').value = task.condominio;
-                    this.renderArchiveList();
-                    this.openModalUI('archive-modal');
-                }
-            },
-
             // --- CONTROLE DE ABAS ---
             switchMainView(viewName) {
                 this.data.currentView = viewName;
@@ -970,7 +973,7 @@
                 }
             },
 
-            // --- LÓGICA DE RELATÓRIOS COM FILTRO DE DATA (NOVO) ---
+            // --- LÓGICA DE RELATÓRIOS ---
             
             populateReportDropdown() {
                 const select = document.getElementById('report-condo-select');
@@ -979,18 +982,10 @@
                 const allTasks = [...this.data.tasks, ...this.data.archived];
                 const uniqueNames = [...new Set(allTasks.map(t => t.condominio.trim().toUpperCase()))].sort();
                 
-                // Mantem seleção atual se existir
-                const currentVal = select.value;
                 select.innerHTML = '<option value="">Selecione um Condomínio...</option>';
                 uniqueNames.forEach(name => {
-                    if(name) select.innerHTML += `<option value="${name}" ${name===currentVal?'selected':''}>${name}</option>`;
+                    if(name) select.innerHTML += `<option value="${name}">${name}</option>`;
                 });
-            },
-
-            updateReport() {
-                // Reaplica o relatório com o novo filtro de data
-                const currentCondo = document.getElementById('report-condo-select').value;
-                if(currentCondo) this.generateReport(currentCondo);
             },
 
             generateReport(condoName) {
@@ -1009,27 +1004,7 @@
                 emptyState.classList.add('hidden');
 
                 const allTasks = [...this.data.tasks, ...this.data.archived];
-                let condoTasks = allTasks.filter(t => t.condominio.trim().toUpperCase() === condoName.toUpperCase());
-
-                // APLICAR FILTRO DE DATA
-                const filterType = document.getElementById('report-date-filter').value;
-                const now = new Date();
-                
-                condoTasks = condoTasks.filter(t => {
-                    if(!t.dataAnalise) return false;
-                    const tDate = new Date(t.dataAnalise);
-                    
-                    if (filterType === '30') {
-                        const limit = new Date();
-                        limit.setDate(now.getDate() - 30);
-                        return tDate >= limit;
-                    } else if (filterType === 'currMonth') {
-                        return tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
-                    } else if (filterType === 'currYear') {
-                        return tDate.getFullYear() === now.getFullYear();
-                    }
-                    return true; // 'all'
-                });
+                const condoTasks = allTasks.filter(t => t.condominio.trim().toUpperCase() === condoName.toUpperCase());
                 
                 let totalOc = 0;
                 const dayOfWeekCounts = [0,0,0,0,0,0,0]; // Dom - Sab
