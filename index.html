@@ -1,1887 +1,786 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Monitoramento - Modo Gestor</title>
-    
-    <!-- ================================================================== -->
-    <!-- BIBLIOTECAS EXTERNAS -->
-    <!-- ================================================================== -->
-    <!-- Tailwind CSS -->
+    <title>Painel de Monitoramento de Minimercados</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Configurações Tailwind -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: { orange: '#f26324', yellow: '#f7b41e', dark: '#1e293b' }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     
-    <!-- Ícones -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-    <!-- ================================================================== -->
-    <!-- ÁREA DE CSS (ESTILOS) -->
-    <!-- ================================================================== -->
     <style>
-        /* Transições Globais */
-        body { transition: background-color 0.3s, color 0.3s; }
-        
-        /* Efeitos de Card */
-        .card-transition { transition: transform 0.2s, box-shadow 0.2s; }
-        .card-transition:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        
-        /* Containers de Gráficos */
-        .chart-container { position: relative; width: 100%; height: 300px; }
-        @media (min-width: 768px) { .chart-container { height: 350px; } }
-        
-        /* Scrollbar Personalizada */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        
-        /* Animações */
-        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(10px); } 
-            to { opacity: 1; transform: translateY(0); } 
+        /* CSS Personalizado */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
         }
-
-        /* Loader */
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #f26324; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Animação do Badge de Gestor */
-        .manager-pulse { animation: managerPulse 2s infinite; }
-        @keyframes managerPulse { 
-            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); } 
-            70% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); } 
-            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); } 
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
         }
-
-        /* Estilos de Impressão */
-        @media print {
-            body { background-color: white !important; color: black !important; }
-            #login-view, nav, #toolbar-section, #actions-menu-container, button:not(.hidden), .no-print { display: none !important; }
-            #dashboard-view, #view-monitoring, #view-reports, #report-content { display: block !important; }
-            .card-transition { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
-            .chart-container { height: 250px !important; }
+        .details-content.hidden {
+            display: none;
         }
+        .toggle-details-btn svg {
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-details-btn.collapsed svg {
+            transform: rotate(180deg);
+        }
+        .z-50 { z-index: 50; }
+        .z-60 { z-index: 60; } /* Z-index maior para o modal de confirmação */
         
-        /* Classe de erro para inputs */
-        .input-error { border-color: #ef4444 !important; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important; }
+        /* Botões de ação sempre visíveis */
+        .occ-actions {
+            opacity: 1; 
+        }
     </style>
 </head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
 
-<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 overflow-x-hidden">
-
-    <!-- ================================================================== -->
-    <!-- ÁREA DE HTML (ESTRUTURA) -->
-    <!-- ================================================================== -->
-
-    <!-- TELA DE LOGIN (PORTARIA) -->
-    <section id="login-view" class="fixed inset-0 z-50 bg-slate-100 dark:bg-slate-900 flex flex-col items-center justify-center p-4 transition-opacity duration-500">
-        <div class="absolute top-4 right-4 flex gap-2">
-             <button onclick="App.openModalUI('cloud-config-modal')" class="text-slate-400 hover:text-brand-orange transition p-2" title="Configuração Técnica">
-                <i class="ph ph-gear text-2xl"></i>
-            </button>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border-t-4 border-brand-orange animate-fade-in flex flex-col">
-            <div class="mb-6 flex justify-center">
-                <div class="w-16 h-16 bg-orange-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-brand-orange text-3xl shadow-inner">
-                    <i class="ph ph-user-focus"></i>
-                </div>
-            </div>
-            
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-extrabold tracking-tight select-none text-brand-orange uppercase">
-                    Painel de Monitoramento
-                </h1>
-                <p class="text-slate-500 dark:text-slate-400 text-sm">Acesso Seguro</p>
-            </div>
-
-            <!-- FORMULÁRIO DE LOGIN -->
-            <div id="login-form-container" class="space-y-4">
-                <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg mb-4">
-                    <button id="tab-login" class="flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-600 text-brand-orange shadow-sm transition-all" onclick="App.toggleAuthMode('login')">Entrar</button>
-                    <button id="tab-register" class="flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-all" onclick="App.toggleAuthMode('register')">Primeiro Acesso</button>
-                </div>
-
-                <div id="auth-title" class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Acesso ao Sistema</div>
-
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Nome Completo</label>
-                    <div class="relative">
-                        <i class="ph ph-user absolute left-3 top-2.5 text-slate-400"></i>
-                        <input type="text" id="login-username" class="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none transition uppercase" placeholder="EX: LUIZ SILVA">
-                    </div>
-                </div>
-                
-                <div>
-                    <div class="flex justify-between items-end mb-1">
-                        <label id="lbl-password" class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Sua Senha</label>
-                    </div>
-                    <div class="relative">
-                        <i class="ph ph-lock absolute left-3 top-2.5 text-slate-400"></i>
-                        <input type="password" id="login-password" class="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none transition" placeholder="••••••••">
-                    </div>
-                </div>
-
-                <div id="auth-error-msg" class="hidden text-red-500 text-xs text-center bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-800 flex items-center justify-center gap-2">
-                    <i class="ph ph-warning-circle"></i> <span id="error-text-content">Erro ao autenticar.</span>
-                </div>
-
-                <button id="action-btn" type="button" class="w-full bg-brand-orange hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2">
-                    Acessar Painel
-                </button>
-            </div>
-
-            <div id="login-loading" class="hidden flex flex-col items-center justify-center py-4">
-                <div class="loader mb-3"></div>
-                <p class="text-xs text-slate-400 animate-pulse">Validando acesso...</p>
-            </div>
-
-            <p class="mt-6 text-[10px] text-center text-slate-400 leading-relaxed">
-                <span id="conn-status-icon" class="text-green-500 font-bold flex items-center justify-center gap-1"><i class="ph ph-shield-check"></i> Conexão Segura</span>
-                <span id="system-status">Inicializando...</span>
-            </p>
-        </div>
-    </section>
-
-    <!-- PAINEL PRINCIPAL (DASHBOARD) -->
-    <div id="dashboard-view" class="hidden flex-col min-h-screen w-full">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
         
-        <!-- Navbar -->
-        <nav class="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-40 border-b dark:border-slate-700">
-            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div class="text-xl font-extrabold tracking-tight select-none flex items-center gap-1 cursor-pointer" onclick="window.location.reload()">
-                        <i class="ph ph-video-camera text-brand-orange"></i>
-                        <span class="hidden md:inline text-brand-orange">Painel de Monitoramento</span>
-                    </div>
-                    <span id="app-mode-badge" class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1">
-                        <div class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse"></div> Conectando...
-                    </span>
-                    <!-- Botão Visão Global do Gestor -->
-                    <button id="manager-global-btn" onclick="App.toggleManagerGlobalMode()" class="hidden ml-2 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1 hover:bg-purple-200 transition-all border border-purple-300">
-                        <i class="ph ph-globe-hemisphere-west"></i> <span id="manager-btn-text">Minha Visão</span>
-                    </button>
-                </div>
-                <div class="flex items-center gap-3 md:gap-4">
-                    <div class="text-right hidden lg:block mr-2">
-                        <p class="text-xs text-slate-500 dark:text-slate-400 capitalize" id="current-date">...</p>
-                    </div>
-                    <button id="admin-panel-btn" onclick="App.openAdminPanel()" class="hidden bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-orange p-2 rounded-lg transition relative" title="Painel do Administrador">
-                        <i class="ph ph-lock-key text-lg"></i>
-                        <div id="admin-indicator" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
-                    </button>
-                    <button onclick="App.openMyAccountModal()" class="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-brand-orange hover:text-white px-3 py-1.5 rounded-lg transition group">
-                         <div class="hidden md:block leading-tight text-right">
-                            <p class="text-[10px] uppercase font-bold opacity-70">Olá,</p>
-                            <p id="user-display-name" class="text-xs font-bold uppercase truncate max-w-[100px]">Utilizador</p>
-                        </div>
-                        <div id="user-avatar" class="w-8 h-8 rounded-full bg-white text-brand-orange flex items-center justify-center font-bold text-sm border border-slate-200 dark:border-slate-600 shadow-sm group-hover:text-brand-orange">U</div>
-                    </button>
-                    <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <button id="theme-toggle" class="hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
-                        <i class="ph ph-sun"></i>
-                    </button>
-                </div>
+        <header class="mb-8 text-center">
+            <div class="text-4xl font-extrabold mb-2 tracking-tight" style="font-family: 'Arial Black', Arial, sans-serif;">
+                <span style="color: #f26324;">vend</span><span style="color: #f7b41e;">Perto</span>
             </div>
-        </nav>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Painel de Monitoramento</h1>
+            <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
+        </header>
 
-        <!-- BANNER DE ERRO DE CONEXÃO -->
-        <div id="db-error-banner" class="hidden bg-red-500 text-white p-4 text-center shadow-lg">
-            <p class="font-bold flex items-center justify-center gap-2">
-                <i class="ph ph-warning-circle text-xl"></i>
-                Acesso ao Banco de Dados Bloqueado!
-            </p>
-            <p class="text-xs mt-1 opacity-90">Verifique a conexão de internet ou permissões.</p>
-            <button onclick="window.location.reload()" class="mt-2 bg-white text-red-500 px-4 py-1 rounded text-xs font-bold hover:bg-slate-100 transition">
-                Tentar Novamente
-            </button>
-        </div>
-        
-        <!-- BANNER MODO GESTOR -->
-        <div id="manager-banner" class="hidden bg-purple-600 text-white py-2 px-4 text-center shadow-md animate-fade-in sticky top-[60px] z-30">
-            <p class="text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                <i class="ph ph-eye text-lg"></i> Modo Gestor Ativo: Visualizando dados de toda a equipe
-            </p>
-        </div>
+        <!-- Resumo do Dashboard -->
+        <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
+                <p id="total-solicitacoes" class="text-3xl font-bold text-orange-600 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Backups Pendentes</h3>
+                <p id="backups-pendentes" class="text-3xl font-bold text-amber-500 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Análises Pendentes</h3>
+                <p id="analises-pendentes" class="text-3xl font-bold text-red-500 mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Ocorrências (Semana)</h3>
+                <p id="total-ocorrencias-semana" class="text-3xl font-bold text-slate-700 mt-1 dark:text-slate-100">0</p>
+            </div>
+        </section>
 
-        <!-- CONTEÚDO PRINCIPAL -->
-        <div class="container mx-auto p-4 md:p-6 lg:p-8 flex-grow animate-fade-in flex flex-col">
-            
-            <!-- HEADER DA PÁGINA COM ABAS -->
-            <header class="mb-6">
-                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Painel de Monitoramento</h1>
-                        <p id="welcome-msg" class="text-slate-600 dark:text-slate-400 mt-1 text-sm">Gerencie as suas ocorrências com segurança.</p>
-                    </div>
-                    <div id="sync-status" class="text-xs font-mono text-slate-400 flex items-center gap-1 hidden">
-                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> <span id="sync-text" class="hidden md:inline">Sincronizando...</span>
+        <!-- Filtros e Ações -->
+        <section class="bg-white p-4 rounded-xl shadow-md mb-8 dark:bg-slate-800 dark:shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-4 flex-grow">
+                    <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 flex-grow md:flex-grow-0 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <select id="filtro-backup" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        <option value="">Backup (Todos)</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                    <select id="filtro-analise" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        <option value="">Análise (Todos)</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Análise">Em Análise</option>
+                        <option value="Concluída">Concluída</option>
+                    </select>
+                    <div class="flex gap-2">
+                        <button id="expand-all-btn" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Expandir</button>
+                        <button id="collapse-all-btn" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Recolher</button>
                     </div>
                 </div>
-
-                <!-- MENU DE ABAS -->
-                <div class="mt-6 flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-full md:w-auto inline-flex overflow-x-auto no-print">
-                    <button onclick="App.switchMainView('monitoring')" id="btn-view-monitoring" class="flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all bg-white dark:bg-slate-600 text-brand-orange shadow-sm flex items-center gap-2 justify-center whitespace-nowrap">
-                        <i class="ph ph-video-camera"></i> Monitoramento
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <button id="add-task-btn" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors w-full sm:w-auto flex-grow">
+                        + Adicionar
                     </button>
-                    <button onclick="App.switchMainView('productivity')" id="btn-view-productivity" class="flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center gap-2 justify-center whitespace-nowrap">
-                        <i class="ph ph-chart-line-up"></i> Produtividade
-                    </button>
-                    <button onclick="App.switchMainView('reports')" id="btn-view-reports" class="flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center gap-2 justify-center whitespace-nowrap">
-                        <i class="ph ph-file-text"></i> Relatórios
-                    </button>
-                </div>
-            </header>
-
-            <!-- VIEW: MONITORAMENTO -->
-            <div id="view-monitoring" class="flex flex-col gap-6">
-                <!-- KPIs -->
-                <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
-                        <h3 class="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Ativas</h3>
-                        <p id="total-solicitacoes" class="text-3xl font-bold text-slate-800 dark:text-white">0</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
-                        <h3 class="text-xs font-bold uppercase text-amber-600 dark:text-amber-500">Backups Pend.</h3>
-                        <p id="backups-pendentes" class="text-3xl font-bold text-amber-500">0</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
-                        <h3 class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">Quantidade de Dias Visualizados</h3>
-                        <p id="analises-concluidas" class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">0</p>
-                        <p class="text-xs text-slate-400 text-right">Estatística Semanal</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
-                        <h3 class="text-xs font-bold uppercase text-blue-600 dark:text-blue-400">Quantidade de PDVs visualizados</h3>
-                        <p id="total-pdvs" class="text-3xl font-bold text-blue-500">0</p>
-                        <p class="text-xs text-slate-400 text-right">Únicos na Semana</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
-                        <h3 class="text-xs font-bold uppercase text-red-600 dark:text-red-400">Ocorrências</h3>
-                        <p id="total-ocorrencias-semana" class="text-3xl font-bold text-red-500">0</p>
-                        <p class="text-xs text-slate-400 text-right">Estatística Semanal</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 card-transition">
-                        <h3 class="text-xs font-bold uppercase text-purple-600 dark:text-purple-400">Média (Oc/Análise)</h3>
-                        <p id="media-ocorrencias" class="text-3xl font-bold text-purple-500">0.0</p>
-                        <p class="text-xs text-slate-400 text-right">Por Concluída</p>
-                    </div>
-                </section>
-
-                <!-- Toolbar -->
-                <section id="toolbar-section" class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm mb-4 border border-slate-100 dark:border-slate-700">
-                    <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
-                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                            <input type="text" id="filtro-condominio" placeholder="Buscar condomínio..." class="pl-3 w-full lg:w-64 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm dark:text-white focus:ring-2 focus:ring-brand-orange outline-none transition">
-                            <select id="filtro-analise" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm dark:text-white focus:ring-2 focus:ring-brand-orange outline-none">
-                                <option value="">Status Análise: Todos</option>
-                                <option value="Pendente">Pendente</option>
-                                <option value="Em Análise">Em Análise</option>
-                                <option value="Concluída">Concluída</option>
-                            </select>
-                            <select id="filtro-backup" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm dark:text-white focus:ring-2 focus:ring-brand-orange outline-none">
-                                <option value="">Status Backup: Todos</option>
-                                <option value="Pendente">Pendente</option>
-                                <option value="Em Andamento">Em Andamento</option>
-                                <option value="Concluído">Concluído</option>
-                            </select>
-                            <input type="text" id="filtro-usuario" placeholder="Filtrar por usuário..." class="hidden pl-3 w-full lg:w-48 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg px-3 py-2 text-sm dark:text-white focus:ring-2 focus:ring-purple-500 outline-none transition">
-                        </div>
-                        <div class="flex items-center gap-3 w-full lg:w-auto justify-end">
-                            <button id="add-task-btn" class="bg-brand-orange hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20">
-                                <i class="ph ph-plus-circle text-lg"></i> Nova Análise
-                            </button>
-                            
-                            <div class="relative" id="actions-menu-container">
-                                <button id="actions-menu-btn" class="bg-slate-100 dark:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 dark:text-white flex items-center gap-2 transition-colors">
-                                    Ações <i class="ph ph-caret-down"></i>
-                                </button>
-                                <div id="actions-menu" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden">
-                                    <div class="border-t border-slate-100 dark:border-slate-700 my-0"></div>
-                                    <button id="excel-import-btn" onclick="App.openImport(event)" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors">
-                                        <i class="ph ph-file-csv text-lg text-green-600"></i> Importar (Excel)
-                                    </button>
-                                    <button id="archive-btn" onclick="App.openArchive(event)" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                                        <i class="ph ph-archive-box text-lg text-purple-500"></i> Arquivo Morto
-                                    </button>
-                                    <div class="border-t border-slate-100 dark:border-slate-700 my-0"></div>
-                                    <button id="export-data-btn" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                                        <i class="ph ph-download-simple text-lg text-slate-500"></i> Backup Local (JSON)
-                                    </button>
-                                    <button id="import-data-btn" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                                        <i class="ph ph-upload-simple text-lg text-slate-500"></i> Restaurar Backup (JSON)
-                                    </button>
-                                </div>
+                    <div class="relative inline-block text-left" id="actions-menu-container">
+                        <button type="button" id="actions-menu-btn" class="inline-flex justify-center w-full rounded-lg border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 focus:ring-orange-500 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-600">
+                            Ações
+                            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20 dark:bg-slate-700 dark:ring-slate-600">
+                            <div class="py-1">
+                                <button id="priority-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Prioridades</button>
+                                <button id="planner-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Planejar Semana</button>
+                                <button id="period-analysis-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise por Período</button>
+                                <button id="annual-report-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise Anual</button>
+                                <button id="pdv-dashboard-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Painel do PDV</button>
+                                <div class="border-t border-slate-100 my-1 dark:border-slate-600"></div>
+                                <button id="bulk-add-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Importar Planilha</button>
+                                <button id="category-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Categorias</button>
+                                <button id="rename-condo-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Renomear</button>
+                                <button id="archive-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Arquivar</button>
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <!-- Lista de Tarefas -->
-                <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <!-- JS preenche aqui -->
-                </main>
-                
-                <!-- Gráficos -->
-                <section class="mb-8">
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                        <h2 class="text-lg font-bold mb-4 dark:text-white flex items-center gap-2"><i class="ph ph-map-pin"></i> Ocorrências por Local</h2>
-                        <div class="chart-container"><canvas id="ocorrenciasChart"></canvas></div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- VIEW: PRODUTIVIDADE (NOVA VERSÃO) -->
-            <div id="view-productivity" class="hidden flex-col gap-6 animate-fade-in">
-                <!-- TOTAIS GERAIS -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
-                        <h3 class="text-xs font-bold uppercase text-blue-600 dark:text-blue-400 mb-1">Dias Visualizados</h3>
-                        <p id="prod-total-dias" class="text-3xl font-extrabold text-slate-800 dark:text-white">0</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
-                        <h3 class="text-xs font-bold uppercase text-brand-orange mb-1">PDVs Analisados</h3>
-                        <p id="prod-total-pdvs" class="text-3xl font-extrabold text-slate-800 dark:text-white">0</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
-                        <h3 class="text-xs font-bold uppercase text-red-600 dark:text-red-400 mb-1">Ocorrências</h3>
-                        <p id="prod-total-oc" class="text-3xl font-extrabold text-slate-800 dark:text-white">0</p>
-                    </div>
-                </div>
-
-                <!-- LISTA DE REGISTROS -->
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold dark:text-white flex items-center gap-2">
-                            <i class="ph ph-table"></i> Registros Manuais
-                        </h2>
-                        <button onclick="App.openProductivityModal()" class="bg-brand-orange hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20">
-                            <i class="ph ph-plus"></i> Novo Registro
-                        </button>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-                            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">Referência</th>
-                                    <th scope="col" class="px-6 py-3 text-center">Dias</th>
-                                    <th scope="col" class="px-6 py-3 text-center">PDVs</th>
-                                    <th scope="col" class="px-6 py-3 text-center">Ocorrências</th>
-                                    <th scope="col" class="px-6 py-3 text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="productivity-table-body">
-                                <!-- Preenchido via JS -->
-                            </tbody>
-                        </table>
-                        <div id="productivity-empty-state" class="hidden text-center py-8 text-slate-400 text-xs">
-                            Nenhum registro encontrado. Adicione dados manualmente.
-                        </div>
-                    </div>
                 </div>
             </div>
+        </section>
 
-            <!-- VIEW: RELATÓRIOS -->
-            <div id="view-reports" class="hidden flex-col gap-6 animate-fade-in">
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 mb-4 flex flex-col md:flex-row gap-4 items-center justify-between no-print">
+        <!-- Lista de Tarefas -->
+        <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Cards Renderizados via JS -->
+        </main>
+        
+        <!-- Gráficos -->
+        <section class="mt-12">
+            <h2 class="text-2xl font-bold text-center mb-8 text-slate-800 dark:text-slate-100">Ocorrências da Semana (por Condomínio)</h2>
+            <div class="flex justify-center">
+                <div class="bg-white p-4 rounded-xl shadow-md w-full lg:w-1/2 dark:bg-slate-800 dark:shadow-xl">
+                     <div class="chart-container">
+                        <canvas id="ocorrenciasChart"></canvas>
+                     </div>
+                </div>
+            </div>
+            <!-- Produtividade Semanal (Abaixo dos gráficos ou onde preferir) -->
+             <div id="weekly-productivity" class="mt-8">
+                 <div class="bg-white p-4 rounded-xl shadow-md text-center max-w-sm mx-auto dark:bg-slate-800 dark:shadow-xl">
+                    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Produtividade Semanal (Ocorrências / Análise)</h3>
+                    <p id="produtividade-semanal" class="text-3xl font-bold text-emerald-600 mt-1">N/A</p>
+                    <p class="text-xs text-slate-400 mt-1">Média da semana atual</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- MODAIS -->
+
+    <!-- NOVO MODAL DE CONFIRMAÇÃO (GENÉRICO) -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-60">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm text-center dark:bg-slate-800 dark:shadow-xl border border-slate-200 dark:border-slate-700">
+            <div class="mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2" id="confirm-modal-title">Tem certeza?</h2>
+            <p class="text-slate-600 dark:text-slate-300 mb-6 text-sm" id="confirm-modal-msg">Essa ação não pode ser desfeita.</p>
+            <div class="flex justify-center gap-3">
+                <button id="confirm-modal-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600 flex-1">Cancelar</button>
+                <button id="confirm-modal-yes-btn" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-700 flex-1">Sim, confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Análise -->
+    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Adicionar Nova Análise</h2>
+            <form id="task-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <h2 class="text-lg font-bold dark:text-white flex items-center gap-2"><i class="ph ph-files text-brand-orange"></i> Relatórios Detalhados</h2>
-                        <p class="text-xs text-slate-500">Análise profunda por PDV/Condomínio</p>
-                    </div>
-                    <div class="w-full md:w-72">
-                        <select id="report-condo-select" onchange="App.generateReport(this.value)" class="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none">
-                            <option value="">Selecione um Condomínio...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Conteúdo do Relatório -->
-                <div id="report-content" class="hidden flex-col gap-6">
-                    <div class="flex justify-center mb-4">
-                        <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 text-center w-full max-w-md">
-                            <h3 class="text-sm font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">Total de Ocorrências</h3>
-                            <p id="rep-total-oc" class="text-5xl font-extrabold text-red-600 dark:text-red-500">0</p>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Condomínio</label>
+                        <div class="relative">
+                            <input type="text" id="form-condominio" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required autocomplete="off">
+                            <div id="autocomplete-list" class="absolute z-10 w-full bg-white border border-slate-300 rounded-lg mt-1 hidden max-h-40 overflow-y-auto shadow-lg dark:bg-slate-700 dark:border-slate-600"></div>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                        <div class="chart-container h-80">
-                            <canvas id="reportDayChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div id="report-empty" class="flex flex-col items-center justify-center py-12 text-slate-400">
-                    <i class="ph ph-magnifying-glass text-6xl mb-4 opacity-20"></i>
-                    <p class="text-sm">Selecione um condomínio acima para gerar o relatório.</p>
-                </div>
-            </div>
-
-            <footer class="text-center text-xs text-slate-400 py-4 mt-auto border-t dark:border-slate-700 no-print">
-                <p id="footer-msg"><i class="ph ph-hard-drives"></i> Modo Seguro.</p>
-                <p class="mt-1">© 2025 Painel de Monitoramento - vGestor 4.0</p>
-            </footer>
-        </div>
-    </div>
-
-    <!-- ================================================================== -->
-    <!-- MODAIS E COMPONENTES AUXILIARES -->
-    <!-- ================================================================== -->
-
-    <!-- Novo Modal de Produtividade -->
-    <div id="productivity-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-sm border dark:border-slate-700 shadow-2xl">
-            <h2 class="text-xl font-bold mb-4 dark:text-white" id="prod-modal-title">Novo Registro</h2>
-            <form id="prod-form" onsubmit="event.preventDefault(); App.saveProductivity();">
-                <input type="hidden" id="prod-id">
-                <div class="space-y-3">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Referência (Data/Semana)</label>
-                        <input type="text" id="prod-ref" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Ex: Semana 42 ou 10/10/2025" required>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Dias</label>
-                            <input type="number" id="prod-dias" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="0">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">PDVs</label>
-                            <input type="number" id="prod-pdvs" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="0">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Ocorrências</label>
-                            <input type="number" id="prod-ocs" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="0">
-                        </div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <input type="date" id="form-data-analise" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" onclick="App.closeModalUI('productivity-modal')" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300 transition-colors text-sm font-bold">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded bg-brand-orange text-white font-bold hover:bg-orange-700 transition-colors text-sm shadow-lg">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="excel-import-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl border dark:border-slate-700 shadow-2xl">
-            <h2 class="text-xl font-bold mb-2 dark:text-white">Importar Dados (Excel)</h2>
-            <p class="text-xs text-slate-500 mb-4">Cole as linhas do Excel aqui para importar em massa (Formato: Condomínio | Data | Obs).</p>
-            <textarea id="excel-paste-area" rows="10" class="w-full p-3 text-sm font-mono bg-slate-100 dark:bg-slate-900 border rounded dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Exemplo:
-Condomínio A	2025-10-01	Observação 1
-Condomínio B	2025-10-02	Observação 2"></textarea>
-            <div class="flex justify-end gap-2 mt-4">
-                <button onclick="App.closeModalUI('excel-import-modal')" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white transition-colors">Cancelar</button>
-                <button id="process-import-btn" class="px-4 py-2 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors">Processar Dados</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="archive-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[75]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl border dark:border-slate-700">
-            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
-                <div class="flex items-center gap-3">
-                    <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2">
-                        <i class="ph ph-archive-box"></i> Arquivo Morto
-                        <span id="archive-count-badge" class="text-sm bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-white px-2 py-0.5 rounded-full ml-2">0</span>
-                    </h2>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="App.recoverLostData()" class="text-xs font-bold text-blue-500 hover:text-white hover:bg-blue-500 border border-blue-500 px-3 py-1.5 rounded transition-all flex items-center gap-1 shadow-sm" title="Buscar em backups locais">
-                        <i class="ph ph-magnifying-glass"></i> Cofre de Segurança
-                    </button>
-                    <button onclick="App.closeModalUI('archive-modal')" class="text-2xl text-slate-400 hover:text-slate-600 ml-2">&times;</button>
-                </div>
-            </div>
-            
-            <input type="text" id="archive-search" placeholder="Pesquisar no arquivo..." class="mb-3 w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-brand-orange">
-            <div id="archive-list" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
-        </div>
-    </div>
-
-    <div id="recovery-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[90]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-3xl h-[80vh] flex flex-col shadow-2xl border-2 border-blue-500 dark:border-blue-700">
-            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
-                <h2 class="text-xl font-bold dark:text-white flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                    <i class="ph ph-shield-check text-2xl"></i> Cofre de Segurança (Backup Local)
-                </h2>
-                <button onclick="App.closeModalUI('recovery-modal')" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
-            </div>
-            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4 text-xs text-blue-800 dark:text-blue-200 border border-blue-100 dark:border-blue-800">
-                <i class="ph ph-info"></i> Estes itens foram encontrados nos backups internos do seu navegador. Se algo sumiu, provavelmente está aqui.
-            </div>
-            <input type="text" id="recovery-search" placeholder="Pesquisar no cofre (Nome do condomínio...)" class="mb-3 w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-            <div id="recovery-list" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
-        </div>
-    </div>
-
-    <div id="my-account-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[60]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-sm border dark:border-slate-700 shadow-2xl">
-             <div class="flex justify-between items-start mb-4">
-                 <div>
-                     <h2 class="text-lg font-bold dark:text-white">Minha Conta</h2>
-                     <p id="account-modal-name" class="text-sm text-slate-500 uppercase"></p>
+                 <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Semana (Nº)</label>
+                    <input type="number" id="form-semana-trabalho" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                  </div>
-                 <div class="w-10 h-10 rounded-full bg-brand-orange text-white flex items-center justify-center font-bold text-lg">U</div>
-             </div>
-             <div class="space-y-2">
-                 <button onclick="App.openChangePasswordModal()" class="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition text-slate-700 dark:text-white">
-                     <i class="ph ph-key"></i> Alterar Senha
-                 </button>
-                 <button onclick="App.logout()" class="w-full flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 transition text-red-600">
-                     <i class="ph ph-sign-out"></i> Sair do Sistema
-                 </button>
-             </div>
-             <button onclick="document.getElementById('my-account-modal').classList.add('hidden')" class="w-full mt-4 py-2 text-xs text-slate-400 hover:text-slate-600">Fechar</button>
-        </div>
-    </div>
-    
-    <div id="admin-panel-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[60]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl border dark:border-slate-700 shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-4">
-                <h2 class="text-xl font-bold dark:text-white flex items-center gap-2"><i class="ph ph-users-three text-brand-orange"></i> Gestão de Equipe</h2>
-                <button onclick="document.getElementById('admin-panel-modal').classList.add('hidden')" class="text-slate-400 hover:text-red-500 text-2xl transition">&times;</button>
-            </div>
-            <div class="mb-6 bg-slate-50 dark:bg-slate-700/50 p-5 rounded-lg border border-slate-200 dark:border-slate-600">
-                <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-3 flex items-center gap-2"><i class="ph ph-user-plus text-blue-500"></i> Autorizar Novo Acesso</h3>
-                <div class="flex flex-col gap-2">
-                    <input type="text" id="new-user-name" class="w-full p-3 rounded border dark:bg-slate-800 dark:border-slate-600 dark:text-white text-sm uppercase focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nome Completo do Funcionário">
-                    <button onclick="App.authorizeNewUser()" class="bg-blue-600 text-white py-2.5 rounded text-sm font-bold hover:bg-blue-700 transition shadow-sm">
-                        Autorizar Cadastro
-                    </button>
-                </div>
-            </div>
-            <div class="flex-grow overflow-y-auto pr-1">
-                <h3 class="text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider">Equipe Autorizada</h3>
-                <ul id="admin-users-list" class="space-y-2 text-sm"></ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Outros modais essenciais (Delete, Senha, Cloud, Task, Ocorrencia) -->
-    <div id="delete-confirmation-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-sm border border-red-200 dark:border-red-900 shadow-2xl text-center">
-             <h2 class="text-lg font-bold dark:text-white mb-2">Excluir Análise?</h2>
-             <div class="flex gap-2 justify-center mt-4">
-                 <button onclick="App.closeModalUI('delete-confirmation-modal')" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white font-bold text-sm transition-colors">Cancelar</button>
-                 <button onclick="App.confirmDeleteTask()" class="px-4 py-2 rounded bg-red-500 text-white font-bold text-sm hover:bg-red-600 shadow-lg transition-colors">Sim, Excluir</button>
-             </div>
-        </div>
-    </div>
-
-    <div id="change-password-modal" class="hidden fixed inset-0 bg-black/60 z-[65] flex items-center justify-center p-4">
-         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl w-full max-w-sm shadow-xl">
-             <h2 class="font-bold mb-4 dark:text-white">Nova Senha</h2>
-             <input type="password" id="new-password-input" class="w-full border p-2 rounded mb-4 dark:bg-slate-700 dark:text-white" placeholder="Digite a nova senha">
-             <button onclick="App.changeUserPassword()" class="w-full bg-brand-orange text-white py-2 rounded font-bold">Salvar</button>
-             <button onclick="document.getElementById('change-password-modal').classList.add('hidden')" class="w-full mt-2 text-slate-500 text-xs">Cancelar</button>
-         </div>
-    </div>
-
-    <div id="cloud-config-modal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl w-full max-w-lg shadow-xl">
-            <h2 class="font-bold mb-2 dark:text-white">Configuração</h2>
-            <p class="text-xs text-slate-500 mb-2">Se estiver fora do ambiente padrão, cole a configuração JSON do Firebase abaixo.</p>
-            <textarea id="firebase-config-input" class="w-full h-32 text-xs bg-slate-100 p-2 mb-4 dark:bg-slate-700 dark:text-white rounded border border-slate-300 dark:border-slate-600"></textarea>
-            <div class="flex justify-end gap-2">
-                <button onclick="document.getElementById('cloud-config-modal').classList.add('hidden')" class="text-slate-500 text-sm px-3 py-1">Fechar</button>
-                <button onclick="App.saveCloudConfig()" class="bg-brand-orange text-white px-4 py-2 rounded text-sm font-bold">Salvar Configuração</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="task-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md border dark:border-slate-700 shadow-2xl">
-            <h2 class="text-2xl font-bold mb-4 dark:text-white" id="task-modal-title">Nova Análise</h2>
-            <form id="task-form" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Condomínio</label>
-                    <input type="text" id="form-condominio" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" required>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Data</label>
-                    <input type="date" id="form-data-analise" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" required>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Semana (Opcional)</label>
-                    <input type="text" id="form-semana" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" placeholder="Ex: Semana 47">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Observações</label>
-                    <textarea id="form-observacoes" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-orange outline-none" rows="2"></textarea>
-                </div>
-                <div class="flex justify-end gap-2 pt-4">
-                    <button type="button" id="cancel-btn" class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300 transition-colors">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded bg-brand-orange text-white font-bold hover:bg-orange-700 transition-colors">Salvar</button>
+                 <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Observações</label>
+                    <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></textarea>
+                 </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-700">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="ocorrencia-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-2xl h-[90vh] flex flex-col border dark:border-slate-700 shadow-2xl">
+    <!-- Modal Gerenciamento de Ocorrências (EDITAR/ADICIONAR/EXCLUIR) -->
+    <div id="ocorrencia-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Gerenciar Ocorrências</h2>
+            <form id="ocorrencia-form" class="flex-grow flex flex-col min-h-0">
+                <input type="hidden" id="ocorrencia-task-id">
+                
+                <!-- Lista de Ocorrências com Edição -->
+                <div class="flex-grow overflow-y-auto mb-4 bg-slate-50 rounded-lg p-2 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                    <div id="ocorrencia-list" class="space-y-2">
+                        <!-- Itens renderizados aqui via JS -->
+                    </div>
+                </div>
+                
+                <div class="flex-shrink-0 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <h3 class="font-semibold mb-2 text-sm text-slate-600 dark:text-slate-300">Adicionar / Editar Item</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Categoria</label>
+                            <select id="add-ocorrencia-categoria" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></select>
+                         </div>
+                        <div>
+                           <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Descrição</label>
+                           <input type="text" id="add-ocorrencia-desc" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Início</label>
+                            <input type="time" id="add-horario-inicial" step="1" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Fim</label>
+                            <input type="time" id="add-horario-final" step="1" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-1 px-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                        </div>
+                    </div>
+                     <div class="mt-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="add-ocorrencia-inconclusiva" class="h-4 w-4 text-orange-600 border-gray-300 rounded-lg focus:ring-orange-500">
+                            <span class="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300">Inconclusiva</span>
+                        </label>
+                    </div>
+                     <button type="button" id="add-ocorrencia-btn" class="mt-3 w-full bg-orange-100 text-orange-800 font-semibold px-4 py-2 rounded-lg hover:bg-orange-200 text-sm dark:bg-orange-900 dark:text-orange-100 dark:hover:bg-orange-800">+ Adicionar à Lista</button>
+                </div>
+                <div class="mt-6 flex justify-end gap-3 flex-shrink-0">
+                    <button type="button" id="ocorrencia-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
+                    <button type="submit" class="bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-700">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modais Secundários -->
+    <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Importar Planilha</h2>
+            <p class="text-sm text-slate-600 mb-4 dark:text-slate-300">Cole os dados do Excel. Formato:<br><strong>Semana | Data | Unidade | OC | Colaborador | Status</strong></p>
+            <form id="bulk-add-form">
+                <textarea id="bulk-input-area" rows="10" class="w-full border border-slate-300 rounded-lg p-2 mb-4 text-xs font-mono dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Cole aqui..."></textarea>
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="bulk-cancel-btn" class="bg-slate-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
+                    <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-700">Importar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-[70]"><div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm text-center dark:bg-slate-800 dark:shadow-xl"><p id="notification-message" class="mb-4 text-lg text-slate-700 dark:text-slate-300"></p><button id="notification-close-btn" class="bg-orange-600 text-white px-6 py-2 rounded-lg">OK</button></div></div>
+    
+    <div id="period-analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl">
+            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Análise por Período</h2><button id="period-analysis-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4 mb-4 dark:border-slate-700"><div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Início</label><input type="date" id="period-start-date" class="mt-1 block w-full border border-slate-300 rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></div><div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Fim</label><input type="date" id="period-end-date" class="mt-1 block w-full border border-slate-300 rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></div><div class="flex items-end"><button id="generate-report-btn" class="bg-orange-600 text-white font-semibold w-full px-4 py-2 rounded-lg hover:bg-orange-700">Gerar Relatório</button></div></div>
+            <div class="flex flex-wrap gap-2 mb-4"><button data-period="today" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg dark:bg-slate-700 dark:text-slate-100">Hoje</button><button data-period="this-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg dark:bg-slate-700 dark:text-slate-100">Esta Semana</button><button data-period="this-month" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg dark:bg-slate-700 dark:text-slate-100">Este Mês</button></div>
+            <div id="period-results-content" class="flex-grow overflow-y-auto hidden"><section class="grid grid-cols-3 gap-4 mb-6"><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Dias</h3><p id="period-dias" class="text-3xl font-bold text-orange-600 mt-1">0</p></div><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">PDV</h3><p id="period-pdv" class="text-3xl font-bold text-orange-500 mt-1">0</p></div><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">OC</h3><p id="period-oc" class="text-3xl font-bold text-red-600 mt-1">0</p></div></section><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-slate-50 p-4 rounded-xl dark:bg-slate-900"><div class="chart-container" style="height:250px;"><canvas id="periodCategoryChart"></canvas></div></div><div class="bg-slate-50 p-4 rounded-xl dark:bg-slate-900"><div class="chart-container" style="height:250px;"><canvas id="periodChart"></canvas></div></div></div><div class="mt-6"><h3 class="font-semibold mb-2">Lista</h3><ul id="period-task-list" class="space-y-2 max-h-40 overflow-y-auto pr-2 bg-slate-50 p-2 rounded-lg dark:bg-slate-900"></ul></div></div>
+        </div>
+    </div>
+    
+    <div id="annual-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-6xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Relatório Anual</h2><button id="annual-report-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><div class="flex-grow overflow-y-auto"><section class="grid grid-cols-2 gap-4"><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Total Análises</h3><p id="annual-total-analises" class="text-3xl font-bold text-orange-600 mt-1">0</p></div><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Total Ocorrências</h3><p id="annual-total-ocorrencias" class="text-3xl font-bold text-red-600 mt-1">0</p></div></section><div class="mt-4 chart-container"><canvas id="annualReportChart_Monthly"></canvas></div></div></div></div>
+    <div id="priority-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-2xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Prioridades</h2><button id="priority-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><ul id="priority-task-list" class="flex-grow overflow-y-auto space-y-2"></ul></div></div>
+    <div id="planner-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-lg flex flex-col dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Planejador</h2><form id="planner-form"><input type="number" id="planner-week-number" class="w-full border p-2 rounded-lg mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Semana Nº"><div id="planner-list-container" class="h-64 overflow-y-auto border p-2 rounded-lg mb-4"></div><div class="flex justify-end gap-2"><button type="button" id="planner-cancel-btn" class="bg-slate-200 px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></form></div></div>
+    <div id="pdv-dashboard-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-4xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Painel PDV</h2><button id="pdv-dashboard-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><div id="pdv-content" class="flex-grow overflow-y-auto"><div class="chart-container mb-4"><canvas id="pdvTrendChart"></canvas></div></div></div></div>
+    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Categorias</h2><div id="category-list-container" class="h-40 overflow-y-auto border p-2 mb-4 rounded-lg"></div><button id="category-close-btn" class="w-full bg-slate-200 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Fechar</button></div></div>
+    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Renomear</h2><form id="rename-form"><label>Antigo</label><select id="form-old-name" class="w-full border p-2 rounded-lg mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></select><label>Novo</label><input type="text" id="form-new-name" class="w-full border p-2 rounded-lg mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"><div class="flex justify-end gap-2"><button type="button" id="rename-cancel-btn" class="bg-slate-200 px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button><button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg">Salvar</button></div></form></div></div>
+    <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Arquivar</h2><form id="archive-form"><div class="space-y-2 mb-4"><button type="button" id="view-archive-btn" class="w-full bg-slate-500 text-white px-4 py-2 rounded-lg mb-4">Ver Arquivo</button><div class="flex gap-2"><button type="button" id="archive-cancel-btn" class="bg-slate-200 w-full px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></div></form></div></div>
+    
+    <!-- Modal Arquivados -->
+    <div id="view-archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:shadow-xl">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold dark:text-white">Ocorrências: <span id="modal-condo-name" class="text-brand-orange"></span></h2>
-                <button id="ocorrencia-cancel-btn" class="text-slate-400 hover:text-red-500 text-2xl transition-colors">&times;</button>
+                <h2 class="text-2xl font-bold">Análises Arquivadas</h2>
+                <button id="view-archive-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button>
             </div>
-            <div id="ocorrencia-list" class="flex-grow overflow-y-auto mb-4 space-y-2 p-2 bg-slate-50 dark:bg-slate-900 rounded border dark:border-slate-700 shadow-inner"></div>
-            <div class="pt-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
-                    <select id="add-ocorrencia-categoria" class="md:col-span-4 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none"></select>
-                    <input type="text" id="add-ocorrencia-desc" placeholder="Descrição da ocorrência..." class="md:col-span-8 border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-2 mb-2">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] text-slate-500 uppercase font-bold mb-1">Início</label>
-                        <input type="time" id="add-horario-inicial" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
-                    </div>
-                    <div class="flex flex-col">
-                         <label class="text-[10px] text-slate-500 uppercase font-bold mb-1">Fim</label>
-                         <input type="time" id="add-horario-final" step="1" class="border rounded p-2 text-sm dark:bg-slate-700 dark:text-white dark:border-slate-600 focus:ring-2 focus:ring-brand-orange outline-none">
-                    </div>
-                </div>
-                <div class="flex gap-2 mt-3">
-                    <button type="button" onclick="App.addOccurrence()" id="add-ocorrencia-btn" class="flex-1 bg-orange-100 text-brand-orange font-bold py-2 rounded hover:bg-orange-200 transition-colors border border-orange-200">+ Adicionar Item</button>
-                    <button type="button" onclick="App.saveAndCloseOcorrencias()" id="save-ocorrencias-btn" class="flex-1 bg-brand-orange text-white font-bold py-2 rounded hover:bg-orange-700 transition-colors shadow-lg shadow-orange-500/20">Salvar Alterações</button>
-                </div>
+             <div class="mb-4">
+                <input type="text" id="archive-search-input" placeholder="Buscar em arquivadas..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+             </div>
+            <div id="view-archive-list-container" class="flex-grow overflow-y-auto bg-slate-50 p-3 rounded-lg min-h-[200px] dark:bg-slate-900">
+                <p class="text-center text-slate-500">Nenhuma análise arquivada.</p>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                 <button id="view-archive-close-footer-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notificação -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-[70] flex items-center gap-2">
-        <i class="ph ph-check-circle text-green-400 text-xl"></i>
-        <span id="toast-msg">Ação realizada</span>
-    </div>
-
-    <input type="file" id="file-input" class="hidden" accept=".json">
-    <input type="hidden" id="ocorrencia-current-task-id">
-
-    <!-- ================================================================== -->
-    <!-- ÁREA DE JAVASCRIPT (LÓGICA) -->
-    <!-- ================================================================== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc, collection, getDocs, updateDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // ==================================================================
-        // ÁREA DE CONFIGURAÇÃO (COLE AQUI)
-        // Substitua o bloco abaixo com o código copiado do Firebase Console
-        // ==================================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyC7uyQ7Xeu1WfnHbV4-KcngMsPKv5l6QmM",
-            authDomain: "painel-de-monitoramento-411b7.firebaseapp.com",
-            projectId: "painel-de-monitoramento-411b7",
-            storageBucket: "painel-de-monitoramento-411b7.firebasestorage.app",
-            messagingSenderId: "638200796920",
-            appId: "1:638200796920:web:8d668d52af2355b1c14d0d"
+    <script>
+        const statusClasses = {
+            'Pendente': 'bg-amber-100 text-amber-600',
+            'Em Andamento': 'bg-orange-100 text-orange-600',
+            'Em Análise': 'bg-orange-100 text-orange-600',
+            'Concluído': 'bg-emerald-100 text-emerald-600',
+            'Concluída': 'bg-emerald-100 text-emerald-600',
+            'Não visualizar': 'bg-slate-100 text-slate-500'
         };
 
-        // Lógica de fallback para ambiente Canvas (pré-visualização)
-        let finalConfig = firebaseConfig;
-        if (Object.keys(firebaseConfig).length === 0) {
-            try {
-                if (typeof __firebase_config !== 'undefined') {
-                    finalConfig = JSON.parse(__firebase_config);
-                } else {
-                    const saved = localStorage.getItem('mon_custom_firebase_config');
-                    if(saved) finalConfig = JSON.parse(saved);
-                }
-            } catch(e) { console.warn("Config automática falhou"); }
+        let ocorrenciasChart, annualMonthlyChart, pdvTrendChart, periodChart, periodCategoryChart;
+
+        function updateChartsTheme() {
+            const isDark = true; 
+            const fontColor = '#f1f5f9';
+            const commonOptions = { scales: { y: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } }, x: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } } }, plugins: { legend: { labels: { color: fontColor } } } };
+            
+            // Adicionado verificação de null para evitar erros se os charts não existirem
+            if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
+            if (periodChart) { Object.assign(periodChart.options, commonOptions); periodChart.update(); }
+            if (periodCategoryChart) { Object.assign(periodCategoryChart.options.plugins.legend.labels, { color: fontColor }); periodCategoryChart.update(); }
         }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        function setupCharts() {
+            // Verificação de segurança para os elementos canvas
+            const ocorrenciasEl = document.getElementById('ocorrenciasChart');
+            if (ocorrenciasEl) {
+                const ctx = ocorrenciasEl.getContext('2d');
+                ocorrenciasChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+            }
 
-        // Variáveis globais
-        let auth, db, appFirebase;
+            const annualEl = document.getElementById('annualReportChart_Monthly');
+            if (annualEl) {
+                annualMonthlyChart = new Chart(annualEl.getContext('2d'), { type: 'bar', data: { labels: ['Jan','Fev'], datasets: [{ label: 'Mensal', data: [0,0], backgroundColor: 'red' }] }, options: { maintainAspectRatio: false } });
+            }
 
-        const App = {
-            data: {
-                tasks: [],
-                archived: [],
-                productivity: [],
-                categories: ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Defeito Técnico', 'Procedimento Incorreto', 'Outros'],
-                authMode: 'login',
-                currentView: 'monitoring',
-                user: null,
-                isLoading: false,
-                adminEmail: 'alisson.cambui@vendperto.local',
-                isManagerMode: false,
-                globalTasks: [],
-                unsubscribeGlobal: null,
-                unsubscribePersonal: null,
-                editingId: null,
-                pendingDeleteId: null,
-                editingTaskId: null,
-                recoveryList: []
-            },
-            charts: {},
-            statusColors: {
-                'Pendente': 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400',
-                'Em Andamento': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400',
-                'Em Análise': 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400',
-                'Concluído': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400',
-                'Concluída': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400',
-            },
+            const pdvEl = document.getElementById('pdvTrendChart');
+            if (pdvEl) {
+                pdvTrendChart = new Chart(pdvEl.getContext('2d'), { type: 'line', data: { labels: [], datasets: [{ label: 'Tendência', data: [] }] }, options: { maintainAspectRatio: false } });
+            }
 
-            // --- INIT ---
-            async init() {
-                this.setupTheme();
-                this.setupDate();
-                this.setupEvents();
-                
-                const savedUser = localStorage.getItem('mon_user');
-                if (savedUser) {
-                    try {
-                        this.data.user = JSON.parse(savedUser);
-                        if (this.data.user.name === 'ALISSON CAMBUI' || this.data.user.email === this.data.adminEmail || this.data.user.name === 'GESTOR') this.data.user.isAdmin = true;
-                        this.updateUserInfo(this.data.user);
-                        this.toggleAuthMode('login'); 
-                        this.switchToDashboardView();
-                    } catch(e) { console.error(e); localStorage.removeItem('mon_user'); }
-                }
+            const periodEl = document.getElementById('periodChart');
+            if (periodEl) {
+                periodChart = new Chart(periodEl.getContext('2d'), { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+            }
 
-                // Verifica se temos config antes de tentar iniciar
-                if (!finalConfig || Object.keys(finalConfig).length === 0) {
-                    this.openModalUI('cloud-config-modal');
-                    const txtArea = document.getElementById('firebase-config-input');
-                    if(txtArea) {
-                        txtArea.value = "";
-                        txtArea.placeholder = 'Cole aqui o JSON de configuração do Firebase...';
-                    }
-                    // alert("Configuração do Firebase não detectada. Por favor, cole a configuração no menu de engrenagem para continuar.");
-                } else {
-                    await this.initFirebase();
-                }
+            const periodCatEl = document.getElementById('periodCategoryChart');
+            if (periodCatEl) {
+                periodCategoryChart = new Chart(periodCatEl.getContext('2d'), { type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ea580c', '#f97316', '#f7b41e', '#fbbf24', '#fcd34d'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+            }
+        }
 
-                if (!this.data.user) this.toggleAuthMode('login');
-                
-                // Inicializa gráficos com delay para garantir que o DOM renderizou
-                setTimeout(() => this.setupCharts(), 500);
-            },
-
-            // Função para salvar configuração manualmente
-            saveCloudConfig() {
-                const txt = document.getElementById('firebase-config-input').value;
-                try {
-                    const parsed = JSON.parse(txt); // Valida JSON
-                    localStorage.setItem('mon_custom_firebase_config', JSON.stringify(parsed));
-                    alert("Configuração salva com sucesso! A recarregar a página...");
-                    window.location.reload();
-                } catch(e) {
-                    alert("JSON inválido. Certifique-se de copiar apenas o objeto de configuração.");
-                }
-            },
-
-            // Função Segura para Gerar IDs
-            generateId() {
-                return Date.now().toString(36) + Math.random().toString(36).substr(2);
-            },
-
-            // --- FIREBASE CORE ---
-            async initFirebase() {
-                if (!finalConfig) return; // Segurança extra
-
-                try {
-                    appFirebase = initializeApp(finalConfig);
-                    auth = getAuth(appFirebase);
-                    db = getFirestore(appFirebase);
-
-                    // Tentar habilitar persistência (cache)
-                    try {
-                        await enableIndexedDbPersistence(db);
-                        console.log("Persistência offline ativada.");
-                    } catch (err) {
-                        // Ignora erros de persistência (ex: abas duplicadas)
-                    }
-
-                    // Autenticação Robusta
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } catch(e) {
-                            console.warn("Token falhou, usando anônimo", e);
-                            await signInAnonymously(auth);
-                        }
-                    } else {
-                         await signInAnonymously(auth);
-                    }
-
-                    onAuthStateChanged(auth, (user) => {
-                        if (user && this.data.user && this.data.user.uid && !this.data.isManagerMode) { 
-                            this.subscribeToUserData(this.data.user.uid); 
-                            document.getElementById('system-status').textContent = "Conectado";
-                        }
-                    });
-
-                } catch(e) { 
-                    console.error("Falha Firebase", e);
-                    const errorDiv = document.getElementById('auth-error-msg');
-                    const errorText = document.getElementById('error-text-content');
-                    if (errorDiv) {
-                        errorDiv.classList.remove('hidden');
-                        errorText.textContent = "Erro de conexão: " + e.message;
-                    }
-                }
-            },
+        document.addEventListener('DOMContentLoaded', () => {
+            let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
+            let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
+            let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
             
-            // --- HELPER FUNCTIONS ---
-            formatDate(d) {
-                if (!d) return '-';
-                try {
-                    const [y, m, day] = d.split('-');
-                    return `${day}/${m}`;
-                } catch (e) { return d; }
-            },
+            // Variável temporária para edição de ocorrências
+            let currentEditingTaskOcorrencias = [];
 
-            showToast(msg, isError = false) {
-                const t = document.getElementById('toast');
-                const tm = document.getElementById('toast-msg');
-                const icon = t.querySelector('i');
-                
-                if (t && tm) {
-                    tm.textContent = msg;
-                    if (isError) {
-                        icon.className = "ph ph-warning-circle text-red-400 text-xl";
-                    } else {
-                        icon.className = "ph ph-check-circle text-green-400 text-xl";
-                    }
-                    
-                    t.classList.remove('opacity-0', 'translate-y-20');
-                    setTimeout(() => t.classList.add('opacity-0', 'translate-y-20'), 3000);
-                }
-            },
+            // Lógica do Modal de Confirmação Personalizado
+            const confirmModal = document.getElementById('custom-confirm-modal');
+            const confirmTitle = document.getElementById('confirm-modal-title');
+            const confirmMsg = document.getElementById('confirm-modal-msg');
+            const confirmYesBtn = document.getElementById('confirm-modal-yes-btn');
+            const confirmCancelBtn = document.getElementById('confirm-modal-cancel-btn');
+            let currentConfirmCallback = null;
 
-            // --- LÓGICA DE GESTÃO ---
-            toggleManagerGlobalMode() {
-                if (!this.data.user || !this.data.user.isAdmin) return alert("Acesso restrito.");
-                
-                this.data.isManagerMode = !this.data.isManagerMode;
-                const btn = document.getElementById('manager-global-btn');
-                const btnText = document.getElementById('manager-btn-text');
-                const banner = document.getElementById('manager-banner');
-                const userFilter = document.getElementById('filtro-usuario');
-                
-                if (this.data.isManagerMode) {
-                    btn.className = "ml-2 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1 hover:bg-purple-700 transition-all shadow-lg manager-pulse";
-                    btnText.textContent = "Visão Global Ativa";
-                    banner.classList.remove('hidden');
-                    userFilter.classList.remove('hidden');
-                    
-                    if(this.data.unsubscribePersonal) this.data.unsubscribePersonal();
-                    this.subscribeToGlobalData();
-                } else {
-                    btn.className = "ml-2 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1 hover:bg-purple-200 transition-all border border-purple-300";
-                    btnText.textContent = "Visão Gestor";
-                    banner.classList.add('hidden');
-                    userFilter.classList.add('hidden');
-                    userFilter.value = '';
-                    
-                    if(this.data.unsubscribeGlobal) this.data.unsubscribeGlobal();
-                    this.data.globalTasks = [];
-                    this.subscribeToUserData(this.data.user.uid);
-                }
-            },
+            const showConfirm = (title, msg, callback) => {
+                confirmTitle.textContent = title;
+                confirmMsg.textContent = msg;
+                currentConfirmCallback = callback;
+                confirmModal.classList.remove('hidden');
+            };
 
-            subscribeToGlobalData() {
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'user_records');
-                this.data.unsubscribeGlobal = onSnapshot(colRef, (snapshot) => {
-                    let allTasks = [];
-                    let allArchived = [];
-                    
-                    snapshot.forEach(doc => {
-                        const d = doc.data();
-                        let ownerName = "Usuário";
-                        if(d.ownerEmail) ownerName = d.ownerEmail.split('@')[0].replace('.', ' ').toUpperCase();
-                        
-                        if(d.tasks) {
-                            const userTasks = d.tasks.map(t => ({...t, _ownerName: ownerName, _ownerUid: doc.id.replace('app_user_data_', '')}));
-                            allTasks = [...allTasks, ...userTasks];
-                        }
-                        if(d.archived) {
-                             const userArchived = d.archived.map(t => ({...t, _ownerName: ownerName, _ownerUid: doc.id.replace('app_user_data_', '')}));
-                             allArchived = [...allArchived, ...userArchived];
-                        }
-                    });
+            confirmYesBtn.addEventListener('click', () => {
+                if (currentConfirmCallback) currentConfirmCallback();
+                confirmModal.classList.add('hidden');
+                currentConfirmCallback = null;
+            });
 
-                    this.data.tasks = allTasks;
-                    this.data.archived = allArchived;
-                    this.render();
-                    this.updateCharts();
+            confirmCancelBtn.addEventListener('click', () => {
+                confirmModal.classList.add('hidden');
+                currentConfirmCallback = null;
+            });
+
+            const saveTasks = () => {
+                localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
+                localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
+            };
+
+            const showNotification = (message) => {
+                document.getElementById('notification-message').textContent = message;
+                document.getElementById('notification-modal').classList.remove('hidden');
+            };
+
+            const formatDate = (dateString) => {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString + 'T00:00:00');
+                date.setDate(date.getDate()); // Ajuste fuso
+                return date.toLocaleDateString('pt-BR');
+            };
+            
+            const populateCategorySelect = (selectElement) => {
+                if (!selectElement) return; // Segurança extra
+                selectElement.innerHTML = '';
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    selectElement.appendChild(option);
                 });
-            },
+            };
 
-            async saveData() {
-                if (this.data.isManagerMode) {
-                    await this.saveAsManager();
-                    return;
-                }
-
-                 const cleanTasks = JSON.parse(JSON.stringify(this.data.tasks));
-                 const cleanArchived = JSON.parse(JSON.stringify(this.data.archived));
-                 const cleanProd = JSON.parse(JSON.stringify(this.data.productivity || [])); 
-                 
-                 if (cleanTasks.length > 0 || cleanArchived.length > 0) {
-                     localStorage.setItem('mon_safe_backup', JSON.stringify({t: cleanTasks, a: cleanArchived}));
-                 }
-
-                 if (this.data.user && auth.currentUser) {
-                    try {
-                        const safeId = this.data.user.uid;
-                        const dataRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + safeId);
-                        await setDoc(dataRef, { 
-                            tasks: cleanTasks, archived: cleanArchived, 
-                            productivity: cleanProd, lastUpdate: new Date().toISOString(), ownerEmail: this.data.user.email 
-                        }, { merge: true });
-                    } catch(e) { console.error("Erro save cloud", e); }
-                 }
-                 this.render(); 
-                 this.updateCharts();
-            },
-
-            async saveAsManager() {
-                const tasksByOwner = {};
-                this.data.tasks.forEach(t => {
-                    const uid = t._ownerUid || this.data.user.uid; 
-                    if(!tasksByOwner[uid]) tasksByOwner[uid] = [];
-                    const cleanTask = {...t};
-                    delete cleanTask._ownerName;
-                    delete cleanTask._ownerUid;
-                    tasksByOwner[uid].push(cleanTask);
-                });
-
-                for (const uid of Object.keys(tasksByOwner)) {
-                    try {
-                        const dataRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + uid);
-                        await updateDoc(dataRef, { tasks: tasksByOwner[uid], lastUpdate: new Date().toISOString() });
-                    } catch(e) { console.error("Erro ao salvar dados do usuário " + uid, e); }
-                }
-                this.showToast('Dados globais sincronizados.');
-                this.render();
-            },
-
-            setupTheme() {
-                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            },
-
-            setupDate() {
-                const dateEl = document.getElementById('current-date');
-                if (dateEl) {
-                    dateEl.textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-                }
-            },
-
-            setupCharts() {
-                 if (typeof Chart === 'undefined') return; 
-                 const isDark = document.documentElement.classList.contains('dark');
-                 Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
-                 Chart.defaults.font.family = "'Inter', sans-serif";
-                 Chart.defaults.scale.grid.color = isDark ? '#334155' : '#e2e8f0'; 
-                 Chart.defaults.scale.grid.borderColor = 'transparent'; 
-
-                 // Gráfico Principal
-                 const c1 = document.getElementById('ocorrenciasChart');
-                 if(c1) {
-                     if(this.charts.oc) this.charts.oc.destroy();
-                     const ctx1 = c1.getContext('2d');
-                     this.charts.oc = new Chart(ctx1, { 
-                        type: 'bar', 
-                        data: { labels:[], datasets:[{ label: 'Ocorrências', data:[], backgroundColor: '#f97316', borderRadius: 4 }] }, 
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
-                     });
-                 }
-                 
-                 // Gráfico de Relatório
-                 const c2 = document.getElementById('reportDayChart');
-                 if(c2) {
-                     if(this.charts.report) this.charts.report.destroy();
-                     const ctx2 = c2.getContext('2d');
-                     this.charts.report = new Chart(ctx2, {
-                        type: 'line',
-                        data: { labels: [], datasets: [{ label: 'Ocorrências por Dia', data: [], borderColor: '#f26324', tension: 0.3, fill: true, backgroundColor: 'rgba(242, 99, 36, 0.1)' }] }, 
-                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-                     });
-                 }
-                 this.updateCharts();
-            },
-
-            updateCharts() {
-                // Atualiza Gráfico Principal
-                if (this.charts.oc && this.data.tasks) {
-                    const counts = {};
-                    this.data.tasks.forEach(t => {
-                        const qtd = t.ocorrencias ? t.ocorrencias.length : 0;
-                        if(qtd > 0) counts[t.condominio] = (counts[t.condominio] || 0) + qtd;
-                    });
-                    
-                    const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 10);
-                    this.charts.oc.data.labels = sorted.map(i => i[0]);
-                    this.charts.oc.data.datasets[0].data = sorted.map(i => i[1]);
-                    this.charts.oc.update();
-                }
-            },
-            
-            setupEvents() {
-                const addListener = (id, event, handler) => { const el = document.getElementById(id); if (el) el.addEventListener(event, handler); };
-                
-                ['filtro-condominio', 'filtro-backup', 'filtro-analise', 'filtro-usuario'].forEach(id => addListener(id, 'input', () => App.render()));
-                
-                addListener('add-task-btn', 'click', () => { 
-                    App.data.editingTaskId = null;
-                    document.getElementById('task-modal-title').textContent = "Nova Análise";
-                    document.getElementById('task-form').reset(); 
-                    document.getElementById('form-data-analise').value = new Date().toISOString().split('T')[0];
-                    App.openModalUI('task-modal'); 
-                });
-                addListener('cancel-btn', 'click', () => App.closeModalUI('task-modal'));
-                addListener('task-form', 'submit', (e) => { 
-                    e.preventDefault(); 
-                    App.saveTaskFromForm();
-                });
-                
-                addListener('actions-menu-btn', 'click', (e) => { e.stopPropagation(); document.getElementById('actions-menu').classList.toggle('hidden'); });
-                document.body.addEventListener('click', () => { const m = document.getElementById('actions-menu'); if(m) m.classList.add('hidden'); });
-                
-                addListener('excel-import-btn', 'click', () => { App.openModalUI('excel-import-modal'); });
-                addListener('process-import-btn', 'click', () => App.processExcel());
-                
-                addListener('archive-search', 'input', () => App.renderArchiveList());
-                addListener('recovery-search', 'input', () => App.renderRecoveryList());
-
-                addListener('export-data-btn', 'click', () => App.exportData());
-                addListener('import-data-btn', 'click', () => document.getElementById('file-input').click());
-                addListener('file-input', 'change', (e) => { 
-                    if(e.target.files[0]) { 
-                        const r = new FileReader(); 
-                        r.onload = ev => { 
-                            try {
-                                const j = JSON.parse(ev.target.result); 
-                                App.data.tasks=j.tasks||[]; 
-                                App.data.archived=j.archived||[]; 
-                                if(j.productivity) App.data.productivity = j.productivity;
-                                App.saveData(); 
-                                App.showToast('Restaurado'); 
-                                setTimeout(()=>window.location.reload(), 500); 
-                            } catch(e) { alert("Erro ao ler arquivo."); }
-                        }; 
-                        r.readAsText(e.target.files[0]); 
-                    } 
-                });
-                
-                addListener('ocorrencia-cancel-btn', 'click', () => { App.closeModalUI('ocorrencia-modal'); App.resetOcorrenciaForm(); });
-
-                addListener('theme-toggle', 'click', () => { 
-                    document.documentElement.classList.toggle('dark'); 
-                    localStorage.theme = document.documentElement.classList.contains('dark')?'dark':'light'; 
-                    App.setupCharts();
-                });
-            },
-
-            // --- RESTORED FUNCTIONS ---
-            switchMainView(viewName) {
-                this.data.currentView = viewName;
-                const views = ['monitoring', 'productivity', 'reports'];
-                views.forEach(v => {
-                    const el = document.getElementById(`view-${v}`);
-                    const btn = document.getElementById(`btn-view-${v}`);
-                    if(viewName === v) {
-                        el.classList.remove('hidden'); el.classList.add('flex');
-                        btn.classList.add('bg-white', 'dark:bg-slate-600', 'text-brand-orange', 'shadow-sm');
-                        btn.classList.remove('text-slate-500', 'dark:text-slate-400');
-                    } else {
-                        el.classList.add('hidden'); el.classList.remove('flex');
-                        btn.classList.remove('bg-white', 'dark:bg-slate-600', 'text-brand-orange', 'shadow-sm');
-                        btn.classList.add('text-slate-500', 'dark:text-slate-400');
-                    }
-                });
-                
-                if(viewName === 'monitoring') this.updateCharts();
-                if(viewName === 'productivity') this.renderProductivity();
-                if(viewName === 'reports') {
-                    // Popula o select de condomínios
-                    const sel = document.getElementById('report-condo-select');
-                    if (sel && this.data.tasks) {
-                        const condos = [...new Set(this.data.tasks.map(t => t.condominio))].sort();
-                        sel.innerHTML = '<option value="">Selecione um Condomínio...</option>' + 
-                                        condos.map(c => `<option value="${c}">${c}</option>`).join('');
-                    }
-                }
-            },
-
-            // --- PRODUTIVIDADE (RESTORED) ---
-            renderProductivity() {
-                if (!this.data.productivity) this.data.productivity = [];
-                const list = this.data.productivity;
-                
-                const totalDias = list.reduce((acc, item) => acc + parseInt(item.dias || 0), 0);
-                const totalPdvs = list.reduce((acc, item) => acc + parseInt(item.pdvs || 0), 0);
-                const totalOc = list.reduce((acc, item) => acc + parseInt(item.ocorrencias || 0), 0);
-
-                const elDias = document.getElementById('prod-total-dias');
-                if(elDias) elDias.textContent = totalDias;
-                const elPdvs = document.getElementById('prod-total-pdvs');
-                if(elPdvs) elPdvs.textContent = totalPdvs;
-                const elOc = document.getElementById('prod-total-oc');
-                if(elOc) elOc.textContent = totalOc;
-
-                const tableBody = document.getElementById('productivity-table-body');
-                const emptyState = document.getElementById('productivity-empty-state');
-
-                if (tableBody) {
-                    if (list.length === 0) {
-                        tableBody.innerHTML = '';
-                        if(emptyState) emptyState.classList.remove('hidden');
-                    } else {
-                        if(emptyState) emptyState.classList.add('hidden');
-                        tableBody.innerHTML = list.map((item) => `
-                            <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600">
-                                <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap dark:text-white uppercase">
-                                    ${item.ref}
-                                </td>
-                                <td class="px-6 py-4 text-center font-bold text-blue-600 dark:text-blue-400">
-                                    ${item.dias}
-                                </td>
-                                <td class="px-6 py-4 text-center font-bold text-brand-orange">
-                                    ${item.pdvs}
-                                </td>
-                                <td class="px-6 py-4 text-center font-bold text-red-600 dark:text-red-400">
-                                    ${item.ocorrencias}
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button onclick="App.openProductivityModal('${item.id}')" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-2">Editar</button>
-                                    <button onclick="App.deleteProductivity('${item.id}')" class="font-medium text-red-600 dark:text-red-500 hover:underline">Excluir</button>
-                                </td>
-                            </tr>
-                        `).join('');
-                    }
-                }
-            },
-
-            openProductivityModal(id = null) {
-                const modalTitle = document.getElementById('prod-modal-title');
-                const inpId = document.getElementById('prod-id');
-                const inpRef = document.getElementById('prod-ref');
-                const inpDias = document.getElementById('prod-dias');
-                const inpPdvs = document.getElementById('prod-pdvs');
-                const inpOcs = document.getElementById('prod-ocs');
-
-                if (id) {
-                    const item = this.data.productivity.find(p => p.id === id);
-                    if (item) {
-                        modalTitle.textContent = "Editar Registro";
-                        inpId.value = item.id;
-                        inpRef.value = item.ref;
-                        inpDias.value = item.dias;
-                        inpPdvs.value = item.pdvs;
-                        inpOcs.value = item.ocorrencias;
-                    }
-                } else {
-                    modalTitle.textContent = "Novo Registro";
-                    inpId.value = "";
-                    inpRef.value = "";
-                    inpDias.value = "";
-                    inpPdvs.value = "";
-                    inpOcs.value = "";
-                }
-                this.openModalUI('productivity-modal');
-            },
-
-            saveProductivity() {
-                const id = document.getElementById('prod-id').value;
-                const ref = document.getElementById('prod-ref').value;
-                const dias = parseInt(document.getElementById('prod-dias').value) || 0;
-                const pdvs = parseInt(document.getElementById('prod-pdvs').value) || 0;
-                const ocs = parseInt(document.getElementById('prod-ocs').value) || 0;
-
-                if (!ref) return alert("Preencha a referência (Data/Semana).");
-
-                if (!this.data.productivity) this.data.productivity = [];
-
-                if (id) {
-                    const item = this.data.productivity.find(p => p.id === id);
-                    if (item) {
-                        item.ref = ref;
-                        item.dias = dias;
-                        item.pdvs = pdvs;
-                        item.ocorrencias = ocs;
-                        this.showToast("Registro atualizado!");
-                    }
-                } else {
-                    this.data.productivity.unshift({
-                        id: this.generateId(),
-                        ref: ref,
-                        dias: dias,
-                        pdvs: pdvs,
-                        ocorrencias: ocs,
-                        createdAt: new Date().toISOString()
-                    });
-                    this.showToast("Registro adicionado!");
-                }
-
-                this.saveData();
-                this.renderProductivity();
-                this.closeModalUI('productivity-modal');
-            },
-
-            deleteProductivity(id) {
-                if(confirm("Tem certeza que deseja excluir este registro?")) {
-                    this.data.productivity = this.data.productivity.filter(p => p.id !== id);
-                    this.saveData();
-                    this.renderProductivity();
-                    this.showToast("Registro excluído.");
-                }
-            },
-            
-            subscribeToUserData(uid) {
-                this.data.unsubscribePersonal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + uid), (docSnap) => {
-                    if (this.data.isManagerMode) return;
-
-                    const syncStatusEl = document.getElementById('app-mode-badge');
-                    if (docSnap.metadata.fromCache) {
-                        syncStatusEl.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> Offline`;
-                    } else {
-                        syncStatusEl.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online`;
-                    }
-
-                    if (docSnap.exists()) {
-                        const d = docSnap.data();
-                        this.data.tasks = d.tasks || [];
-                        this.data.archived = d.archived || [];
-                        this.data.productivity = d.productivity || [];
-                        this.render();
-                        
-                        if (this.data.currentView === 'productivity') {
-                            this.renderProductivity();
-                        } else {
-                            this.updateCharts();
-                        }
-                    }
-                });
-            },
-
-            // COFRE DE SEGURANÇA (RECUPERAÇÃO)
-            recoverLostData() {
-                const candidates = new Map();
-                const process = (key) => {
-                    try {
-                        const raw = localStorage.getItem(key); if (!raw) return; const parsed = JSON.parse(raw);
-                        let arr = []; if (Array.isArray(parsed)) arr = parsed; else if (parsed.a) arr = parsed.a.concat(parsed.t || []); 
-                        arr.forEach(t => { if (t && t.id) candidates.set(t.id, t); });
-                    } catch(e) { console.error("Error reading " + key, e); }
-                };
-                process('mon_archived'); 
-                process('mon_tasks'); 
-                process('mon_safe_backup'); 
-                
-                const currentIds = new Set([...this.data.tasks.map(t => t.id), ...this.data.archived.map(t => t.id)]);
-                this.data.recoveryList = [];
-                for (const [id, task] of candidates) { 
-                    if (!currentIds.has(id)) this.data.recoveryList.push(task); 
-                }
-                
-                if (this.data.recoveryList.length === 0) { 
-                    alert("O Cofre está vazio. Nenhum dado perdido foi encontrado nos backups locais."); 
-                } else { 
-                    this.openModalUI('recovery-modal'); 
-                    this.renderRecoveryList(); 
-                }
-            },
-
-            renderRecoveryList() {
-                const list = document.getElementById('recovery-list');
-                const search = document.getElementById('recovery-search').value.toLowerCase();
-                const filtered = this.data.recoveryList.filter(t => (t.condominio || '').toLowerCase().includes(search));
-                
-                if (filtered.length === 0) { list.innerHTML = '<p class="text-center text-xs text-slate-400 py-4">Nenhum item correspondente encontrado.</p>'; return; }
-                
-                list.innerHTML = filtered.map(t => `
-                    <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded border border-blue-100 dark:border-blue-900 hover:shadow-md transition-all">
-                        <div>
-                            <p class="font-bold text-sm dark:text-white uppercase text-blue-900 dark:text-blue-100">${t.condominio || 'Sem Nome'}</p>
-                            <p class="text-[10px] text-slate-500 flex items-center gap-1"><i class="ph ph-calendar"></i> ${this.formatDate(t.dataAnalise)} <span class="mx-1">•</span> ${t.semana || '-'}</p>
-                        </div>
-                        <button onclick="App.restoreSingleFromRecovery('${t.id}')" class="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded shadow-lg transition-colors">
-                            <i class="ph ph-download-simple"></i> Recuperar Este
-                        </button>
-                    </div>`).join('');
-            },
-
-            restoreSingleFromRecovery(id) {
-                const idx = this.data.recoveryList.findIndex(t => t.id === id);
-                if (idx > -1) {
-                    const item = this.data.recoveryList[idx];
-                    this.data.recoveryList.splice(idx, 1);
-                    item.manualRestore = true; 
-                    item.carimboSemanaAtual = true; 
-                    
-                    this.data.tasks.unshift(item);
-                    this.saveData(); 
-                    this.renderRecoveryList(); 
-                    this.render(); 
-                    this.showToast('Item recuperado do Cofre!');
-                    
-                    if (this.data.recoveryList.length === 0) this.closeModalUI('recovery-modal');
-                }
-            },
-
-            // AUTH & USER
-            generateEmail(name) { 
-                const cleanName = name.trim().toLowerCase()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g, "") 
-                    .replace(/\s+/g, '.') 
-                    .replace(/[^a-z0-9.]/g, ''); 
-                return `${cleanName}@vendperto.local`; 
-            },
-            
-            async loginWithUser() { 
-                if (!auth) return alert("Sistema a carregar... Tente novamente em 2 segundos.");
-                
-                if (!auth.currentUser) {
-                    try { await signInAnonymously(auth); } catch(e) { return alert("Erro de conexão: Verifique sua internet."); }
-                }
-
-                const name = document.getElementById('login-username').value.trim().toUpperCase();
-                const pass = document.getElementById('login-password').value;
-                if(!name || !pass) return alert("Preencha os dados.");
-                
-                const email = this.generateEmail(name);
-                const safeId = email.replace(/[^a-zA-Z0-9]/g, '_');
-                
-                document.getElementById('login-loading').classList.remove('hidden');
-                document.getElementById('login-form-container').classList.add('hidden');
-
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId);
-                    
-                    // Timeout manual de 10s
-                    const fetchPromise = getDoc(docRef);
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 10000));
-                    const docSnap = await Promise.race([fetchPromise, timeoutPromise]);
-
-                    // AUTO-RECUPERAÇÃO DE ADMIN (Se o utilizador mestre não existir, cria-o agora)
-                    const isAdminUser = name === 'GESTOR' || name === 'ALISSON CAMBUI';
-                    
-                    if (!docSnap.exists() && isAdminUser) {
-                        const newUser = { 
-                            name, email, password: pass, isAdmin: true, authorized: true, createdAt: new Date().toISOString() 
-                        };
-                        await setDoc(docRef, newUser);
-                        this.finishLogin({ ...newUser, uid: safeId, displayName: name });
-                        return;
-                    }
-
-                    if (docSnap.exists()) {
-                        const u = docSnap.data();
-                        if (u.authorized === false) {
-                            alert("Acesso pendente de aprovação ou bloqueado pelo gestor.");
-                            this.resetLoginUI();
-                            return;
-                        }
-
-                        if (u.password === pass) {
-                            this.finishLogin({ ...u, uid: safeId, displayName: u.name });
-                        } else { 
-                            alert("Senha incorreta."); 
-                            this.resetLoginUI();
-                        }
-                    } else { 
-                        alert("Usuário não encontrado. Crie um cadastro primeiro."); 
-                        this.resetLoginUI();
-                    }
-                } catch(e) { 
-                    if (e.message === "Timeout") {
-                        alert("Erro: O servidor demorou muito para responder. Verifique sua conexão.");
-                    } else {
-                        alert("Erro de conexão: " + e.message); 
-                    }
-                    this.resetLoginUI();
-                }
-            },
-
-            finishLogin(user) {
-                this.data.user = user;
-                localStorage.setItem('mon_user', JSON.stringify(this.data.user));
-                this.updateUserInfo(this.data.user);
-                this.switchToDashboardView();
-                this.subscribeToUserData(user.uid);
-            },
-            
-            resetLoginUI() {
-                document.getElementById('login-loading').classList.add('hidden');
-                document.getElementById('login-form-container').classList.remove('hidden');
-            },
-
-            async registerWithUser() {
-                if (!auth.currentUser) return alert("Aguardando conexão com o servidor...");
-                const name = document.getElementById('login-username').value.trim().toUpperCase();
-                const pass = document.getElementById('login-password').value;
-                if (!name || pass.length < 6) return alert('Senha deve ter no mínimo 6 caracteres.');
-                const email = this.generateEmail(name);
-                const safeId = email.replace(/[^a-zA-Z0-9]/g, '_');
-                
-                try {
-                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId);
-                    const snap = await getDoc(ref);
-                    
-                    // Se já existe e tem senha, bloqueia. Se não tem senha (foi pré-autorizado), permite criar.
-                    if (snap.exists() && snap.data().password) return alert('Usuário já existe. Tente fazer login.');
-                    
-                    const isSuperUser = name === 'GESTOR' || name === 'ALISSON CAMBUI';
-                    // Define authorized como false por padrão se não existir, ou true se for SuperUser
-                    const isAuthorized = snap.exists() ? snap.data().authorized : isSuperUser;
-                    
-                    if (!isAuthorized) {
-                         alert("Seu cadastro foi enviado, mas precisa ser aprovado pelo gestor antes de acessar.");
-                    } else {
-                         alert('Cadastro realizado! Faça login.');
-                    }
-
-                    await setDoc(ref, { 
-                        name, email, password: pass, isAdmin: isSuperUser, authorized: isAuthorized, createdAt: new Date().toISOString() 
-                    }, { merge: true });
-                    
-                    this.toggleAuthMode('login');
-                } catch (e) { alert('Erro: ' + e.message); }
-            },
-
-            async authorizeNewUser() {
-                 const name = document.getElementById('new-user-name').value.trim().toUpperCase();
-                 if (!name) return;
-                 const email = this.generateEmail(name);
-                 const safeId = email.replace(/[^a-zA-Z0-9]/g, '_');
-                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId), { 
-                     name, email, password: '', authorized: true, isAdmin: false 
-                 }, { merge: true });
-                 alert('Autorizado.');
-                 document.getElementById('new-user-name').value = ''; // Limpar campo
-                 this.loadAuthorizedUsers();
-            },
-
-            async loadAuthorizedUsers() {
-                 const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'auth_users'));
-                 const list = document.getElementById('admin-users-list');
-                 list.innerHTML = '';
-                 q.forEach((docSnap) => {
-                     const u = docSnap.data();
-                     const isGestor = u.isAdmin === true;
-                     const docId = docSnap.id;
-                     const isMe = docId === 'app_users_' + this.data.user.uid;
-                     const isAuth = u.authorized !== false; // Default true if undefined
-                     
-                     list.innerHTML += `
-                        <li class="flex justify-between items-center py-3 border-b dark:border-slate-700 dark:text-slate-300">
-                            <div>
-                                <div class="font-bold text-sm flex items-center gap-2">
-                                    ${u.name}
-                                    ${isGestor ? '<span class="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-[10px] px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 uppercase font-bold">Gestor</span>' : ''}
-                                </div>
-                                <div class="text-[10px] text-slate-400">${u.email}</div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] ${u.password?'text-green-500':'text-amber-500'} font-bold">${u.password?'Ativo':'Pendente'}</span>
-                                ${!isMe ? `
-                                <div class="flex gap-1">
-                                    <button onclick="App.toggleAuthStatus('${docId}', ${!isAuth})" 
-                                        class="p-2 rounded-lg ${isAuth ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} hover:opacity-80 transition" 
-                                        title="${isAuth ? 'Bloquear Acesso' : 'Autorizar Acesso'}">
-                                        <i class="ph ${isAuth ? 'ph-check' : 'ph-x'} text-lg"></i>
-                                    </button>
-                                    <button onclick="App.toggleAdminStatus('${docId}', ${!isGestor})" 
-                                        class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition text-slate-500" 
-                                        title="${isGestor ? 'Remover permissão de Gestor' : 'Promover a Gestor'}">
-                                        <i class="ph ${isGestor ? 'ph-shield-slash text-red-500' : 'ph-shield-check text-blue-500'} text-lg"></i>
-                                    </button>
-                                </div>` : ''}
-                            </div>
-                        </li>`;
-                 });
-            },
-            
-            async toggleAuthStatus(docId, makeAuth) {
-                if(!confirm(makeAuth ? "Autorizar acesso deste usuário?" : "Bloquear acesso deste usuário?")) return;
-                try {
-                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', docId);
-                    await updateDoc(ref, { authorized: makeAuth });
-                    this.showToast(makeAuth ? "Autorizado!" : "Bloqueado.");
-                    this.loadAuthorizedUsers(); 
-                } catch(e) { alert("Erro: " + e.message); }
-            },
-
-            async toggleAdminStatus(docId, makeAdmin) {
-                if(!confirm(makeAdmin ? "Promover este usuário a Gestor? Ele terá acesso total." : "Remover acesso de Gestor deste usuário?")) return;
-                try {
-                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', docId);
-                    await updateDoc(ref, { isAdmin: makeAdmin });
-                    this.showToast(makeAdmin ? "Promovido!" : "Removido.");
-                    this.loadAuthorizedUsers(); 
-                } catch(e) { alert("Erro ao alterar permissões: " + e.message); }
-            },
-
-            // --- UI HELPERS ---
-            updateUserInfo(u) { 
-                let dn = u.name;
-                if (u.isAdmin) {
-                    dn += ' (GESTOR)';
-                    document.getElementById('manager-global-btn').classList.remove('hidden');
-                    document.getElementById('admin-panel-btn').classList.remove('hidden');
-                }
-                document.getElementById('user-display-name').textContent = dn; 
-                document.getElementById('account-modal-name').textContent = dn;
-            },
-            
-            toggleAuthMode(mode) {
-                this.data.authMode = mode;
-                const els = { login: document.getElementById('tab-login'), reg: document.getElementById('tab-register'), btn: document.getElementById('action-btn') };
-                if (mode === 'login') {
-                    els.login.classList.add('bg-white', 'text-brand-orange'); els.login.classList.remove('text-slate-500');
-                    els.reg.classList.remove('bg-white', 'text-brand-orange'); els.reg.classList.add('text-slate-500');
-                    els.btn.textContent = "Acessar Painel"; els.btn.onclick = () => App.loginWithUser();
-                } else {
-                    els.reg.classList.add('bg-white', 'text-brand-orange'); els.reg.classList.remove('text-slate-500');
-                    els.login.classList.remove('bg-white', 'text-brand-orange'); els.login.classList.add('text-slate-500');
-                    els.btn.textContent = "Criar Senha"; els.btn.onclick = () => App.registerWithUser();
-                }
-            },
-            
-            openModalUI(id) { document.getElementById(id).classList.remove('hidden'); },
-            closeModalUI(id) { document.getElementById(id).classList.add('hidden'); },
-            openMyAccountModal() { document.getElementById('my-account-modal').classList.remove('hidden'); },
-            openAdminPanel() { if(this.data.user?.isAdmin) { this.openModalUI('admin-panel-modal'); this.loadAuthorizedUsers(); } },
-            openArchive(e) { if(e) e.stopPropagation(); document.getElementById('actions-menu').classList.add('hidden'); document.getElementById('archive-search').value = ''; this.renderArchiveList(); this.openModalUI('archive-modal'); },
-            openImport(e) { if(e) e.stopPropagation(); document.getElementById('actions-menu').classList.add('hidden'); this.openModalUI('excel-import-modal'); },
-            openChangePasswordModal() { this.openModalUI('change-password-modal'); },
-
-            switchToDashboardView() { 
-                document.getElementById('login-view').classList.add('hidden'); 
-                document.getElementById('dashboard-view').classList.remove('hidden'); 
-                document.getElementById('dashboard-view').classList.add('flex');
-            },
-
-            async logout() { 
-                this.data.user = null; 
-                localStorage.removeItem('mon_user'); 
-                localStorage.removeItem('mon_safe_backup'); // Limpa cache de sessão
-                if(this.data.unsubscribeGlobal) this.data.unsubscribeGlobal();
-                window.location.reload(); 
-            },
-
-            // --- CRUD TAREFAS ---
-            addTask(task) {
-                const t = { 
-                    id: this.generateId(), ...task, 
-                    dataAnalise: task.dataAnalise || new Date().toISOString().split('T')[0],
-                    statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencias: [], createdAt: new Date().toISOString(),
-                    _ownerUid: this.data.user.uid // Define dono inicial
-                };
-                this.data.tasks.unshift(t);
-                this.saveData();
-                this.showToast('Análise criada!');
-            },
-
-            editTask(id) {
-                const task = this.data.tasks.find(t => t.id === id);
-                if (!task) return;
-                this.data.editingTaskId = id;
-                document.getElementById('task-modal-title').textContent = "Editar Análise";
-                document.getElementById('form-condominio').value = task.condominio;
-                document.getElementById('form-data-analise').value = task.dataAnalise;
-                document.getElementById('form-semana').value = task.semana || '';
-                document.getElementById('form-observacoes').value = task.observacoes || '';
-                App.openModalUI('task-modal');
-            },
-
-            saveTaskFromForm() {
-                const id = this.data.editingTaskId;
-                const newData = {
-                    condominio: document.getElementById('form-condominio').value,
-                    dataAnalise: document.getElementById('form-data-analise').value,
-                    semana: document.getElementById('form-semana').value,
-                    observacoes: document.getElementById('form-observacoes').value
-                };
-                if (id) {
-                    const taskIndex = this.data.tasks.findIndex(t => t.id === id);
-                    if (taskIndex > -1) { 
-                        // Importante: Mantém _ownerUid e outros campos originais
-                        const originalTask = this.data.tasks[taskIndex];
-                        this.data.tasks[taskIndex] = { ...originalTask, ...newData };
-                        this.showToast('Atualizado!'); 
-                    }
-                } else { this.addTask(newData); }
-                this.saveData();
-                this.closeModalUI('task-modal');
-            },
-
-            updateStatus(id, field, val) {
-                const t = this.data.tasks.find(x => x.id === id);
-                if (t) { t[field] = val; this.saveData(); }
-            },
-            
-            requestDeleteTask(id) { this.data.pendingDeleteId = id; document.getElementById('delete-confirmation-modal').classList.remove('hidden'); },
-            confirmDeleteTask() { this.data.tasks = this.data.tasks.filter(t => t.id !== this.data.pendingDeleteId); this.saveData(); this.closeModalUI('delete-confirmation-modal'); },
-            archiveTask(id) { const idx = this.data.tasks.findIndex(t => t.id === id); if(idx>-1) { this.data.archived.push(this.data.tasks.splice(idx,1)[0]); this.saveData(); } },
-
-            // --- OCORRÊNCIAS ---
-            openOcorrenciaModal(id) {
-                document.getElementById('ocorrencia-current-task-id').value = id;
-                const t = this.data.tasks.find(x => x.id === id);
-                if(!t) return;
-                document.getElementById('modal-condo-name').textContent = t.condominio;
-                const sel = document.getElementById('add-ocorrencia-categoria');
-                sel.innerHTML = this.data.categories.map(c => `<option>${c}</option>`).join('');
-                this.renderOcorrenciasList(t);
-                this.openModalUI('ocorrencia-modal');
-            },
-            
-            // FUNÇÃO REFEITA E BLINDADA
-            addOccurrence() {
-                try {
-                    const taskId = document.getElementById('ocorrencia-current-task-id').value;
-                    if (!taskId) throw new Error("ID da análise não encontrado.");
-
-                    const t = this.data.tasks.find(x => x.id === taskId);
-                    if(!t) throw new Error("Análise não encontrada na lista ativa.");
-
-                    if (!t.ocorrencias) t.ocorrencias = [];
-
-                    const catEl = document.getElementById('add-ocorrencia-categoria');
-                    const descEl = document.getElementById('add-ocorrencia-desc');
-                    const iniEl = document.getElementById('add-horario-inicial');
-                    const fimEl = document.getElementById('add-horario-final');
-
-                    const cat = catEl.value;
-                    const desc = descEl.value;
-                    const ini = iniEl.value;
-                    const fim = fimEl.value;
-
-                    // CORREÇÃO: Substituição do alert por feedback visual
-                    if(!desc || desc.trim() === "") {
-                        this.showToast("Erro: Descrição obrigatória!", true);
-                        descEl.focus();
-                        descEl.classList.add('input-error');
-                        setTimeout(() => descEl.classList.remove('input-error'), 2000);
-                        return;
-                    }
-
-                    if (this.data.editingId) {
-                        const oc = t.ocorrencias.find(o => o.id === this.data.editingId);
-                        if (oc) {
-                            oc.categoria = cat; oc.descricao = desc; oc.inicio = ini; oc.fim = fim;
-                            this.showToast('Item atualizado!');
-                        }
-                        this.data.editingId = null;
-                        this.resetOcorrenciaFormUI();
-                    } else {
-                        const newId = (typeof this.generateId === 'function') ? this.generateId() : Date.now().toString();
-                        t.ocorrencias.push({ id: newId, categoria: cat, descricao: desc, inicio: ini, fim: fim });
-                        this.showToast('Item adicionado!');
-                    }
-                    
-                    // Limpar campos
-                    descEl.value = '';
-                    iniEl.value = '';
-                    fimEl.value = '';
-                    descEl.focus(); // Focar novamente para adicionar mais itens rapidamente
-
-                    this.saveData();
-                    this.renderOcorrenciasList(t);
-                } catch(e) {
-                    console.error(e);
-                    alert("Erro ao adicionar: " + e.message);
-                }
-            },
-
-            saveAndCloseOcorrencias() {
-                 const desc = document.getElementById('add-ocorrencia-desc').value;
-                 // CORREÇÃO: Se houver texto, tenta salvar antes de fechar para não perder dados
-                 if (desc && desc.trim() !== "") {
-                     this.addOccurrence(); 
-                 }
-                 this.saveData();
-                 this.closeModalUI('ocorrencia-modal');
-                 this.resetOcorrenciaForm(); 
-                 this.showToast('Alterações salvas');
-            },
-
-            prepareEditOcorrencia(taskId, ocId) {
-                const t = this.data.tasks.find(x => x.id === taskId);
-                if(!t) return;
-                const oc = t.ocorrencias.find(o => o.id === ocId);
-                if(!oc) return;
-                document.getElementById('add-ocorrencia-categoria').value = oc.categoria;
-                document.getElementById('add-ocorrencia-desc').value = oc.descricao;
-                document.getElementById('add-horario-inicial').value = oc.inicio || '';
-                document.getElementById('add-horario-final').value = oc.fim || '';
-                this.data.editingId = ocId;
-                const btn = document.getElementById('add-ocorrencia-btn');
-                btn.innerHTML = `<i class="ph ph-floppy-disk text-lg"></i> Salvar Edição`;
-                btn.className = "flex-1 bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition-colors shadow-lg";
-            },
-
-            removeOcorrencia(taskId, ocId) {
-                if(!confirm("Remover este item da lista?")) return;
-                const t = this.data.tasks.find(x => x.id === taskId);
-                if(t) {
-                    t.ocorrencias = t.ocorrencias.filter(o => o.id !== ocId);
-                    this.saveData();
-                    this.renderOcorrenciasList(t);
-                    this.showToast('Item removido.');
-                }
-            },
-
-            resetOcorrenciaFormUI() {
-                const btn = document.getElementById('add-ocorrencia-btn');
-                btn.innerHTML = `+ Adicionar Item`;
-                btn.className = "flex-1 bg-orange-100 text-brand-orange font-bold py-2 rounded hover:bg-orange-200 transition-colors border border-orange-200";
-            },
-
-            resetOcorrenciaForm() {
-                this.data.editingId = null;
-                document.getElementById('add-ocorrencia-desc').value = '';
-                document.getElementById('add-horario-inicial').value = '';
-                document.getElementById('add-horario-final').value = '';
-                this.resetOcorrenciaFormUI();
-            },
-            
-            renderOcorrenciasList(task) {
+            // RENDERIZAÇÃO DA LISTA DE OCORRÊNCIAS NO MODAL
+            function renderModalOcorrenciasList() {
                 const list = document.getElementById('ocorrencia-list');
-                if (!task.ocorrencias || task.ocorrencias.length === 0) {
-                    list.innerHTML = '<p class="text-center text-xs text-slate-400 py-4">Nenhuma ocorrência registrada.</p>';
+                list.innerHTML = '';
+                
+                if (currentEditingTaskOcorrencias.length === 0) {
+                    list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>';
                     return;
                 }
-                const sorted = [...task.ocorrencias].sort((a,b) => (a.inicio || '').localeCompare(b.inicio || ''));
 
-                list.innerHTML = sorted.map(o => `
-                    <div class="p-2 border-b dark:border-slate-700 flex justify-between items-center group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <div>
-                            <span class="text-[10px] font-bold bg-orange-100 text-orange-700 px-1 rounded border border-orange-200">${o.inicio||'--:--'} a ${o.fim||'--:--'}</span>
-                            <span class="text-xs font-bold text-slate-700 dark:text-white ml-2 uppercase">${o.categoria}</span>
-                            <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">${o.descricao}</p>
+                currentEditingTaskOcorrencias.forEach((ocor, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'ocorrencia-item-row p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center group dark:bg-slate-800 dark:border-slate-700';
+                    div.innerHTML = `
+                        <div class="flex-grow">
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-100">${ocor.categoria}</p>
+                            <p class="text-xs text-slate-600 dark:text-slate-400">${ocor.desc}</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-1">${ocor.horarioInicial} - ${ocor.horarioFinal}</p>
                         </div>
-                        <div class="flex gap-1">
-                            <button onclick="App.prepareEditOcorrencia('${task.id}', '${o.id}')" class="p-2 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition" title="Editar">
-                                <i class="ph ph-pencil-simple text-lg"></i>
+                        <div class="flex gap-2 occ-actions">
+                            <button type="button" data-index="${index}" class="edit-item-btn text-blue-500 hover:text-blue-700" title="Editar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
-                            <button onclick="App.removeOcorrencia('${task.id}', '${o.id}')" class="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition" title="Excluir">
-                                <i class="ph ph-trash text-lg"></i>
+                            <button type="button" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700" title="Remover">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                         </div>
-                    </div>`).join('');
-            },
-
-            // --- RENDER ---
-            render() { 
-                const list = document.getElementById('task-list');
-                const fCondo = document.getElementById('filtro-condominio').value.toLowerCase();
-                const fAnalise = document.getElementById('filtro-analise').value;
-                const fBackup = document.getElementById('filtro-backup').value;
-                const fUser = document.getElementById('filtro-usuario').value.toLowerCase();
-
-                // Segurança contra tasks nulas
-                if (!this.data.tasks) this.data.tasks = [];
-
-                const filtered = this.data.tasks.filter(t => {
-                    if (!t) return false;
-                    const matchUser = this.data.isManagerMode ? (t._ownerName || '').toLowerCase().includes(fUser) : true;
-                    return (t.condominio || '').toLowerCase().includes(fCondo) &&
-                           (fAnalise === '' || t.statusAnalise === fAnalise) &&
-                           (fBackup === '' || t.statusBackup === fBackup) && matchUser;
+                    `;
+                    list.appendChild(div);
                 });
-                
-                document.getElementById('total-solicitacoes').textContent = this.data.tasks.length;
-                document.getElementById('backups-pendentes').textContent = this.data.tasks.filter(t => t.statusBackup === 'Pendente').length;
-                
-                const statTasks = this.data.tasks.filter(t => !t.manualRestore || t.carimboSemanaAtual);
-                const concluidas = statTasks.filter(t => t.statusAnalise === 'Concluída');
-                const concluidasCount = concluidas.length;
-                
-                document.getElementById('analises-concluidas').textContent = concluidasCount;
-                
-                const uniquePdvs = new Set(concluidas.map(t => (t.condominio || '').trim().toUpperCase()));
-                document.getElementById('total-pdvs').textContent = uniquePdvs.size;
+            }
 
-                const totalOc = statTasks.reduce((acc, t) => acc + (t.ocorrencias?.length||0), 0);
-                document.getElementById('total-ocorrencias-semana').textContent = totalOc;
+            // Ações dentro do modal de ocorrências
+            document.getElementById('ocorrencia-list').addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-item-btn');
+                const editBtn = e.target.closest('.edit-item-btn');
 
-                const media = concluidasCount > 0 ? (totalOc / concluidasCount).toFixed(1) : "0.0";
-                const elMedia = document.getElementById('media-ocorrencias');
-                if(elMedia) elMedia.textContent = media;
+                if (deleteBtn) {
+                    const index = parseInt(deleteBtn.dataset.index);
+                    currentEditingTaskOcorrencias.splice(index, 1);
+                    renderModalOcorrenciasList();
+                } else if (editBtn) {
+                    const index = parseInt(editBtn.dataset.index);
+                    const item = currentEditingTaskOcorrencias[index];
+                    document.getElementById('add-ocorrencia-categoria').value = item.categoria;
+                    document.getElementById('add-ocorrencia-desc').value = item.desc;
+                    document.getElementById('add-horario-inicial').value = item.horarioInicial;
+                    document.getElementById('add-horario-final').value = item.horarioFinal;
+                    currentEditingTaskOcorrencias.splice(index, 1);
+                    renderModalOcorrenciasList();
+                }
+            });
 
-                list.innerHTML = filtered.map(t => {
-                    const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
-                    const ownerBadge = this.data.isManagerMode ? 
-                        `<div class="mb-2 inline-block bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800 uppercase">
-                            <i class="ph ph-user"></i> ${t._ownerName || 'Desconhecido'}
-                         </div>` : '';
+            document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
+                const desc = document.getElementById('add-ocorrencia-desc').value;
+                const cat = document.getElementById('add-ocorrencia-categoria').value;
+                const ini = document.getElementById('add-horario-inicial').value;
+                const fim = document.getElementById('add-horario-final').value;
+                if (desc) {
+                    currentEditingTaskOcorrencias.push({ categoria: cat, desc: desc, horarioInicial: ini, horarioFinal: fim });
+                    renderModalOcorrenciasList();
+                    document.getElementById('add-ocorrencia-desc').value = '';
+                    document.getElementById('add-horario-inicial').value = '';
+                    document.getElementById('add-horario-final').value = '';
+                } else {
+                    showNotification('Digite uma descrição.');
+                }
+            });
 
-                    const optionsAnalise = ['Pendente', 'Em Análise', 'Concluída'].map(opt => `<option value="${opt}" ${t.statusAnalise === opt ? 'selected' : ''}>${opt}</option>`).join('');
-                    const optionsBackup = ['Pendente', 'Em Andamento', 'Concluído'].map(opt => `<option value="${opt}" ${t.statusBackup === opt ? 'selected' : ''}>${opt}</option>`).join('');
+            document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const taskId = document.getElementById('ocorrencia-task-id').value;
+                const task = tasks.find(t => t.id == taskId);
+                if (task) {
+                    task.ocorrencias = [...currentEditingTaskOcorrencias];
+                    task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não';
+                    refreshUI();
+                    document.getElementById('ocorrencia-modal').classList.add('hidden');
+                    showNotification('Ocorrências atualizadas com sucesso.');
+                }
+            });
+            
+            function handleTaskSubmit(e) {
+                e.preventDefault();
+                const condominio = document.getElementById('form-condominio').value;
+                const dataAnalise = document.getElementById('form-data-analise').value;
+                if (tasks.some(t => t.condominio === condominio && t.dataAnalise === dataAnalise)) {
+                    showNotification('Análise já existe.'); return; 
+                }
+                tasks.unshift({
+                    id: Date.now(),
+                    condominio: condominio,
+                    dataAnalise: dataAnalise,
+                    semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || 0,
+                    observacoes: document.getElementById('form-observacoes').value,
+                    statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencia: 'Pendente', isExpanded: true, ocorrencias: []
+                });
+                refreshUI();
+                document.getElementById('task-modal').classList.add('hidden');
+                showNotification('Nova análise adicionada.');
+            }
+
+            function handleBulkAddSubmit(e) {
+                e.preventDefault();
+                const inputArea = document.getElementById('bulk-input-area').value.trim();
+                const lines = inputArea.split('\n').filter(line => line.trim().length > 0);
+                const newTasks = [];
+                lines.forEach((line, index) => {
+                    let parts = line.split(/\s{2,}|\t/).map(p => p.trim()).filter(p => p.length > 0);
+                    if (parts.length < 5) return;
+                    let unidadeRaw = parts[2] || '';
+                    let statusRaw = parts[parts.length - 1] || 'Pendente';
+                    let isoDate = parts[1].includes('/') ? parts[1].split('/').reverse().join('-') : new Date().toISOString().split('T')[0];
+                    newTasks.push({
+                        id: Date.now() + index,
+                        condominio: unidadeRaw,
+                        dataAnalise: isoDate,
+                        semanaDeTrabalho: 0,
+                        observacoes: '',
+                        statusBackup: statusRaw.toLowerCase().includes('finalizado') ? 'Concluído' : 'Pendente',
+                        statusAnalise: statusRaw.toLowerCase().includes('finalizado') ? 'Concluída' : 'Pendente',
+                        ocorrencia: 'Não', isExpanded: true, ocorrencias: []
+                    });
+                });
+                if (newTasks.length > 0) { tasks.unshift(...newTasks); refreshUI(); document.getElementById('bulk-add-modal').classList.add('hidden'); showNotification(`${newTasks.length} importados.`); }
+            }
+
+            function updateDashboard() {
+                const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
+                
+                const elTotal = document.getElementById('total-solicitacoes');
+                if (elTotal) elTotal.textContent = ft.length;
+                
+                const elBackups = document.getElementById('backups-pendentes');
+                if (elBackups) elBackups.textContent = ft.filter(t => t.statusBackup === 'Pendente').length;
+                
+                const elAnalises = document.getElementById('analises-pendentes');
+                if (elAnalises) elAnalises.textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
+                
+                const ct = ft.filter(t => t.statusAnalise === 'Concluída');
+                const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
+                
+                const elOcorrencias = document.getElementById('total-ocorrencias-semana');
+                if (elOcorrencias) elOcorrencias.textContent = totOc;
+                
+                const elProd = document.getElementById('produtividade-semanal');
+                if (elProd) elProd.textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
+            }
+
+            function updateCharts() {
+                const dataByCondo = tasks.reduce((acc, task) => {
+                    if (task.ocorrencia === 'Sim' && task.ocorrencias) {
+                        if (!acc[task.condominio]) acc[task.condominio] = 0;
+                        acc[task.condominio] += task.ocorrencias.length;
+                    }
+                    return acc;
+                }, {});
+                if (ocorrenciasChart) {
+                    ocorrenciasChart.data.labels = Object.keys(dataByCondo);
+                    ocorrenciasChart.data.datasets[0].data = Object.values(dataByCondo);
+                    ocorrenciasChart.update();
+                }
+            }
+
+            function renderTasks() {
+                const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
+                const filtroBackup = document.getElementById('filtro-backup').value;
+                const filtroAnalise = document.getElementById('filtro-analise').value;
+                let filtered = tasks.filter(t => t.condominio.toLowerCase().includes(filtroCond));
+                if (filtroBackup) filtered = filtered.filter(t => t.statusBackup === filtroBackup);
+                if (filtroAnalise) filtered = filtered.filter(t => t.statusAnalise === filtroAnalise);
+
+                const list = document.getElementById('task-list');
+                if (!list) return; // Segurança extra
+                
+                list.innerHTML = '';
+                if(filtered.length === 0) { list.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`; return; }
+
+                filtered.forEach(task => {
+                    const card = document.createElement('div');
+                    let color = task.statusAnalise === 'Concluída' ? '#10b981' : (task.statusAnalise === 'Em Análise' ? '#f97316' : '#f59e0b');
+                    card.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 dark:bg-slate-800 dark:shadow-xl';
+                    card.style.borderLeftColor = color;
                     
-                    return `
-                    <div class="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 card-transition relative group">
-                        ${ownerBadge}
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="font-bold text-lg text-slate-800 dark:text-white uppercase tracking-tight">${t.condominio}</h3>
-                                    <button onclick="App.editTask('${t.id}')" class="text-blue-400 hover:text-blue-600" title="Editar Dados"><i class="ph ph-pencil-simple"></i></button>
-                                </div>
-                                <p class="text-xs text-slate-500 flex items-center gap-1"><i class="ph ph-calendar"></i> ${this.formatDate(t.dataAnalise)} <span class="bg-slate-100 dark:bg-slate-700 px-1.5 rounded ml-2">${t.semana||'-'}</span></p>
-                            </div>
-                            <div class="flex gap-1">
-                                <button onclick="App.openOcorrenciaModal('${t.id}')" class="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-brand-orange hover:bg-orange-100 dark:hover:bg-orange-900/40 transition relative">
-                                    <i class="ph ph-list-checks text-xl"></i>
-                                    ${ocCount > 0 ? `<span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-sm">${ocCount}</span>` : ''}
+                    const ocCount = task.ocorrencias ? task.ocorrencias.length : 0;
+                    const badge = ocCount > 0 ? `<div class="mt-1"><span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded-lg border border-red-300 dark:bg-red-900 dark:text-red-100 dark:border-red-700">OCs: ${ocCount}</span></div>` : '';
+                    const isCollapsed = !task.isExpanded;
+                    
+                    let editBtnHTML = (task.statusAnalise !== 'Arquivado') ? `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">${task.statusAnalise === 'Concluída' ? 'Ver/Editar Ocorrências' : 'Registrar Ocorrências'}</button>` : '';
+                    let obsHTML = task.observacoes ? `<div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700"><p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs:</p><p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p></div>` : '';
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-lg flex-1">${task.condominio}</h3>
+                            <div class="flex items-center gap-2">
+                                <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-orange-600 font-bold text-lg p-1" title="Arquivar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                                </button>
+                                <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg p-1" title="Excluir">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-400 uppercase">Análise</label>
-                                <select onchange="App.updateStatus('${t.id}', 'statusAnalise', this.value)" class="w-full text-xs font-bold rounded p-1.5 border dark:border-slate-600 dark:bg-slate-700 outline-none ${this.statusColors[t.statusAnalise]}">
-                                    ${optionsAnalise}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-400 uppercase">Backup</label>
-                                <select onchange="App.updateStatus('${t.id}', 'statusBackup', this.value)" class="w-full text-xs font-bold rounded p-1.5 border dark:border-slate-600 dark:bg-slate-700 outline-none ${this.statusColors[t.statusBackup]}">
-                                    ${optionsBackup}
-                                </select>
-                            </div>
+                        <div class="flex justify-between items-center mt-2">
+                            <div><p class="text-sm text-slate-500 dark:text-slate-400">Data: <strong>${formatDate(task.dataAnalise)}</strong></p>${badge}</div>
+                            <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 dark:text-slate-100">${isCollapsed ? '&#9660;' : '&#9650;'}</button>
                         </div>
-                        ${t.observacoes ? `<p class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 p-2 rounded mb-3 italic border-l-2 border-slate-300 dark:border-slate-600 line-clamp-2">"${t.observacoes}"</p>` : ''}
-                        <div class="flex justify-end gap-2 mt-2 pt-3 border-t dark:border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <button onclick="App.archiveTask('${t.id}')" class="text-xs text-purple-500 hover:text-purple-700 font-bold flex items-center gap-1"><i class="ph ph-archive"></i> Arquivar</button>
-                             <button onclick="App.requestDeleteTask('${t.id}')" class="text-xs text-red-400 hover:text-red-600 font-bold ml-2 flex items-center gap-1"><i class="ph ph-trash"></i> Excluir</button>
+                        <div class="${isCollapsed ? 'hidden' : ''} mt-4 details-content">
+                            <div class="space-y-3 text-sm mt-4">
+                                <div class="flex justify-between items-center text-sm mb-1"><span class="font-semibold text-slate-600 dark:text-slate-300">Backup:</span> <select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option></select></div>
+                                <div class="flex justify-between items-center text-sm"><span class="font-semibold text-slate-600 dark:text-slate-300">Análise:</span> <select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option></select></div>
+                            </div>
+                            ${obsHTML}
+                            ${editBtnHTML}
                         </div>
-                    </div>`}).join('');
+                    `;
+                    list.appendChild(card);
+                });
             }
-        };
-        
-        window.App = App; 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("Sistema carregado com sucesso.");
-            App.init();
+
+            function refreshUI() {
+                saveTasks();
+                renderTasks();
+                updateDashboard();
+                updateCharts();
+                updateChartsTheme();
+            }
+
+            function renderArchivedList() {
+                const container = document.getElementById('view-archive-list-container');
+                const filter = document.getElementById('archive-search-input').value.toLowerCase();
+                const filtered = archivedTasks.filter(t => t.condominio.toLowerCase().includes(filter) || (t.dataAnalise && t.dataAnalise.includes(filter)));
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '<p class="text-center text-slate-500 mt-4">Nenhuma análise arquivada.</p>';
+                    return;
+                }
+
+                container.innerHTML = filtered.map(t => `
+                    <div class="flex justify-between items-center p-3 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <div>
+                            <p class="font-bold text-slate-700 dark:text-slate-200">${t.condominio}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">${formatDate(t.dataAnalise)}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button data-id="${t.id}" class="unarchive-btn text-xs font-semibold bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg hover:bg-orange-200 dark:bg-orange-900 dark:text-orange-100 dark:hover:bg-orange-800 transition-colors">Desarquivar</button>
+                            <button data-id="${t.id}" class="delete-archive-btn text-xs font-semibold bg-red-100 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800 transition-colors">Excluir</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
+            document.getElementById('filtro-backup').addEventListener('change', refreshUI); 
+            document.getElementById('filtro-analise').addEventListener('change', refreshUI); 
+            document.getElementById('expand-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = true); refreshUI(); });
+            document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
+            document.getElementById('add-task-btn').addEventListener('click', () => {
+                document.getElementById('task-form').reset();
+                document.getElementById('form-data-analise').value = new Date().toISOString().split('T')[0];
+                document.getElementById('task-modal').classList.remove('hidden');
+            });
+            document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
+            document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
+            document.getElementById('bulk-add-form').addEventListener('submit', handleBulkAddSubmit);
+            
+            const actionsMenu = document.getElementById('actions-menu');
+            document.getElementById('actions-menu-btn').addEventListener('click', (e) => { e.stopPropagation(); actionsMenu.classList.toggle('hidden'); });
+            document.addEventListener('click', (event) => { if (!document.getElementById('actions-menu-container').contains(event.target)) actionsMenu.classList.add('hidden'); });
+            
+            const modals = { 'bulk-add-btn': 'bulk-add-modal', 'category-btn': 'category-modal', 'rename-condo-btn': 'rename-modal', 'archive-btn': 'archive-modal', 'period-analysis-btn': 'period-analysis-modal', 'annual-report-btn': 'annual-report-modal', 'priority-btn': 'priority-modal', 'planner-btn': 'planner-modal', 'pdv-dashboard-btn': 'pdv-dashboard-modal' };
+            Object.keys(modals).forEach(k => document.getElementById(k).addEventListener('click', () => { actionsMenu.classList.add('hidden'); document.getElementById(modals[k]).classList.remove('hidden'); }));
+            
+            const closeIds = ['bulk-cancel-btn', 'category-close-btn', 'rename-cancel-btn', 'archive-cancel-btn', 'period-analysis-close-btn', 'annual-report-close-btn', 'priority-close-btn', 'planner-cancel-btn', 'pdv-dashboard-close-btn', 'view-archive-close-btn', 'view-archive-close-footer-btn', 'notification-close-btn', 'ocorrencia-cancel-btn'];
+            closeIds.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.addEventListener('click', () => el.closest('.fixed').classList.add('hidden'));
+            });
+
+            document.getElementById('view-archive-btn').addEventListener('click', () => {
+                document.getElementById('archive-modal').classList.add('hidden');
+                document.getElementById('view-archive-modal').classList.remove('hidden');
+                document.getElementById('archive-search-input').value = '';
+                renderArchivedList();
+            });
+            document.getElementById('archive-search-input').addEventListener('input', renderArchivedList);
+            
+            document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
+                const unarchive = e.target.closest('.unarchive-btn');
+                const del = e.target.closest('.delete-archive-btn');
+                if (unarchive) {
+                    showConfirm('Desarquivar', 'Restaurar esta análise para o quadro principal?', () => {
+                        const id = unarchive.dataset.id;
+                        const idx = archivedTasks.findIndex(t => t.id == id);
+                        if (idx > -1) {
+                            tasks.unshift(archivedTasks[idx]);
+                            archivedTasks.splice(idx, 1);
+                            refreshUI(); renderArchivedList();
+                            showNotification('Análise restaurada.');
+                        }
+                    });
+                } else if (del) {
+                    showConfirm('Excluir do Arquivo', 'Excluir permanentemente esta análise?', () => {
+                        archivedTasks = archivedTasks.filter(t => t.id != del.dataset.id);
+                        saveTasks(); renderArchivedList();
+                    });
+                }
+            });
+
+            document.getElementById('task-list').addEventListener('click', (e) => {
+                const target = e.target;
+                const delBtn = target.closest('.delete-task-btn');
+                const archBtn = target.closest('.archive-single-btn');
+                const toggleBtn = target.closest('.toggle-details-btn');
+                const editOcBtn = target.closest('.edit-ocorrencia-btn');
+
+                if (delBtn) {
+                    showConfirm('Excluir Análise', 'Tem certeza que deseja excluir esta análise?', () => {
+                        tasks = tasks.filter(t => t.id != delBtn.dataset.id);
+                        refreshUI();
+                        showNotification('Análise excluída.');
+                    });
+                } else if (archBtn) {
+                    showConfirm('Arquivar Análise', 'Mover esta análise para o arquivo?', () => {
+                        const idx = tasks.findIndex(t => t.id == archBtn.dataset.id);
+                        if(idx > -1) {
+                            archivedTasks.push(tasks[idx]);
+                            tasks.splice(idx, 1);
+                            refreshUI();
+                            showNotification('Análise arquivada.');
+                        }
+                    });
+                } else if (toggleBtn) {
+                    const t = tasks.find(x => x.id == toggleBtn.dataset.id);
+                    if(t) { t.isExpanded = !t.isExpanded; refreshUI(); }
+                } else if (editOcBtn) {
+                    const t = tasks.find(x => x.id == editOcBtn.dataset.id);
+                    if(t) {
+                        document.getElementById('ocorrencia-task-id').value = t.id;
+                        populateCategorySelect(document.getElementById('add-ocorrencia-categoria'));
+                        currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || []));
+                        renderModalOcorrenciasList();
+                        document.getElementById('add-ocorrencia-desc').value = ''; 
+                        document.getElementById('ocorrencia-modal').classList.remove('hidden');
+                    }
+                }
+            });
+
+            document.getElementById('task-list').addEventListener('change', (e) => {
+                if (e.target.classList.contains('status-select')) {
+                    const t = tasks.find(x => x.id == e.target.dataset.id);
+                    if (t) {
+                        if (e.target.dataset.type === 'backup') t.statusBackup = e.target.value;
+                        if (e.target.dataset.type === 'analise') t.statusAnalise = e.target.value;
+                        refreshUI();
+                    }
+                }
+            });
+
+            setupCharts();
+            refreshUI();
         });
     </script>
 </body>
