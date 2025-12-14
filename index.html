@@ -681,24 +681,33 @@ Condomínio B	2025-10-02	Observação 2"></textarea>
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc, collection, getDocs, updateDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURAÇÃO SEGURA DO FIREBASE
-        // Tenta obter a config do ambiente (Canvas) ou do localStorage (Navegador externo)
-        let firebaseConfig;
-        let appId = 'default-app-id';
+        // ==================================================================
+        // ÁREA DE CONFIGURAÇÃO (COLE AQUI)
+        // Substitua o bloco abaixo com o código copiado do Firebase Console
+        // ==================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7uyQ7Xeu1WfnHbV4-KcngMsPKv5l6QmM",
+            authDomain: "painel-de-monitoramento-411b7.firebaseapp.com",
+            projectId: "painel-de-monitoramento-411b7",
+            storageBucket: "painel-de-monitoramento-411b7.firebasestorage.app",
+            messagingSenderId: "638200796920",
+            appId: "1:638200796920:web:8d668d52af2355b1c14d0d"
+        };
 
-        try {
-            if (typeof __firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(__firebase_config);
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            } else {
-                const savedConfig = localStorage.getItem('mon_custom_firebase_config');
-                if (savedConfig) {
-                    firebaseConfig = JSON.parse(savedConfig);
+        // Lógica de fallback para ambiente Canvas (pré-visualização)
+        let finalConfig = firebaseConfig;
+        if (Object.keys(firebaseConfig).length === 0) {
+            try {
+                if (typeof __firebase_config !== 'undefined') {
+                    finalConfig = JSON.parse(__firebase_config);
+                } else {
+                    const saved = localStorage.getItem('mon_custom_firebase_config');
+                    if(saved) finalConfig = JSON.parse(saved);
                 }
-            }
-        } catch (e) {
-            console.warn("Configuração do Firebase não detectada automaticamente.");
+            } catch(e) { console.warn("Config automática falhou"); }
         }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // Variáveis globais
         let auth, db, appFirebase;
@@ -750,14 +759,14 @@ Condomínio B	2025-10-02	Observação 2"></textarea>
                 }
 
                 // Verifica se temos config antes de tentar iniciar
-                if (!firebaseConfig) {
+                if (!finalConfig || Object.keys(finalConfig).length === 0) {
                     this.openModalUI('cloud-config-modal');
                     const txtArea = document.getElementById('firebase-config-input');
                     if(txtArea) {
                         txtArea.value = "";
                         txtArea.placeholder = 'Cole aqui o JSON de configuração do Firebase...';
                     }
-                    alert("Configuração do Firebase não detectada. Por favor, cole a configuração no menu de engrenagem para continuar.");
+                    // alert("Configuração do Firebase não detectada. Por favor, cole a configuração no menu de engrenagem para continuar.");
                 } else {
                     await this.initFirebase();
                 }
@@ -788,10 +797,10 @@ Condomínio B	2025-10-02	Observação 2"></textarea>
 
             // --- FIREBASE CORE ---
             async initFirebase() {
-                if (!firebaseConfig) return; // Segurança extra
+                if (!finalConfig) return; // Segurança extra
 
                 try {
-                    appFirebase = initializeApp(firebaseConfig);
+                    appFirebase = initializeApp(finalConfig);
                     auth = getAuth(appFirebase);
                     db = getFirestore(appFirebase);
 
@@ -1273,7 +1282,7 @@ Condomínio B	2025-10-02	Observação 2"></textarea>
             },
 
             async registerWithUser() {
-                if (!auth.currentUser) return alert("Aguardando conexão...");
+                if (!auth.currentUser) return alert("Aguardando conexão com o servidor...");
                 const name = document.getElementById('login-username').value.trim().toUpperCase();
                 const pass = document.getElementById('login-password').value;
                 if (!name || pass.length < 6) return alert('Senha deve ter no mínimo 6 caracteres.');
@@ -1603,554 +1612,6 @@ Condomínio B	2025-10-02	Observação 2"></textarea>
                 a.download = `backup_monitoramento_${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
             },
-
-            // --- CONTROLE DE ABAS ---
-            switchMainView(viewName) {
-                this.data.currentView = viewName;
-                const views = ['monitoring', 'productivity', 'reports'];
-                views.forEach(v => {
-                    const el = document.getElementById(`view-${v}`);
-                    const btn = document.getElementById(`btn-view-${v}`);
-                    if(viewName === v) {
-                        el.classList.remove('hidden'); el.classList.add('flex');
-                        btn.classList.add('bg-white', 'dark:bg-slate-600', 'text-brand-orange', 'shadow-sm');
-                        btn.classList.remove('text-slate-500', 'dark:text-slate-400');
-                    } else {
-                        el.classList.add('hidden'); el.classList.remove('flex');
-                        btn.classList.remove('bg-white', 'dark:bg-slate-600', 'text-brand-orange', 'shadow-sm');
-                        btn.classList.add('text-slate-500', 'dark:text-slate-400');
-                    }
-                });
-                
-                if(viewName === 'monitoring') this.updateCharts();
-                if(viewName === 'productivity') this.renderProductivity();
-                if(viewName === 'reports') {
-                    // Popula o select de condomínios
-                    const sel = document.getElementById('report-condo-select');
-                    if (sel && this.data.tasks) {
-                        const condos = [...new Set(this.data.tasks.map(t => t.condominio))].sort();
-                        sel.innerHTML = '<option value="">Selecione um Condomínio...</option>' + 
-                                        condos.map(c => `<option value="${c}">${c}</option>`).join('');
-                    }
-                }
-            },
-
-            // NOVA FUNÇÃO DE RENDERIZAÇÃO DA PRODUTIVIDADE (MANUAL)
-            renderProductivity() {
-                // Se a lista estiver vazia ou nula
-                if (!this.data.productivity) this.data.productivity = [];
-                const list = this.data.productivity;
-                
-                // Calcular totais
-                const totalDias = list.reduce((acc, item) => acc + parseInt(item.dias || 0), 0);
-                const totalPdvs = list.reduce((acc, item) => acc + parseInt(item.pdvs || 0), 0);
-                const totalOc = list.reduce((acc, item) => acc + parseInt(item.ocorrencias || 0), 0);
-
-                // Atualizar DOM
-                document.getElementById('prod-total-dias').textContent = totalDias;
-                document.getElementById('prod-total-pdvs').textContent = totalPdvs;
-                document.getElementById('prod-total-oc').textContent = totalOc;
-
-                // Renderizar Tabela
-                const tableBody = document.getElementById('productivity-table-body');
-                const emptyState = document.getElementById('productivity-empty-state');
-
-                if (list.length === 0) {
-                    tableBody.innerHTML = '';
-                    if(emptyState) emptyState.classList.remove('hidden');
-                } else {
-                    if(emptyState) emptyState.classList.add('hidden');
-                    tableBody.innerHTML = list.map((item) => `
-                        <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600">
-                            <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap dark:text-white uppercase">
-                                ${item.ref}
-                            </td>
-                            <td class="px-6 py-4 text-center font-bold text-blue-600 dark:text-blue-400">
-                                ${item.dias}
-                            </td>
-                            <td class="px-6 py-4 text-center font-bold text-brand-orange">
-                                ${item.pdvs}
-                            </td>
-                            <td class="px-6 py-4 text-center font-bold text-red-600 dark:text-red-400">
-                                ${item.ocorrencias}
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <button onclick="App.openProductivityModal('${item.id}')" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-2">Editar</button>
-                                <button onclick="App.deleteProductivity('${item.id}')" class="font-medium text-red-600 dark:text-red-500 hover:underline">Excluir</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
-            },
-
-            // Funções CRUD para Produtividade
-            openProductivityModal(id = null) {
-                const modalTitle = document.getElementById('prod-modal-title');
-                const inpId = document.getElementById('prod-id');
-                const inpRef = document.getElementById('prod-ref');
-                const inpDias = document.getElementById('prod-dias');
-                const inpPdvs = document.getElementById('prod-pdvs');
-                const inpOcs = document.getElementById('prod-ocs');
-
-                if (id) {
-                    const item = this.data.productivity.find(p => p.id === id);
-                    if (item) {
-                        modalTitle.textContent = "Editar Registro";
-                        inpId.value = item.id;
-                        inpRef.value = item.ref;
-                        inpDias.value = item.dias;
-                        inpPdvs.value = item.pdvs;
-                        inpOcs.value = item.ocorrencias;
-                    }
-                } else {
-                    modalTitle.textContent = "Novo Registro";
-                    inpId.value = "";
-                    inpRef.value = "";
-                    inpDias.value = "";
-                    inpPdvs.value = "";
-                    inpOcs.value = "";
-                }
-                this.openModalUI('productivity-modal');
-            },
-
-            saveProductivity() {
-                const id = document.getElementById('prod-id').value;
-                const ref = document.getElementById('prod-ref').value;
-                const dias = parseInt(document.getElementById('prod-dias').value) || 0;
-                const pdvs = parseInt(document.getElementById('prod-pdvs').value) || 0;
-                const ocs = parseInt(document.getElementById('prod-ocs').value) || 0;
-
-                if (!ref) return alert("Preencha a referência (Data/Semana).");
-
-                if (!this.data.productivity) this.data.productivity = [];
-
-                if (id) {
-                    // Edição
-                    const item = this.data.productivity.find(p => p.id === id);
-                    if (item) {
-                        item.ref = ref;
-                        item.dias = dias;
-                        item.pdvs = pdvs;
-                        item.ocorrencias = ocs;
-                        this.showToast("Registro atualizado!");
-                    }
-                } else {
-                    // Novo
-                    this.data.productivity.unshift({
-                        id: this.generateId(),
-                        ref: ref,
-                        dias: dias,
-                        pdvs: pdvs,
-                        ocorrencias: ocs,
-                        createdAt: new Date().toISOString()
-                    });
-                    this.showToast("Registro adicionado!");
-                }
-
-                this.saveData();
-                this.renderProductivity();
-                this.closeModalUI('productivity-modal');
-            },
-
-            deleteProductivity(id) {
-                if(confirm("Tem certeza que deseja excluir este registro?")) {
-                    this.data.productivity = this.data.productivity.filter(p => p.id !== id);
-                    this.saveData();
-                    this.renderProductivity();
-                    this.showToast("Registro excluído.");
-                }
-            },
-
-            subscribeToUserData(uid) {
-                this.data.unsubscribePersonal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'user_records', 'app_user_data_' + uid), (docSnap) => {
-                    if (this.data.isManagerMode) return;
-
-                    const syncStatusEl = document.getElementById('app-mode-badge');
-                    if (docSnap.metadata.fromCache) {
-                        syncStatusEl.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> Offline`;
-                    } else {
-                        syncStatusEl.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online`;
-                    }
-
-                    if (docSnap.exists()) {
-                        const d = docSnap.data();
-                        this.data.tasks = d.tasks || [];
-                        this.data.archived = d.archived || [];
-                        this.data.productivity = d.productivity || [];
-                        this.render();
-                        
-                        // Atualiza charts ou produtividade dependendo da view atual
-                        if (this.data.currentView === 'productivity') {
-                            this.renderProductivity();
-                        } else {
-                            this.updateCharts();
-                        }
-                    }
-                });
-            },
-
-            // --- COFRE DE SEGURANÇA (RECUPERAÇÃO) ---
-            recoverLostData() {
-                const candidates = new Map();
-                const process = (key) => {
-                    try {
-                        const raw = localStorage.getItem(key); if (!raw) return; const parsed = JSON.parse(raw);
-                        let arr = []; if (Array.isArray(parsed)) arr = parsed; else if (parsed.a) arr = parsed.a.concat(parsed.t || []); 
-                        arr.forEach(t => { if (t && t.id) candidates.set(t.id, t); });
-                    } catch(e) { console.error("Error reading " + key, e); }
-                };
-                process('mon_archived'); 
-                process('mon_tasks'); 
-                // Prioridade: Backup Seguro Recente
-                process('mon_safe_backup'); 
-                
-                const currentIds = new Set([...this.data.tasks.map(t => t.id), ...this.data.archived.map(t => t.id)]);
-                this.data.recoveryList = [];
-                for (const [id, task] of candidates) { 
-                    if (!currentIds.has(id)) this.data.recoveryList.push(task); 
-                }
-                
-                if (this.data.recoveryList.length === 0) { 
-                    alert("O Cofre está vazio. Nenhum dado perdido foi encontrado nos backups locais."); 
-                } else { 
-                    this.openModalUI('recovery-modal'); 
-                    this.renderRecoveryList(); 
-                }
-            },
-
-            renderRecoveryList() {
-                const list = document.getElementById('recovery-list');
-                const search = document.getElementById('recovery-search').value.toLowerCase();
-                const filtered = this.data.recoveryList.filter(t => (t.condominio || '').toLowerCase().includes(search));
-                
-                if (filtered.length === 0) { list.innerHTML = '<p class="text-center text-xs text-slate-400 py-4">Nenhum item correspondente encontrado.</p>'; return; }
-                
-                list.innerHTML = filtered.map(t => `
-                    <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded border border-blue-100 dark:border-blue-900 hover:shadow-md transition-all">
-                        <div>
-                            <p class="font-bold text-sm dark:text-white uppercase text-blue-900 dark:text-blue-100">${t.condominio || 'Sem Nome'}</p>
-                            <p class="text-[10px] text-slate-500 flex items-center gap-1"><i class="ph ph-calendar"></i> ${this.formatDate(t.dataAnalise)} <span class="mx-1">•</span> ${t.semana || '-'}</p>
-                        </div>
-                        <button onclick="App.restoreSingleFromRecovery('${t.id}')" class="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded shadow-lg transition-colors">
-                            <i class="ph ph-download-simple"></i> Recuperar Este
-                        </button>
-                    </div>`).join('');
-            },
-
-            restoreSingleFromRecovery(id) {
-                const idx = this.data.recoveryList.findIndex(t => t.id === id);
-                if (idx > -1) {
-                    const item = this.data.recoveryList[idx];
-                    this.data.recoveryList.splice(idx, 1);
-                    item.manualRestore = true; 
-                    item.carimboSemanaAtual = true; 
-                    
-                    this.data.tasks.unshift(item);
-                    this.saveData(); 
-                    this.renderRecoveryList(); 
-                    this.render(); 
-                    this.showToast('Item recuperado do Cofre!');
-                    
-                    if (this.data.recoveryList.length === 0) this.closeModalUI('recovery-modal');
-                }
-            },
-
-            // --- AUTH ---
-            generateEmail(name) { 
-                // Correção: Normaliza acentos para evitar que "João" vire "Joo"
-                const cleanName = name.trim().toLowerCase()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g, "") // Remove acentos
-                    .replace(/\s+/g, '.') // Espaços viram pontos
-                    .replace(/[^a-z0-9.]/g, ''); // Remove chars especiais
-                return `${cleanName}@vendperto.local`; 
-            },
-            
-            async loginWithUser() { 
-                if (!auth) return alert("Sistema a carregar... Tente novamente em 2 segundos.");
-                
-                if (!auth.currentUser) {
-                    try { await signInAnonymously(auth); } catch(e) { return alert("Erro de conexão: Verifique sua internet."); }
-                }
-
-                const name = document.getElementById('login-username').value.trim().toUpperCase();
-                const pass = document.getElementById('login-password').value;
-                if(!name || !pass) return alert("Preencha os dados.");
-                
-                const email = this.generateEmail(name);
-                const safeId = email.replace(/[^a-zA-Z0-9]/g, '_');
-                
-                document.getElementById('login-loading').classList.remove('hidden');
-                document.getElementById('login-form-container').classList.add('hidden');
-
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId);
-                    
-                    // Timeout manual de 10s
-                    const fetchPromise = getDoc(docRef);
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 10000));
-                    const docSnap = await Promise.race([fetchPromise, timeoutPromise]);
-
-                    // AUTO-RECUPERAÇÃO DE ADMIN (Se o utilizador mestre não existir, cria-o agora)
-                    const isAdminUser = name === 'GESTOR' || name === 'ALISSON CAMBUI';
-                    
-                    if (!docSnap.exists() && isAdminUser) {
-                        const newUser = { 
-                            name, email, password: pass, isAdmin: true, authorized: true, createdAt: new Date().toISOString() 
-                        };
-                        await setDoc(docRef, newUser);
-                        this.finishLogin({ ...newUser, uid: safeId, displayName: name });
-                        return;
-                    }
-
-                    if (docSnap.exists()) {
-                        const u = docSnap.data();
-                        if (u.authorized === false) {
-                            alert("Acesso pendente de aprovação ou bloqueado pelo gestor.");
-                            this.resetLoginUI();
-                            return;
-                        }
-
-                        if (u.password === pass) {
-                            this.finishLogin({ ...u, uid: safeId, displayName: u.name });
-                        } else { 
-                            alert("Senha incorreta."); 
-                            this.resetLoginUI();
-                        }
-                    } else { 
-                        alert("Usuário não encontrado. Crie um cadastro primeiro."); 
-                        this.resetLoginUI();
-                    }
-                } catch(e) { 
-                    if (e.message === "Timeout") {
-                        alert("Erro: O servidor demorou muito para responder. Verifique sua conexão.");
-                    } else {
-                        alert("Erro de conexão: " + e.message); 
-                    }
-                    this.resetLoginUI();
-                }
-            },
-
-            finishLogin(user) {
-                this.data.user = user;
-                localStorage.setItem('mon_user', JSON.stringify(this.data.user));
-                this.updateUserInfo(this.data.user);
-                this.switchToDashboardView();
-                this.subscribeToUserData(user.uid);
-            },
-            
-            resetLoginUI() {
-                document.getElementById('login-loading').classList.add('hidden');
-                document.getElementById('login-form-container').classList.remove('hidden');
-            },
-
-            async registerWithUser() {
-                if (!auth.currentUser) return alert("Aguardando conexão com o servidor...");
-                const name = document.getElementById('login-username').value.trim().toUpperCase();
-                const pass = document.getElementById('login-password').value;
-                if (!name || pass.length < 6) return alert('Senha deve ter no mínimo 6 caracteres.');
-                const email = this.generateEmail(name);
-                const safeId = email.replace(/[^a-zA-Z0-9]/g, '_');
-                
-                try {
-                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId);
-                    const snap = await getDoc(ref);
-                    
-                    // Se já existe e tem senha, bloqueia. Se não tem senha (foi pré-autorizado), permite criar.
-                    if (snap.exists() && snap.data().password) return alert('Usuário já existe. Tente fazer login.');
-                    
-                    const isSuperUser = name === 'GESTOR' || name === 'ALISSON CAMBUI';
-                    // Define authorized como false por padrão se não existir, ou true se for SuperUser
-                    const isAuthorized = snap.exists() ? snap.data().authorized : isSuperUser;
-                    
-                    if (!isAuthorized) {
-                         alert("Seu cadastro foi enviado, mas precisa ser aprovado pelo gestor antes de acessar.");
-                    } else {
-                         alert('Cadastro realizado! Faça login.');
-                    }
-
-                    await setDoc(ref, { 
-                        name, email, password: pass, isAdmin: isSuperUser, authorized: isAuthorized, createdAt: new Date().toISOString() 
-                    }, { merge: true });
-                    
-                    this.toggleAuthMode('login');
-                } catch (e) { alert('Erro: ' + e.message); }
-            },
-
-            async authorizeNewUser() {
-                 const name = document.getElementById('new-user-name').value.trim().toUpperCase();
-                 if (!name) return;
-                 const email = this.generateEmail(name);
-                 const safeId = email.replace(/[^a-zA-Z0-9]/g, '_');
-                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', 'app_users_' + safeId), { 
-                     name, email, password: '', authorized: true, isAdmin: false 
-                 }, { merge: true });
-                 alert('Autorizado.');
-                 document.getElementById('new-user-name').value = ''; // Limpar campo
-                 this.loadAuthorizedUsers();
-            },
-
-            async loadAuthorizedUsers() {
-                 const q = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'auth_users'));
-                 const list = document.getElementById('admin-users-list');
-                 list.innerHTML = '';
-                 q.forEach((docSnap) => {
-                     const u = docSnap.data();
-                     const isGestor = u.isAdmin === true;
-                     const docId = docSnap.id;
-                     const isMe = docId === 'app_users_' + this.data.user.uid;
-                     const isAuth = u.authorized !== false; // Default true if undefined
-                     
-                     list.innerHTML += `
-                        <li class="flex justify-between items-center py-3 border-b dark:border-slate-700 dark:text-slate-300">
-                            <div>
-                                <div class="font-bold text-sm flex items-center gap-2">
-                                    ${u.name}
-                                    ${isGestor ? '<span class="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-[10px] px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 uppercase font-bold">Gestor</span>' : ''}
-                                </div>
-                                <div class="text-[10px] text-slate-400">${u.email}</div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] ${u.password?'text-green-500':'text-amber-500'} font-bold">${u.password?'Ativo':'Pendente'}</span>
-                                ${!isMe ? `
-                                <div class="flex gap-1">
-                                    <button onclick="App.toggleAuthStatus('${docId}', ${!isAuth})" 
-                                        class="p-2 rounded-lg ${isAuth ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} hover:opacity-80 transition" 
-                                        title="${isAuth ? 'Bloquear Acesso' : 'Autorizar Acesso'}">
-                                        <i class="ph ${isAuth ? 'ph-check' : 'ph-x'} text-lg"></i>
-                                    </button>
-                                    <button onclick="App.toggleAdminStatus('${docId}', ${!isGestor})" 
-                                        class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition text-slate-500" 
-                                        title="${isGestor ? 'Remover permissão de Gestor' : 'Promover a Gestor'}">
-                                        <i class="ph ${isGestor ? 'ph-shield-slash text-red-500' : 'ph-shield-check text-blue-500'} text-lg"></i>
-                                    </button>
-                                </div>` : ''}
-                            </div>
-                        </li>`;
-                 });
-            },
-            
-            async toggleAuthStatus(docId, makeAuth) {
-                if(!confirm(makeAuth ? "Autorizar acesso deste usuário?" : "Bloquear acesso deste usuário?")) return;
-                try {
-                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', docId);
-                    await updateDoc(ref, { authorized: makeAuth });
-                    this.showToast(makeAuth ? "Usuário autorizado!" : "Acesso bloqueado.");
-                    this.loadAuthorizedUsers(); 
-                } catch(e) { alert("Erro: " + e.message); }
-            },
-
-            async toggleAdminStatus(docId, makeAdmin) {
-                if(!confirm(makeAdmin ? "Promover este usuário a Gestor? Ele terá acesso total." : "Remover acesso de Gestor deste usuário?")) return;
-                try {
-                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auth_users', docId);
-                    await updateDoc(ref, { isAdmin: makeAdmin });
-                    this.showToast(makeAdmin ? "Usuário promovido a Gestor!" : "Permissão de Gestor removida.");
-                    this.loadAuthorizedUsers(); 
-                } catch(e) { alert("Erro ao alterar permissões: " + e.message); }
-            },
-
-            // --- UI HELPERS ---
-            updateUserInfo(u) { 
-                let dn = u.name;
-                if (u.isAdmin) {
-                    dn += ' (GESTOR)';
-                    document.getElementById('manager-global-btn').classList.remove('hidden');
-                    document.getElementById('admin-panel-btn').classList.remove('hidden');
-                }
-                document.getElementById('user-display-name').textContent = dn; 
-                document.getElementById('account-modal-name').textContent = dn;
-            },
-            
-            toggleAuthMode(mode) {
-                this.data.authMode = mode;
-                const els = { login: document.getElementById('tab-login'), reg: document.getElementById('tab-register'), btn: document.getElementById('action-btn') };
-                if (mode === 'login') {
-                    els.login.classList.add('bg-white', 'text-brand-orange'); els.login.classList.remove('text-slate-500');
-                    els.reg.classList.remove('bg-white', 'text-brand-orange'); els.reg.classList.add('text-slate-500');
-                    els.btn.textContent = "Acessar Painel"; els.btn.onclick = () => App.loginWithUser();
-                } else {
-                    els.reg.classList.add('bg-white', 'text-brand-orange'); els.reg.classList.remove('text-slate-500');
-                    els.login.classList.remove('bg-white', 'text-brand-orange'); els.login.classList.add('text-slate-500');
-                    els.btn.textContent = "Criar Senha"; els.btn.onclick = () => App.registerWithUser();
-                }
-            },
-            
-            openModalUI(id) { document.getElementById(id).classList.remove('hidden'); },
-            closeModalUI(id) { document.getElementById(id).classList.add('hidden'); },
-            openMyAccountModal() { document.getElementById('my-account-modal').classList.remove('hidden'); },
-            openAdminPanel() { if(this.data.user?.isAdmin) { this.openModalUI('admin-panel-modal'); this.loadAuthorizedUsers(); } },
-            openArchive(e) { if(e) e.stopPropagation(); document.getElementById('actions-menu').classList.add('hidden'); document.getElementById('archive-search').value = ''; this.renderArchiveList(); this.openModalUI('archive-modal'); },
-            openImport(e) { if(e) e.stopPropagation(); document.getElementById('actions-menu').classList.add('hidden'); this.openModalUI('excel-import-modal'); },
-            openChangePasswordModal() { this.openModalUI('change-password-modal'); },
-
-            switchToDashboardView() { 
-                document.getElementById('login-view').classList.add('hidden'); 
-                document.getElementById('dashboard-view').classList.remove('hidden'); 
-                document.getElementById('dashboard-view').classList.add('flex');
-            },
-
-            async logout() { 
-                this.data.user = null; 
-                localStorage.removeItem('mon_user'); 
-                localStorage.removeItem('mon_safe_backup'); // Limpa cache de sessão
-                if(this.data.unsubscribeGlobal) this.data.unsubscribeGlobal();
-                window.location.reload(); 
-            },
-
-            // --- CRUD TAREFAS ---
-            addTask(task) {
-                const t = { 
-                    id: this.generateId(), ...task, 
-                    dataAnalise: task.dataAnalise || new Date().toISOString().split('T')[0],
-                    statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencias: [], createdAt: new Date().toISOString(),
-                    _ownerUid: this.data.user.uid // Define dono inicial
-                };
-                this.data.tasks.unshift(t);
-                this.saveData();
-                this.showToast('Análise criada!');
-            },
-
-            editTask(id) {
-                const task = this.data.tasks.find(t => t.id === id);
-                if (!task) return;
-                this.data.editingTaskId = id;
-                document.getElementById('task-modal-title').textContent = "Editar Análise";
-                document.getElementById('form-condominio').value = task.condominio;
-                document.getElementById('form-data-analise').value = task.dataAnalise;
-                document.getElementById('form-semana').value = task.semana || '';
-                document.getElementById('form-observacoes').value = task.observacoes || '';
-                App.openModalUI('task-modal');
-            },
-
-            saveTaskFromForm() {
-                const id = this.data.editingTaskId;
-                const newData = {
-                    condominio: document.getElementById('form-condominio').value,
-                    dataAnalise: document.getElementById('form-data-analise').value,
-                    semana: document.getElementById('form-semana').value,
-                    observacoes: document.getElementById('form-observacoes').value
-                };
-                if (id) {
-                    const taskIndex = this.data.tasks.findIndex(t => t.id === id);
-                    if (taskIndex > -1) { 
-                        // Importante: Mantém _ownerUid e outros campos originais
-                        const originalTask = this.data.tasks[taskIndex];
-                        this.data.tasks[taskIndex] = { ...originalTask, ...newData };
-                        this.showToast('Atualizado!'); 
-                    }
-                } else { this.addTask(newData); }
-                this.saveData();
-                this.closeModalUI('task-modal');
-            },
-
-            updateStatus(id, field, val) {
-                const t = this.data.tasks.find(x => x.id === id);
-                if (t) { t[field] = val; this.saveData(); }
-            },
-            
-            requestDeleteTask(id) { this.data.pendingDeleteId = id; document.getElementById('delete-confirmation-modal').classList.remove('hidden'); },
-            confirmDeleteTask() { this.data.tasks = this.data.tasks.filter(t => t.id !== this.data.pendingDeleteId); this.saveData(); this.closeModalUI('delete-confirmation-modal'); },
-            archiveTask(id) { const idx = this.data.tasks.findIndex(t => t.id === id); if(idx>-1) { this.data.archived.push(this.data.tasks.splice(idx,1)[0]); this.saveData(); } },
 
             // --- OCORRÊNCIAS ---
             openOcorrenciaModal(id) {
