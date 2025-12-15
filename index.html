@@ -525,26 +525,73 @@
             function handleBulkAddSubmit(e) {
                 e.preventDefault();
                 const inputArea = document.getElementById('bulk-input-area').value.trim();
+                if (!inputArea) {
+                    showNotification('Cole os dados da planilha na área de texto.');
+                    return;
+                }
                 const lines = inputArea.split('\n').filter(line => line.trim().length > 0);
                 const newTasks = [];
+                let ignoredCount = 0;
+
                 lines.forEach((line, index) => {
+                    // Detecção de cabeçalho: verifica se a linha contém palavras-chave típicas
+                    const lineLower = line.toLowerCase();
+                    if ((lineLower.includes('semana') || lineLower.includes('data') || lineLower.includes('dia')) && 
+                        (lineLower.includes('unidade') || lineLower.includes('colaborador') || lineLower.includes('status'))) {
+                        return; // Ignora linha de título
+                    }
+
                     let parts = line.split(/\s{2,}|\t/).map(p => p.trim()).filter(p => p.length > 0);
-                    if (parts.length < 5) return;
+                    
+                    if (parts.length < 5) {
+                        ignoredCount++;
+                        return;
+                    }
+                    
                     let unidadeRaw = parts[2] || '';
                     let statusRaw = parts[parts.length - 1] || 'Pendente';
-                    let isoDate = parts[1].includes('/') ? parts[1].split('/').reverse().join('-') : new Date().toISOString().split('T')[0];
+                    let isoDate = '';
+                    
+                    // Tratamento de data mais robusto
+                    const datePart = parts[1];
+                    if (datePart && datePart.includes('/')) {
+                        const [d, m, y] = datePart.split('/');
+                        // Garante formato YYYY-MM-DD
+                        if (d && m && y) isoDate = `${y}-${m}-${d}`;
+                    } else {
+                        isoDate = new Date().toISOString().split('T')[0];
+                    }
+
+                    // Evita duplicatas simples
+                    const isDuplicate = tasks.some(t => t.condominio === unidadeRaw && t.dataAnalise === isoDate);
+                    if (isDuplicate) {
+                        ignoredCount++;
+                        return;
+                    }
+
                     newTasks.push({
                         id: Date.now() + index,
                         condominio: unidadeRaw,
                         dataAnalise: isoDate,
-                        semanaDeTrabalho: 0,
+                        semanaDeTrabalho: parseInt(parts[0].replace(/\D/g,'')) || 0, // Tenta extrair número da semana
                         observacoes: '',
                         statusBackup: statusRaw.toLowerCase().includes('finalizado') ? 'Concluído' : 'Pendente',
                         statusAnalise: statusRaw.toLowerCase().includes('finalizado') ? 'Concluída' : 'Pendente',
-                        ocorrencia: 'Não', isExpanded: true, ocorrencias: []
+                        ocorrencia: 'Não', 
+                        isExpanded: true, 
+                        ocorrencias: []
                     });
                 });
-                if (newTasks.length > 0) { tasks.unshift(...newTasks); refreshUI(); document.getElementById('bulk-add-modal').classList.add('hidden'); showNotification(`${newTasks.length} importados.`); }
+
+                if (newTasks.length > 0) { 
+                    tasks.unshift(...newTasks); 
+                    refreshUI(); 
+                    document.getElementById('bulk-add-modal').classList.add('hidden'); 
+                    document.getElementById('bulk-input-area').value = ''; 
+                    showNotification(`${newTasks.length} análises importadas. (${ignoredCount} ignoradas/duplicadas)`); 
+                } else {
+                    showNotification('Nenhum dado novo importado. Verifique o formato ou duplicatas.');
+                }
             }
 
             function updateDashboard() {
