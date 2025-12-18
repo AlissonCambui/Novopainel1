@@ -562,12 +562,26 @@
                         isoDate = new Date().toISOString().split('T')[0];
                     }
 
-                    // Evita duplicatas simples
-                    const isDuplicate = tasks.some(t => t.condominio === unidadeRaw && t.dataAnalise === isoDate);
-                    if (isDuplicate) {
+                    // --- INICIO DO AJUSTE DE DUPLICIDADE (DUPLA CHECAGEM) ---
+                    
+                    // 1. Verifica se já existe no banco de dados (ignorando maiúsculas/minúsculas)
+                    const existsInDb = tasks.some(t => 
+                        t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && 
+                        t.dataAnalise === isoDate
+                    );
+
+                    // 2. Verifica se já existe NO PRÓPRIO LOTE sendo importado agora
+                    const existsInBatch = newTasks.some(t => 
+                        t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && 
+                        t.dataAnalise === isoDate
+                    );
+
+                    // Se existir em QUALQUER um dos dois lugares, é duplicado.
+                    if (existsInDb || existsInBatch) {
                         ignoredCount++;
                         return;
                     }
+                    // --- FIM DO AJUSTE ---
 
                     newTasks.push({
                         id: Date.now() + index,
