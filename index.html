@@ -257,7 +257,7 @@
     <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
             <h2 class="text-2xl font-bold mb-4">Importar Planilha</h2>
-            <p class="text-sm text-slate-600 mb-4 dark:text-slate-300">Cole os dados do Excel. Formato:<br><strong>Semana | Data | Unidade | OC | Colaborador | Status</strong></p>
+            <p class="text-sm text-slate-600 mb-4 dark:text-slate-300">Cole os dados do Excel. Formato:<br><strong>Semana | Data | Unidade | Status</strong></p>
             <form id="bulk-add-form">
                 <textarea id="bulk-input-area" rows="10" class="w-full border border-slate-300 rounded-lg p-2 mb-4 text-xs font-mono dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Cole aqui..."></textarea>
                 <div class="flex justify-end gap-2">
@@ -524,87 +524,78 @@
 
             function handleBulkAddSubmit(e) {
                 e.preventDefault();
-                const inputArea = document.getElementById('bulk-input-area').value.trim();
-                if (!inputArea) {
+                const inputArea = document.getElementById('bulk-input-area').value;
+                if (!inputArea.trim()) {
                     showNotification('Cole os dados da planilha na área de texto.');
                     return;
                 }
-                const lines = inputArea.split('\n').filter(line => line.trim().length > 0);
+
                 const newTasks = [];
                 let ignoredCount = 0;
+                let count = 0;
 
-                lines.forEach((line, index) => {
-                    // Detecção de cabeçalho: verifica se a linha contém palavras-chave típicas
-                    const lineLower = line.toLowerCase();
-                    if ((lineLower.includes('semana') || lineLower.includes('data') || lineLower.includes('dia')) && 
-                        (lineLower.includes('unidade') || lineLower.includes('colaborador') || lineLower.includes('status'))) {
-                        return; // Ignora linha de título
-                    }
+                // Regex para capturar o padrão da linha, mesmo sem quebras de linha claras
+                // Captura: Semana (Semana 53), Data (28/12/2025), Conteúdo do meio (Unidade+Colaborador), Status (Pendente/Concluído...)
+                const regex = /Semana\s*(\d+)\s*(\d{2}\/\d{2}\/\d{4})\s*(.*?)\s*(Pendente|Em Andamento|Concluído|Concluída|Em Análise|Finalizado|Não visualizar)/gi;
+                let match;
 
-                    let parts = line.split(/\s{2,}|\t/).map(p => p.trim()).filter(p => p.length > 0);
-                    
-                    if (parts.length < 5) {
-                        ignoredCount++;
-                        return;
-                    }
-                    
-                    let unidadeRaw = parts[2] || '';
-                    let statusRaw = parts[parts.length - 1] || 'Pendente';
-                    let isoDate = '';
-                    
-                    // Tratamento de data mais robusto
-                    const datePart = parts[1];
-                    if (datePart && datePart.includes('/')) {
-                        const [d, m, y] = datePart.split('/');
-                        // Garante formato YYYY-MM-DD
-                        if (d && m && y) isoDate = `${y}-${m}-${d}`;
-                    } else {
-                        isoDate = new Date().toISOString().split('T')[0];
-                    }
+                while ((match = regex.exec(inputArea)) !== null) {
+                    const semanaRaw = match[1];
+                    const dataRaw = match[2];
+                    const middleContent = match[3];
+                    const statusRaw = match[4];
 
-                    // --- INICIO DO AJUSTE DE DUPLICIDADE (DUPLA CHECAGEM) ---
-                    
+                    // Formatar data de DD/MM/YYYY para YYYY-MM-DD
+                    const [day, month, year] = dataRaw.split('/');
+                    const isoDate = `${year}-${month}-${day}`;
+
+                    // Limpar Nome da Unidade (Tentativa heurística de remover o nome do colaborador grudado no final)
+                    // Assume que o colaborador começa com Maiúscula seguida de minúsculas (Ex: "RESERVA BARRA FUNDAAlisson" -> Remove "Alisson")
+                    let unidadeClean = middleContent.replace(/[A-Z][a-z]+$/, '').trim();
+                    // Se a limpeza resultar em vazio (caso raro onde tudo foi removido), usa o original
+                    if (!unidadeClean) unidadeClean = middleContent.trim();
+
+                    // --- DUPLA CHECAGEM DE DUPLICIDADE ---
                     // 1. Verifica se já existe no banco de dados (ignorando maiúsculas/minúsculas)
                     const existsInDb = tasks.some(t => 
-                        t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && 
+                        t.condominio.toLowerCase().trim() === unidadeClean.toLowerCase() && 
                         t.dataAnalise === isoDate
                     );
 
                     // 2. Verifica se já existe NO PRÓPRIO LOTE sendo importado agora
                     const existsInBatch = newTasks.some(t => 
-                        t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && 
+                        t.condominio.toLowerCase().trim() === unidadeClean.toLowerCase() && 
                         t.dataAnalise === isoDate
                     );
 
-                    // Se existir em QUALQUER um dos dois lugares, é duplicado.
                     if (existsInDb || existsInBatch) {
                         ignoredCount++;
-                        return;
+                        continue;
                     }
-                    // --- FIM DO AJUSTE ---
 
                     newTasks.push({
-                        id: Date.now() + index,
-                        condominio: unidadeRaw,
+                        id: Date.now() + count, // Garante IDs únicos no lote
+                        condominio: unidadeClean,
                         dataAnalise: isoDate,
-                        semanaDeTrabalho: parseInt(parts[0].replace(/\D/g,'')) || 0, // Tenta extrair número da semana
+                        semanaDeTrabalho: parseInt(semanaRaw) || 0,
                         observacoes: '',
-                        statusBackup: statusRaw.toLowerCase().includes('finalizado') ? 'Concluído' : 'Pendente',
-                        statusAnalise: statusRaw.toLowerCase().includes('finalizado') ? 'Concluída' : 'Pendente',
+                        statusBackup: statusRaw.toLowerCase().includes('finalizado') || statusRaw.toLowerCase().includes('concluído') ? 'Concluído' : 'Pendente',
+                        statusAnalise: statusRaw.toLowerCase().includes('finalizado') || statusRaw.toLowerCase().includes('concluída') ? 'Concluída' : 'Pendente',
                         ocorrencia: 'Não', 
                         isExpanded: true, 
                         ocorrencias: []
                     });
-                });
+                    count++;
+                }
 
                 if (newTasks.length > 0) { 
                     tasks.unshift(...newTasks); 
                     refreshUI(); 
                     document.getElementById('bulk-add-modal').classList.add('hidden'); 
                     document.getElementById('bulk-input-area').value = ''; 
-                    showNotification(`${newTasks.length} análises importadas. (${ignoredCount} ignoradas/duplicadas)`); 
+                    showNotification(`${newTasks.length} análises importadas com sucesso! (${ignoredCount} duplicadas ignoradas)`); 
                 } else {
-                    showNotification('Nenhum dado novo importado. Verifique o formato ou duplicatas.');
+                    showNotification('Nenhum dado válido encontrado. Verifique o formato.');
                 }
             }
 
