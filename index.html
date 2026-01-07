@@ -54,11 +54,16 @@
             <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
         </header>
 
-        <!-- Resumo do Dashboard -->
-        <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+        <!-- Resumo do Dashboard - Ajustado para 5 colunas em telas grandes -->
+        <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
                 <p id="total-solicitacoes" class="text-3xl font-bold text-orange-600 mt-1">0</p>
+            </div>
+            <!-- NOVO CARD: PDVs Únicos -->
+            <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">PDVs Visualizados</h3>
+                <p id="total-pdvs-unicos" class="text-3xl font-bold text-blue-600 mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Backups Pendentes</h3>
@@ -385,7 +390,6 @@
                     const div = document.createElement('div');
                     div.className = 'ocorrencia-item-row p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center group dark:bg-slate-800 dark:border-slate-700';
                     
-                    // Adiciona badge se for inconclusiva
                     const inconclusivaBadge = ocor.inconclusiva 
                         ? `<span class="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-800">INCONCLUSIVA</span>` 
                         : '';
@@ -422,7 +426,6 @@
                     document.getElementById('add-ocorrencia-desc').value = item.desc;
                     document.getElementById('add-horario-inicial').value = item.horarioInicial;
                     document.getElementById('add-horario-final').value = item.horarioFinal;
-                    // Recupera o estado do checkbox
                     document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false;
                     
                     currentEditingTaskOcorrencias.splice(index, 1);
@@ -435,7 +438,6 @@
                 const cat = document.getElementById('add-ocorrencia-categoria').value;
                 const ini = document.getElementById('add-horario-inicial').value;
                 const fim = document.getElementById('add-horario-final').value;
-                // Captura estado do checkbox
                 const isInconclusiva = document.getElementById('add-ocorrencia-inconclusiva').checked;
 
                 if (desc) {
@@ -444,15 +446,14 @@
                         desc: desc, 
                         horarioInicial: ini, 
                         horarioFinal: fim,
-                        inconclusiva: isInconclusiva // Salva no objeto
+                        inconclusiva: isInconclusiva 
                     });
                     renderModalOcorrenciasList();
                     
-                    // Limpa os campos
                     document.getElementById('add-ocorrencia-desc').value = '';
                     document.getElementById('add-horario-inicial').value = '';
                     document.getElementById('add-horario-final').value = '';
-                    document.getElementById('add-ocorrencia-inconclusiva').checked = false; // Reseta checkbox
+                    document.getElementById('add-ocorrencia-inconclusiva').checked = false;
                 } else {
                     showNotification('Digite uma descrição.');
                 }
@@ -545,16 +546,29 @@
 
             function updateDashboard() {
                 const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
+                
                 const elTotal = document.getElementById('total-solicitacoes');
                 if (elTotal) elTotal.textContent = ft.length;
+                
+                // NOVO CÁLCULO DE PDVS ÚNICOS
+                const elUniquePdv = document.getElementById('total-pdvs-unicos');
+                if (elUniquePdv) {
+                    const uniquePdvs = new Set(ft.map(t => t.condominio.trim())).size;
+                    elUniquePdv.textContent = uniquePdvs;
+                }
+
                 const elBackups = document.getElementById('backups-pendentes');
                 if (elBackups) elBackups.textContent = ft.filter(t => t.statusBackup === 'Pendente').length;
+                
                 const elAnalises = document.getElementById('analises-pendentes');
                 if (elAnalises) elAnalises.textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
+                
                 const ct = ft.filter(t => t.statusAnalise === 'Concluída');
                 const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
+                
                 const elOcorrencias = document.getElementById('total-ocorrencias-semana');
                 if (elOcorrencias) elOcorrencias.textContent = totOc;
+                
                 const elProd = document.getElementById('produtividade-semanal');
                 if (elProd) elProd.textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
             }
@@ -664,7 +678,7 @@
             document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
             document.getElementById('add-task-btn').addEventListener('click', () => {
                 document.getElementById('task-form').reset();
-                document.getElementById('form-data-analise').value = formatDateForInput(new Date());
+                document.getElementById('form-data-analise').value = new Date().toISOString().split('T')[0];
                 document.getElementById('task-modal').classList.remove('hidden');
             });
             document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
@@ -675,7 +689,6 @@
             document.getElementById('actions-menu-btn').addEventListener('click', (e) => { e.stopPropagation(); actionsMenu.classList.toggle('hidden'); });
             document.addEventListener('click', (event) => { if (!document.getElementById('actions-menu-container').contains(event.target)) actionsMenu.classList.add('hidden'); });
             
-            // MENU AÇÕES - APENAS IMPORTAR E ARQUIVAR
             const modals = { 'bulk-add-btn': 'bulk-add-modal', 'archive-btn': 'archive-modal' };
             Object.keys(modals).forEach(k => {
                 const el = document.getElementById(k);
