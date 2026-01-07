@@ -105,17 +105,10 @@
                             Ações
                             <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
+                        <!-- MENU AÇÕES LIMPO -->
                         <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20 dark:bg-slate-700 dark:ring-slate-600">
                             <div class="py-1">
-                                <button id="priority-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Prioridades</button>
-                                <button id="planner-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Planejar Semana</button>
-                                <button id="period-analysis-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise por Período</button>
-                                <button id="annual-report-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise Anual</button>
-                                <button id="pdv-dashboard-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Painel do PDV</button>
-                                <div class="border-t border-slate-100 my-1 dark:border-slate-600"></div>
                                 <button id="bulk-add-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Importar Planilha</button>
-                                <button id="category-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Categorias</button>
-                                <button id="rename-condo-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Renomear</button>
                                 <button id="archive-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Arquivar</button>
                             </div>
                         </div>
@@ -238,8 +231,8 @@
                         </div>
                     </div>
                      <div class="mt-3">
-                        <label class="flex items-center">
-                            <input type="checkbox" id="add-ocorrencia-inconclusiva" class="h-4 w-4 text-orange-600 border-gray-300 rounded-lg focus:ring-orange-500">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="add-ocorrencia-inconclusiva" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 dark:bg-slate-700 dark:border-slate-600">
                             <span class="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300">Inconclusiva</span>
                         </label>
                     </div>
@@ -257,7 +250,7 @@
     <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
             <h2 class="text-2xl font-bold mb-4">Importar Planilha</h2>
-            <p class="text-sm text-slate-600 mb-4 dark:text-slate-300">Cole os dados do Excel. Formato:<br><strong>Semana | Data | Unidade | Status</strong></p>
+            <p class="text-sm text-slate-600 mb-4 dark:text-slate-300">Cole os dados do Excel. Formato:<br><strong>Semana | Data | Unidade | OC | Colaborador | Status</strong></p>
             <form id="bulk-add-form">
                 <textarea id="bulk-input-area" rows="10" class="w-full border border-slate-300 rounded-lg p-2 mb-4 text-xs font-mono dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Cole aqui..."></textarea>
                 <div class="flex justify-end gap-2">
@@ -270,24 +263,10 @@
 
     <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-[70]"><div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm text-center dark:bg-slate-800 dark:shadow-xl"><p id="notification-message" class="mb-4 text-lg text-slate-700 dark:text-slate-300"></p><button id="notification-close-btn" class="bg-orange-600 text-white px-6 py-2 rounded-lg">OK</button></div></div>
     
-    <div id="period-analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl">
-            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Análise por Período</h2><button id="period-analysis-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4 mb-4 dark:border-slate-700"><div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Início</label><input type="date" id="period-start-date" class="mt-1 block w-full border border-slate-300 rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></div><div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Fim</label><input type="date" id="period-end-date" class="mt-1 block w-full border border-slate-300 rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></div><div class="flex items-end"><button id="generate-report-btn" class="bg-orange-600 text-white font-semibold w-full px-4 py-2 rounded-lg hover:bg-orange-700">Gerar Relatório</button></div></div>
-            <div class="flex flex-wrap gap-2 mb-4"><button data-period="today" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg dark:bg-slate-700 dark:text-slate-100">Hoje</button><button data-period="this-week" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg dark:bg-slate-700 dark:text-slate-100">Esta Semana</button><button data-period="this-month" class="period-btn text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg dark:bg-slate-700 dark:text-slate-100">Este Mês</button></div>
-            <div id="period-results-content" class="flex-grow overflow-y-auto hidden"><section class="grid grid-cols-3 gap-4 mb-6"><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Dias</h3><p id="period-dias" class="text-3xl font-bold text-orange-600 mt-1">0</p></div><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">PDV</h3><p id="period-pdv" class="text-3xl font-bold text-orange-500 mt-1">0</p></div><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">OC</h3><p id="period-oc" class="text-3xl font-bold text-red-600 mt-1">0</p></div></section><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-slate-50 p-4 rounded-xl dark:bg-slate-900"><div class="chart-container" style="height:250px;"><canvas id="periodCategoryChart"></canvas></div></div><div class="bg-slate-50 p-4 rounded-xl dark:bg-slate-900"><div class="chart-container" style="height:250px;"><canvas id="periodChart"></canvas></div></div></div><div class="mt-6"><h3 class="font-semibold mb-2">Lista</h3><ul id="period-task-list" class="space-y-2 max-h-40 overflow-y-auto pr-2 bg-slate-50 p-2 rounded-lg dark:bg-slate-900"></ul></div></div>
-        </div>
-    </div>
-    
-    <div id="annual-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-6xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Relatório Anual</h2><button id="annual-report-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><div class="flex-grow overflow-y-auto"><section class="grid grid-cols-2 gap-4"><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Total Análises</h3><p id="annual-total-analises" class="text-3xl font-bold text-orange-600 mt-1">0</p></div><div class="bg-slate-100 p-4 rounded-xl text-center dark:bg-slate-700"><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">Total Ocorrências</h3><p id="annual-total-ocorrencias" class="text-3xl font-bold text-red-600 mt-1">0</p></div></section><div class="mt-4 chart-container"><canvas id="annualReportChart_Monthly"></canvas></div></div></div></div>
-    <div id="priority-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-2xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Prioridades</h2><button id="priority-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><ul id="priority-task-list" class="flex-grow overflow-y-auto space-y-2"></ul></div></div>
-    <div id="planner-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-lg flex flex-col dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Planejador</h2><form id="planner-form"><input type="number" id="planner-week-number" class="w-full border p-2 rounded-lg mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Semana Nº"><div id="planner-list-container" class="h-64 overflow-y-auto border p-2 rounded-lg mb-4"></div><div class="flex justify-end gap-2"><button type="button" id="planner-cancel-btn" class="bg-slate-200 px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></form></div></div>
-    <div id="pdv-dashboard-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-4xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl"><div class="flex justify-between mb-4"><h2 class="text-2xl font-bold">Painel PDV</h2><button id="pdv-dashboard-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button></div><div id="pdv-content" class="flex-grow overflow-y-auto"><div class="chart-container mb-4"><canvas id="pdvTrendChart"></canvas></div></div></div></div>
-    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Categorias</h2><div id="category-list-container" class="h-40 overflow-y-auto border p-2 mb-4 rounded-lg"></div><button id="category-close-btn" class="w-full bg-slate-200 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Fechar</button></div></div>
-    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Renomear</h2><form id="rename-form"><label>Antigo</label><select id="form-old-name" class="w-full border p-2 rounded-lg mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></select><label>Novo</label><input type="text" id="form-new-name" class="w-full border p-2 rounded-lg mb-4 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"><div class="flex justify-end gap-2"><button type="button" id="rename-cancel-btn" class="bg-slate-200 px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button><button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg">Salvar</button></div></form></div></div>
+    <!-- Modal Arquivar -->
     <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Arquivar</h2><form id="archive-form"><div class="space-y-2 mb-4"><button type="button" id="view-archive-btn" class="w-full bg-slate-500 text-white px-4 py-2 rounded-lg mb-4">Ver Arquivo</button><div class="flex gap-2"><button type="button" id="archive-cancel-btn" class="bg-slate-200 w-full px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></div></form></div></div>
     
-    <!-- Modal Arquivados -->
+    <!-- Modal Arquivados (Visualizar) -->
     <div id="view-archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:shadow-xl">
             <div class="flex justify-between items-center mb-4">
@@ -316,45 +295,21 @@
             'Não visualizar': 'bg-slate-100 text-slate-500'
         };
 
-        let ocorrenciasChart, annualMonthlyChart, pdvTrendChart, periodChart, periodCategoryChart;
+        let ocorrenciasChart;
 
         function updateChartsTheme() {
             const isDark = true; 
             const fontColor = '#f1f5f9';
             const commonOptions = { scales: { y: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } }, x: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } } }, plugins: { legend: { labels: { color: fontColor } } } };
             
-            // Adicionado verificação de null para evitar erros se os charts não existirem
             if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
-            if (periodChart) { Object.assign(periodChart.options, commonOptions); periodChart.update(); }
-            if (periodCategoryChart) { Object.assign(periodCategoryChart.options.plugins.legend.labels, { color: fontColor }); periodCategoryChart.update(); }
         }
 
         function setupCharts() {
-            // Verificação de segurança para os elementos canvas
             const ocorrenciasEl = document.getElementById('ocorrenciasChart');
             if (ocorrenciasEl) {
                 const ctx = ocorrenciasEl.getContext('2d');
                 ocorrenciasChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
-            }
-
-            const annualEl = document.getElementById('annualReportChart_Monthly');
-            if (annualEl) {
-                annualMonthlyChart = new Chart(annualEl.getContext('2d'), { type: 'bar', data: { labels: ['Jan','Fev'], datasets: [{ label: 'Mensal', data: [0,0], backgroundColor: 'red' }] }, options: { maintainAspectRatio: false } });
-            }
-
-            const pdvEl = document.getElementById('pdvTrendChart');
-            if (pdvEl) {
-                pdvTrendChart = new Chart(pdvEl.getContext('2d'), { type: 'line', data: { labels: [], datasets: [{ label: 'Tendência', data: [] }] }, options: { maintainAspectRatio: false } });
-            }
-
-            const periodEl = document.getElementById('periodChart');
-            if (periodEl) {
-                periodChart = new Chart(periodEl.getContext('2d'), { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
-            }
-
-            const periodCatEl = document.getElementById('periodCategoryChart');
-            if (periodCatEl) {
-                periodCategoryChart = new Chart(periodCatEl.getContext('2d'), { type: 'pie', data: { labels: [], datasets: [{ label: 'Ocorrências por Categoria', data: [], backgroundColor: ['#ea580c', '#f97316', '#f7b41e', '#fbbf24', '#fcd34d'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
             }
         }
 
@@ -362,11 +317,8 @@
             let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
             let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
             let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
-            
-            // Variável temporária para edição de ocorrências
             let currentEditingTaskOcorrencias = [];
 
-            // Lógica do Modal de Confirmação Personalizado
             const confirmModal = document.getElementById('custom-confirm-modal');
             const confirmTitle = document.getElementById('confirm-modal-title');
             const confirmMsg = document.getElementById('confirm-modal-msg');
@@ -405,12 +357,14 @@
             const formatDate = (dateString) => {
                 if (!dateString) return 'N/A';
                 const date = new Date(dateString + 'T00:00:00');
-                date.setDate(date.getDate()); // Ajuste fuso
+                date.setDate(date.getDate()); 
                 return date.toLocaleDateString('pt-BR');
             };
             
+            const formatDateForInput = (date) => date.toISOString().split('T')[0];
+            
             const populateCategorySelect = (selectElement) => {
-                if (!selectElement) return; // Segurança extra
+                if (!selectElement) return;
                 selectElement.innerHTML = '';
                 categories.forEach(cat => {
                     const option = document.createElement('option');
@@ -420,43 +374,43 @@
                 });
             };
 
-            // RENDERIZAÇÃO DA LISTA DE OCORRÊNCIAS NO MODAL
             function renderModalOcorrenciasList() {
                 const list = document.getElementById('ocorrencia-list');
                 list.innerHTML = '';
-                
                 if (currentEditingTaskOcorrencias.length === 0) {
                     list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>';
                     return;
                 }
-
                 currentEditingTaskOcorrencias.forEach((ocor, index) => {
                     const div = document.createElement('div');
                     div.className = 'ocorrencia-item-row p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center group dark:bg-slate-800 dark:border-slate-700';
+                    
+                    // Adiciona badge se for inconclusiva
+                    const inconclusivaBadge = ocor.inconclusiva 
+                        ? `<span class="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-800">INCONCLUSIVA</span>` 
+                        : '';
+
                     div.innerHTML = `
                         <div class="flex-grow">
-                            <p class="font-bold text-sm text-slate-800 dark:text-slate-100">${ocor.categoria}</p>
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center flex-wrap">
+                                ${ocor.categoria}
+                                ${inconclusivaBadge}
+                            </p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">${ocor.desc}</p>
                             <p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-1">${ocor.horarioInicial} - ${ocor.horarioFinal}</p>
                         </div>
                         <div class="flex gap-2 occ-actions">
-                            <button type="button" data-index="${index}" class="edit-item-btn text-blue-500 hover:text-blue-700" title="Editar">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                            </button>
-                            <button type="button" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700" title="Remover">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
+                            <button type="button" data-index="${index}" class="edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                            <button type="button" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700" title="Remover"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                         </div>
                     `;
                     list.appendChild(div);
                 });
             }
 
-            // Ações dentro do modal de ocorrências
             document.getElementById('ocorrencia-list').addEventListener('click', (e) => {
                 const deleteBtn = e.target.closest('.delete-item-btn');
                 const editBtn = e.target.closest('.edit-item-btn');
-
                 if (deleteBtn) {
                     const index = parseInt(deleteBtn.dataset.index);
                     currentEditingTaskOcorrencias.splice(index, 1);
@@ -468,6 +422,9 @@
                     document.getElementById('add-ocorrencia-desc').value = item.desc;
                     document.getElementById('add-horario-inicial').value = item.horarioInicial;
                     document.getElementById('add-horario-final').value = item.horarioFinal;
+                    // Recupera o estado do checkbox
+                    document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false;
+                    
                     currentEditingTaskOcorrencias.splice(index, 1);
                     renderModalOcorrenciasList();
                 }
@@ -478,12 +435,24 @@
                 const cat = document.getElementById('add-ocorrencia-categoria').value;
                 const ini = document.getElementById('add-horario-inicial').value;
                 const fim = document.getElementById('add-horario-final').value;
+                // Captura estado do checkbox
+                const isInconclusiva = document.getElementById('add-ocorrencia-inconclusiva').checked;
+
                 if (desc) {
-                    currentEditingTaskOcorrencias.push({ categoria: cat, desc: desc, horarioInicial: ini, horarioFinal: fim });
+                    currentEditingTaskOcorrencias.push({ 
+                        categoria: cat, 
+                        desc: desc, 
+                        horarioInicial: ini, 
+                        horarioFinal: fim,
+                        inconclusiva: isInconclusiva // Salva no objeto
+                    });
                     renderModalOcorrenciasList();
+                    
+                    // Limpa os campos
                     document.getElementById('add-ocorrencia-desc').value = '';
                     document.getElementById('add-horario-inicial').value = '';
                     document.getElementById('add-horario-final').value = '';
+                    document.getElementById('add-ocorrencia-inconclusiva').checked = false; // Reseta checkbox
                 } else {
                     showNotification('Digite uma descrição.');
                 }
@@ -524,99 +493,68 @@
 
             function handleBulkAddSubmit(e) {
                 e.preventDefault();
-                const inputArea = document.getElementById('bulk-input-area').value;
-                if (!inputArea.trim()) {
-                    showNotification('Cole os dados da planilha na área de texto.');
-                    return;
-                }
-
+                const inputArea = document.getElementById('bulk-input-area').value.trim();
+                if (!inputArea) { showNotification('Cole os dados.'); return; }
+                const lines = inputArea.split('\n').filter(line => line.trim().length > 0);
                 const newTasks = [];
                 let ignoredCount = 0;
-                let count = 0;
 
-                // Regex para capturar o padrão da linha, mesmo sem quebras de linha claras
-                // Captura: Semana (Semana 53), Data (28/12/2025), Conteúdo do meio (Unidade+Colaborador), Status (Pendente/Concluído...)
-                const regex = /Semana\s*(\d+)\s*(\d{2}\/\d{2}\/\d{4})\s*(.*?)\s*(Pendente|Em Andamento|Concluído|Concluída|Em Análise|Finalizado|Não visualizar)/gi;
-                let match;
+                lines.forEach((line, index) => {
+                    const lineLower = line.toLowerCase();
+                    if ((lineLower.includes('semana') || lineLower.includes('data')) && (lineLower.includes('unidade') || lineLower.includes('status'))) return;
 
-                while ((match = regex.exec(inputArea)) !== null) {
-                    const semanaRaw = match[1];
-                    const dataRaw = match[2];
-                    const middleContent = match[3];
-                    const statusRaw = match[4];
-
-                    // Formatar data de DD/MM/YYYY para YYYY-MM-DD
-                    const [day, month, year] = dataRaw.split('/');
-                    const isoDate = `${year}-${month}-${day}`;
-
-                    // Limpar Nome da Unidade (Tentativa heurística de remover o nome do colaborador grudado no final)
-                    // Assume que o colaborador começa com Maiúscula seguida de minúsculas (Ex: "RESERVA BARRA FUNDAAlisson" -> Remove "Alisson")
-                    let unidadeClean = middleContent.replace(/[A-Z][a-z]+$/, '').trim();
-                    // Se a limpeza resultar em vazio (caso raro onde tudo foi removido), usa o original
-                    if (!unidadeClean) unidadeClean = middleContent.trim();
-
-                    // --- DUPLA CHECAGEM DE DUPLICIDADE ---
-                    // 1. Verifica se já existe no banco de dados (ignorando maiúsculas/minúsculas)
-                    const existsInDb = tasks.some(t => 
-                        t.condominio.toLowerCase().trim() === unidadeClean.toLowerCase() && 
-                        t.dataAnalise === isoDate
-                    );
-
-                    // 2. Verifica se já existe NO PRÓPRIO LOTE sendo importado agora
-                    const existsInBatch = newTasks.some(t => 
-                        t.condominio.toLowerCase().trim() === unidadeClean.toLowerCase() && 
-                        t.dataAnalise === isoDate
-                    );
-
-                    if (existsInDb || existsInBatch) {
-                        ignoredCount++;
-                        continue;
+                    let parts = line.split(/\s{2,}|\t/).map(p => p.trim()).filter(p => p.length > 0);
+                    if (parts.length < 5) { ignoredCount++; return; }
+                    
+                    let unidadeRaw = parts[2] || '';
+                    let statusRaw = parts[parts.length - 1] || 'Pendente';
+                    let isoDate = '';
+                    if (parts[1] && parts[1].includes('/')) {
+                        const [d, m, y] = parts[1].split('/');
+                        if (d && m && y) isoDate = `${y}-${m}-${d}`;
+                    } else {
+                        isoDate = new Date().toISOString().split('T')[0];
                     }
 
+                    const existsInDb = tasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
+                    const existsInBatch = newTasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
+
+                    if (existsInDb || existsInBatch) { ignoredCount++; return; }
+
                     newTasks.push({
-                        id: Date.now() + count, // Garante IDs únicos no lote
-                        condominio: unidadeClean,
+                        id: Date.now() + index,
+                        condominio: unidadeRaw,
                         dataAnalise: isoDate,
-                        semanaDeTrabalho: parseInt(semanaRaw) || 0,
+                        semanaDeTrabalho: parseInt(parts[0].replace(/\D/g,'')) || 0,
                         observacoes: '',
-                        statusBackup: statusRaw.toLowerCase().includes('finalizado') || statusRaw.toLowerCase().includes('concluído') ? 'Concluído' : 'Pendente',
-                        statusAnalise: statusRaw.toLowerCase().includes('finalizado') || statusRaw.toLowerCase().includes('concluída') ? 'Concluída' : 'Pendente',
-                        ocorrencia: 'Não', 
-                        isExpanded: true, 
-                        ocorrencias: []
+                        statusBackup: statusRaw.toLowerCase().includes('finalizado') ? 'Concluído' : 'Pendente',
+                        statusAnalise: statusRaw.toLowerCase().includes('finalizado') ? 'Concluída' : 'Pendente',
+                        ocorrencia: 'Não', isExpanded: true, ocorrencias: []
                     });
-                    count++;
-                }
+                });
 
                 if (newTasks.length > 0) { 
-                    tasks.unshift(...newTasks); 
-                    refreshUI(); 
+                    tasks.unshift(...newTasks); refreshUI(); 
                     document.getElementById('bulk-add-modal').classList.add('hidden'); 
                     document.getElementById('bulk-input-area').value = ''; 
-                    showNotification(`${newTasks.length} análises importadas com sucesso! (${ignoredCount} duplicadas ignoradas)`); 
+                    showNotification(`${newTasks.length} análises importadas. (${ignoredCount} duplicadas/ignoradas)`); 
                 } else {
-                    showNotification('Nenhum dado válido encontrado. Verifique o formato.');
+                    showNotification('Nenhum dado importado.');
                 }
             }
 
             function updateDashboard() {
                 const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
-                
                 const elTotal = document.getElementById('total-solicitacoes');
                 if (elTotal) elTotal.textContent = ft.length;
-                
                 const elBackups = document.getElementById('backups-pendentes');
                 if (elBackups) elBackups.textContent = ft.filter(t => t.statusBackup === 'Pendente').length;
-                
                 const elAnalises = document.getElementById('analises-pendentes');
                 if (elAnalises) elAnalises.textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
-                
                 const ct = ft.filter(t => t.statusAnalise === 'Concluída');
                 const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
-                
                 const elOcorrencias = document.getElementById('total-ocorrencias-semana');
                 if (elOcorrencias) elOcorrencias.textContent = totOc;
-                
                 const elProd = document.getElementById('produtividade-semanal');
                 if (elProd) elProd.textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
             }
@@ -637,6 +575,9 @@
             }
 
             function renderTasks() {
+                const list = document.getElementById('task-list');
+                if (!list) return;
+                
                 const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
                 const filtroBackup = document.getElementById('filtro-backup').value;
                 const filtroAnalise = document.getElementById('filtro-analise').value;
@@ -644,9 +585,6 @@
                 if (filtroBackup) filtered = filtered.filter(t => t.statusBackup === filtroBackup);
                 if (filtroAnalise) filtered = filtered.filter(t => t.statusAnalise === filtroAnalise);
 
-                const list = document.getElementById('task-list');
-                if (!list) return; // Segurança extra
-                
                 list.innerHTML = '';
                 if(filtered.length === 0) { list.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`; return; }
 
@@ -659,7 +597,6 @@
                     const ocCount = task.ocorrencias ? task.ocorrencias.length : 0;
                     const badge = ocCount > 0 ? `<div class="mt-1"><span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded-lg border border-red-300 dark:bg-red-900 dark:text-red-100 dark:border-red-700">OCs: ${ocCount}</span></div>` : '';
                     const isCollapsed = !task.isExpanded;
-                    
                     let editBtnHTML = (task.statusAnalise !== 'Arquivado') ? `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">${task.statusAnalise === 'Concluída' ? 'Ver/Editar Ocorrências' : 'Registrar Ocorrências'}</button>` : '';
                     let obsHTML = task.observacoes ? `<div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700"><p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs:</p><p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p></div>` : '';
 
@@ -667,12 +604,8 @@
                         <div class="flex justify-between items-start">
                             <h3 class="font-bold text-lg flex-1">${task.condominio}</h3>
                             <div class="flex items-center gap-2">
-                                <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-orange-600 font-bold text-lg p-1" title="Arquivar">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-                                </button>
-                                <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg p-1" title="Excluir">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                </button>
+                                <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-orange-600 font-bold text-lg p-1" title="Arquivar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg></button>
+                                <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg p-1" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                             </div>
                         </div>
                         <div class="flex justify-between items-center mt-2">
@@ -731,7 +664,7 @@
             document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
             document.getElementById('add-task-btn').addEventListener('click', () => {
                 document.getElementById('task-form').reset();
-                document.getElementById('form-data-analise').value = new Date().toISOString().split('T')[0];
+                document.getElementById('form-data-analise').value = formatDateForInput(new Date());
                 document.getElementById('task-modal').classList.remove('hidden');
             });
             document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
@@ -742,10 +675,14 @@
             document.getElementById('actions-menu-btn').addEventListener('click', (e) => { e.stopPropagation(); actionsMenu.classList.toggle('hidden'); });
             document.addEventListener('click', (event) => { if (!document.getElementById('actions-menu-container').contains(event.target)) actionsMenu.classList.add('hidden'); });
             
-            const modals = { 'bulk-add-btn': 'bulk-add-modal', 'category-btn': 'category-modal', 'rename-condo-btn': 'rename-modal', 'archive-btn': 'archive-modal', 'period-analysis-btn': 'period-analysis-modal', 'annual-report-btn': 'annual-report-modal', 'priority-btn': 'priority-modal', 'planner-btn': 'planner-modal', 'pdv-dashboard-btn': 'pdv-dashboard-modal' };
-            Object.keys(modals).forEach(k => document.getElementById(k).addEventListener('click', () => { actionsMenu.classList.add('hidden'); document.getElementById(modals[k]).classList.remove('hidden'); }));
+            // MENU AÇÕES - APENAS IMPORTAR E ARQUIVAR
+            const modals = { 'bulk-add-btn': 'bulk-add-modal', 'archive-btn': 'archive-modal' };
+            Object.keys(modals).forEach(k => {
+                const el = document.getElementById(k);
+                if(el) el.addEventListener('click', () => { actionsMenu.classList.add('hidden'); document.getElementById(modals[k]).classList.remove('hidden'); });
+            });
             
-            const closeIds = ['bulk-cancel-btn', 'category-close-btn', 'rename-cancel-btn', 'archive-cancel-btn', 'period-analysis-close-btn', 'annual-report-close-btn', 'priority-close-btn', 'planner-cancel-btn', 'pdv-dashboard-close-btn', 'view-archive-close-btn', 'view-archive-close-footer-btn', 'notification-close-btn', 'ocorrencia-cancel-btn'];
+            const closeIds = ['bulk-cancel-btn', 'archive-cancel-btn', 'view-archive-close-btn', 'view-archive-close-footer-btn', 'notification-close-btn', 'ocorrencia-cancel-btn'];
             closeIds.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.addEventListener('click', () => el.closest('.fixed').classList.add('hidden'));
