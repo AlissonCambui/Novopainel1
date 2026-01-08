@@ -550,10 +550,13 @@
                 const elTotal = document.getElementById('total-solicitacoes');
                 if (elTotal) elTotal.textContent = ft.length;
                 
-                // NOVO CÁLCULO DE PDVS ÚNICOS
+                // CÁLCULO DE PDVS ÚNICOS (SOMENTE CONCLUÍDOS)
                 const elUniquePdv = document.getElementById('total-pdvs-unicos');
                 if (elUniquePdv) {
-                    const uniquePdvs = new Set(ft.map(t => t.condominio.trim())).size;
+                    // Filtra apenas as tarefas com status 'Concluída'
+                    const concludedTasks = ft.filter(t => t.statusAnalise === 'Concluída');
+                    // Cria um Set com os nomes dos condomínios para remover duplicatas
+                    const uniquePdvs = new Set(concludedTasks.map(t => t.condominio.trim())).size;
                     elUniquePdv.textContent = uniquePdvs;
                 }
 
