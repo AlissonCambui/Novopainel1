@@ -47,9 +47,6 @@
     <div class="container mx-auto p-4 md:p-6 lg:p-8">
         
         <header class="mb-8 text-center">
-            <div class="text-4xl font-extrabold mb-2 tracking-tight" style="font-family: 'Arial Black', Arial, sans-serif;">
-                <span style="color: #f26324;">vend</span><span style="color: #f7b41e;">Perto</span>
-            </div>
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Painel de Monitoramento</h1>
             <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
         </header>
@@ -321,7 +318,10 @@
         </div>
     </div>
 
+    <input type="file" id="restore-input" class="hidden" accept=".json">
+
     <script>
+        // Objeto de classes CSS para os status
         const statusClasses = {
             'Pendente': 'bg-amber-100 text-amber-600',
             'Em Andamento': 'bg-orange-100 text-orange-600',
@@ -331,23 +331,47 @@
             'Não visualizar': 'bg-slate-100 text-slate-500'
         };
 
+        // Variáveis Chart.js - Declaradas para escopo global
         let ocorrenciasChart;
 
+        // --- FUNÇÕES DE LAYOUT E CHARTS ---
+        
         function updateChartsTheme() {
             const isDark = true; 
-            const fontColor = '#f1f5f9';
-            const commonOptions = { scales: { y: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } }, x: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } } }, plugins: { legend: { labels: { color: fontColor } } } };
-            
+            const fontColor = '#f1f5f9'; // slate-100 
+
+            const commonOptions = {
+                scales: {
+                    y: {
+                        ticks: { color: fontColor },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        title: { color: fontColor }
+                    },
+                    x: {
+                        ticks: { color: fontColor },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        title: { color: fontColor }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: fontColor }
+                    }
+                }
+            };
+
             if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
         }
 
         function setupCharts() {
-            const ocorrenciasEl = document.getElementById('ocorrenciasChart');
-            if (ocorrenciasEl) {
-                const ctx = ocorrenciasEl.getContext('2d');
-                ocorrenciasChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
-            }
+            const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
+            ocorrenciasChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(249, 115, 22, 0.6)' }] },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
         }
+
 
         document.addEventListener('DOMContentLoaded', () => {
             let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
@@ -355,7 +379,7 @@
             let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
             let currentEditingTaskOcorrencias = [];
 
-            // --- DEFINIÇÃO DE FUNÇÕES NO TOPO PARA EVITAR REFERENCE ERRORS ---
+            // --- 1. DEFINIÇÃO DE TODAS AS FUNÇÕES (HOISTING SEGURO) ---
 
             function saveTasks() {
                 localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
@@ -374,7 +398,7 @@
             function formatDate(dateString) {
                 if (!dateString) return 'N/A';
                 const date = new Date(dateString + 'T00:00:00');
-                date.setDate(date.getDate()); 
+                date.setDate(date.getDate()); // Ajuste fuso
                 return date.toLocaleDateString('pt-BR');
             }
             
@@ -406,6 +430,7 @@
             }
 
             function updateDashboard() {
+                // Filtra apenas ativas para o dashboard
                 const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
                 
                 const elTotal = document.getElementById('total-solicitacoes');
@@ -442,9 +467,13 @@
                     }
                     return acc;
                 }, {});
+                
+                const labels = Object.keys(dataByCondo);
+                const data = Object.values(dataByCondo);
+                
                 if (ocorrenciasChart) {
-                    ocorrenciasChart.data.labels = Object.keys(dataByCondo);
-                    ocorrenciasChart.data.datasets[0].data = Object.values(dataByCondo);
+                    ocorrenciasChart.data.labels = labels;
+                    ocorrenciasChart.data.datasets[0].data = data;
                     ocorrenciasChart.update();
                 }
             }
@@ -456,11 +485,12 @@
                 const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
                 const filtroBackup = document.getElementById('filtro-backup').value;
                 const filtroAnalise = document.getElementById('filtro-analise').value;
+
                 let filtered = tasks.filter(t => t.condominio.toLowerCase().includes(filtroCond));
                 if (filtroBackup) filtered = filtered.filter(t => t.statusBackup === filtroBackup);
                 if (filtroAnalise) filtered = filtered.filter(t => t.statusAnalise === filtroAnalise);
 
-                // --- ORDENAÇÃO ALFABÉTICA (IMPLEMENTADA AQUI) ---
+                // Ordenação Alfabética
                 filtered.sort((a, b) => a.condominio.localeCompare(b.condominio));
 
                 list.innerHTML = '';
@@ -578,6 +608,39 @@
                 });
             }
 
+            function renderCompletedReport() {
+                const tbody = document.getElementById('completed-report-list');
+                const search = document.getElementById('completed-report-search').value.toLowerCase();
+                
+                // Filtra apenas as concluídas da lista de TAREFAS ATIVAS (tasks), ignorando arquivados
+                const completed = tasks.filter(t => 
+                    t.statusAnalise === 'Concluída' && 
+                    (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search))
+                );
+
+                completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
+
+                tbody.innerHTML = '';
+
+                if (completed.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`;
+                    return;
+                }
+
+                completed.forEach(t => {
+                    const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
+                    const row = `
+                        <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600">
+                            <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap dark:text-white">${t.condominio}</td>
+                            <td class="px-4 py-3">${formatDate(t.dataAnalise)}</td>
+                            <td class="px-4 py-3 text-center">${ocCount}</td>
+                            <td class="px-4 py-3 text-right text-emerald-500 font-bold">Concluída</td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
             function handleTaskSubmit(e) {
                 e.preventDefault();
                 const condominio = document.getElementById('form-condominio').value;
@@ -650,44 +713,7 @@
                 }
             }
 
-            // --- NOVA FUNÇÃO: RENDERIZAR RELATÓRIO DE CONCLUÍDAS ---
-            function renderCompletedReport() {
-                const tbody = document.getElementById('completed-report-list');
-                const search = document.getElementById('completed-report-search').value.toLowerCase();
-                
-                // Filtra apenas as concluídas (da lista principal 'tasks', ou seja, não arquivadas)
-                const completed = tasks.filter(t => 
-                    t.statusAnalise === 'Concluída' && 
-                    (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search))
-                );
-
-                // Ordenação Alfabética também aqui para consistência
-                completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
-
-                tbody.innerHTML = '';
-
-                if (completed.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`;
-                    return;
-                }
-
-                completed.forEach(t => {
-                    const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
-                    const row = `
-                        <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600">
-                            <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap dark:text-white">${t.condominio}</td>
-                            <td class="px-4 py-3">${formatDate(t.dataAnalise)}</td>
-                            <td class="px-4 py-3 text-center">${ocCount}</td>
-                            <td class="px-4 py-3 text-right text-emerald-500 font-bold">Concluída</td>
-                        </tr>
-                    `;
-                    tbody.insertAdjacentHTML('beforeend', row);
-                });
-            }
-
-            // --- FIM DA DEFINIÇÃO DE FUNÇÕES ---
-
-            // --- LÓGICA DE MODAL CONFIRM ---
+            // --- 2. MODAL CONFIRM LOGIC ---
             const confirmModal = document.getElementById('custom-confirm-modal');
             const confirmTitle = document.getElementById('confirm-modal-title');
             const confirmMsg = document.getElementById('confirm-modal-msg');
@@ -713,7 +739,7 @@
                 currentConfirmCallback = null;
             });
 
-            // --- LISTENERS ---
+            // --- 3. EVENT LISTENERS ---
 
             document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
             document.getElementById('filtro-backup').addEventListener('change', refreshUI); 
@@ -746,8 +772,6 @@
                     el.addEventListener('click', () => { 
                         actionsMenu.classList.add('hidden'); 
                         document.getElementById(modals[k]).classList.remove('hidden');
-                        
-                        // Se for o botão de relatório, renderiza a lista na hora
                         if (k === 'completed-report-btn') {
                             document.getElementById('completed-report-search').value = '';
                             renderCompletedReport();
@@ -756,7 +780,6 @@
                 }
             });
             
-            // Listener de busca do relatório
             const reportSearch = document.getElementById('completed-report-search');
             if (reportSearch) reportSearch.addEventListener('input', renderCompletedReport);
 
@@ -775,23 +798,29 @@
             document.getElementById('archive-search-input').addEventListener('input', renderArchivedList);
             
             document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
-                const unarchive = e.target.closest('.unarchive-btn');
-                const del = e.target.closest('.delete-archive-btn');
-                if (unarchive) {
+                const unarchiveBtn = e.target.closest('.unarchive-btn');
+                const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
+
+                if (unarchiveBtn) {
+                    const id = unarchiveBtn.dataset.id;
                     showConfirm('Desarquivar', 'Restaurar esta análise para o quadro principal?', () => {
-                        const id = unarchive.dataset.id;
-                        const idx = archivedTasks.findIndex(t => t.id == id);
-                        if (idx > -1) {
-                            tasks.unshift(archivedTasks[idx]);
-                            archivedTasks.splice(idx, 1);
-                            refreshUI(); renderArchivedList();
+                        const index = archivedTasks.findIndex(t => t.id == id);
+                        if (index > -1) {
+                            const taskToRestore = archivedTasks[index];
+                            archivedTasks.splice(index, 1);
+                            tasks.unshift(taskToRestore); 
+                            saveTasks();
+                            refreshUI(); 
+                            renderArchivedList(); 
                             showNotification('Análise restaurada.');
                         }
                     });
-                } else if (del) {
+                } else if (deleteArchiveBtn) {
+                    const id = deleteArchiveBtn.dataset.id;
                     showConfirm('Excluir do Arquivo', 'Excluir permanentemente esta análise?', () => {
-                        archivedTasks = archivedTasks.filter(t => t.id != del.dataset.id);
-                        saveTasks(); renderArchivedList();
+                        archivedTasks = archivedTasks.filter(t => t.id != id);
+                        saveTasks();
+                        renderArchivedList();
                     });
                 }
             });
@@ -826,9 +855,11 @@
                     const t = tasks.find(x => x.id == editOcBtn.dataset.id);
                     if(t) {
                         document.getElementById('ocorrencia-task-id').value = t.id;
-                        populateCategorySelect(document.getElementById('add-ocorrencia-categoria'));
+                        const list = document.getElementById('ocorrencia-list');
+                        list.innerHTML = '';
                         currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || []));
                         renderModalOcorrenciasList();
+                        populateCategorySelect(document.getElementById('add-ocorrencia-categoria'));
                         document.getElementById('add-ocorrencia-desc').value = ''; 
                         document.getElementById('ocorrencia-modal').classList.remove('hidden');
                     }
@@ -846,6 +877,67 @@
                 }
             });
 
+            document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
+                const desc = document.getElementById('add-ocorrencia-desc').value;
+                const cat = document.getElementById('add-ocorrencia-categoria').value;
+                const ini = document.getElementById('add-horario-inicial').value;
+                const fim = document.getElementById('add-horario-final').value;
+                const isInconclusiva = document.getElementById('add-ocorrencia-inconclusiva').checked;
+                
+                if (desc) {
+                    currentEditingTaskOcorrencias.push({ 
+                        categoria: cat, 
+                        desc: desc, 
+                        horarioInicial: ini, 
+                        horarioFinal: fim,
+                        inconclusiva: isInconclusiva 
+                    });
+                    renderModalOcorrenciasList();
+                    
+                    document.getElementById('add-ocorrencia-desc').value = '';
+                    document.getElementById('add-horario-inicial').value = '';
+                    document.getElementById('add-horario-final').value = '';
+                    document.getElementById('add-ocorrencia-inconclusiva').checked = false;
+                }
+            });
+
+            document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const taskId = document.getElementById('ocorrencia-task-id').value;
+                const task = tasks.find(t => t.id == taskId);
+                if (task) {
+                    task.ocorrencias = [...currentEditingTaskOcorrencias];
+                    task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não';
+                    refreshUI();
+                    document.getElementById('ocorrencia-modal').classList.add('hidden');
+                    showNotification('Ocorrências atualizadas com sucesso.');
+                }
+            });
+            
+            document.getElementById('ocorrencia-cancel-btn').addEventListener('click', () => document.getElementById('ocorrencia-modal').classList.add('hidden'));
+            
+            document.getElementById('ocorrencia-list').addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-item-btn');
+                const editBtn = e.target.closest('.edit-item-btn');
+
+                if (deleteBtn) {
+                    const index = parseInt(deleteBtn.dataset.index);
+                    currentEditingTaskOcorrencias.splice(index, 1);
+                    renderModalOcorrenciasList();
+                } else if (editBtn) {
+                    const index = parseInt(editBtn.dataset.index);
+                    const item = currentEditingTaskOcorrencias[index];
+                    document.getElementById('add-ocorrencia-categoria').value = item.categoria;
+                    document.getElementById('add-ocorrencia-desc').value = item.desc;
+                    document.getElementById('add-horario-inicial').value = item.horarioInicial;
+                    document.getElementById('add-horario-final').value = item.horarioFinal;
+                    document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false;
+                    currentEditingTaskOcorrencias.splice(index, 1);
+                    renderModalOcorrenciasList();
+                }
+            });
+
+            // Inicialização
             setupCharts();
             refreshUI();
         });
