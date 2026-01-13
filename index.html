@@ -94,7 +94,7 @@
                     
                     <input type="date" id="filtro-data" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                     
-                    <!-- NOVO FILTRO: DIA DA SEMANA -->
+                    <!-- FILTRO: DIA DA SEMANA -->
                     <select id="filtro-dia-semana" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                         <option value="">Dia da Semana (Todos)</option>
                         <option value="1">Segunda-feira</option>
@@ -134,6 +134,7 @@
                             Ações
                             <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
+                        <!-- MENU AÇÕES -->
                         <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20 dark:bg-slate-700 dark:ring-slate-600">
                             <div class="py-1">
                                 <button id="bulk-add-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Importar Planilha</button>
@@ -354,341 +355,285 @@
     <input type="file" id="restore-input" class="hidden" accept=".json">
 
     <script>
-        // Objeto de classes CSS para os status
-        const statusClasses = {
-            'Pendente': 'bg-amber-100 text-amber-600',
-            'Em Andamento': 'bg-orange-100 text-orange-600',
-            'Em Análise': 'bg-orange-100 text-orange-600',
-            'Concluído': 'bg-emerald-100 text-emerald-600',
-            'Concluída': 'bg-emerald-100 text-emerald-600',
-            'Não visualizar': 'bg-slate-100 text-slate-500'
-        };
-
-        // Variáveis Chart.js - Declaradas para escopo global
-        let ocorrenciasChart;
-
-        // --- FUNÇÕES DE LAYOUT E CHARTS ---
-        
-        function updateChartsTheme() {
-            const isDark = true; 
-            const fontColor = '#f1f5f9'; // slate-100 
-
-            const commonOptions = {
-                scales: {
-                    y: {
-                        ticks: { color: fontColor },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        title: { color: fontColor }
-                    },
-                    x: {
-                        ticks: { color: fontColor },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        title: { color: fontColor }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: fontColor }
-                    }
-                }
-            };
-
-            if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
-        }
-
-        function setupCharts() {
-            const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
-            ocorrenciasChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] }, // MODIFICAÇÃO: Cor do gráfico
-                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-
         document.addEventListener('DOMContentLoaded', () => {
-            let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
-            let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
-            let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
-            let currentEditingTaskOcorrencias = [];
+            try { // BLOCO TRY-CATCH GLOBAL PARA DEPURAÇÃO
+                const statusClasses = {
+                    'Pendente': 'bg-amber-100 text-amber-600',
+                    'Em Andamento': 'bg-orange-100 text-orange-600',
+                    'Em Análise': 'bg-orange-100 text-orange-600',
+                    'Concluído': 'bg-emerald-100 text-emerald-600',
+                    'Concluída': 'bg-emerald-100 text-emerald-600',
+                    'Não visualizar': 'bg-slate-100 text-slate-500'
+                };
 
-            // --- 1. DEFINIÇÃO DE TODAS AS FUNÇÕES (HOISTING SEGURO) ---
+                let ocorrenciasChart;
+                let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
+                let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
+                let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
+                let currentEditingTaskOcorrencias = [];
 
-            function saveTasks() {
-                localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
-                localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
-            }
-
-            function showNotification(message) {
-                const elMsg = document.getElementById('notification-message');
-                const elModal = document.getElementById('notification-modal');
-                if (elMsg && elModal) {
-                    elMsg.textContent = message;
-                    elModal.classList.remove('hidden');
-                }
-            }
-
-            function formatDate(dateString) {
-                if (!dateString) return 'N/A';
-                const date = new Date(dateString + 'T00:00:00');
-                date.setDate(date.getDate()); // Ajuste fuso
-                return date.toLocaleDateString('pt-BR');
-            }
-            
-            function formatDateForInput(date) { 
-                return date.toISOString().split('T')[0];
-            }
-
-            // --- NOVA FUNÇÃO PARA OBTER NOME DO DIA ---
-            function getDayName(dateString) {
-                if (!dateString) return '';
-                // Adiciona hora para evitar problemas de fuso horário na conversão
-                const date = new Date(dateString + 'T12:00:00');
-                // Retorna o dia da semana em português
-                const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
-                // Capitaliza a primeira letra (ex: "segunda-feira" -> "Segunda-feira")
-                return dayName.charAt(0).toUpperCase() + dayName.slice(1);
-            }
-            
-            function populateCategorySelect(selectElement) {
-                if (!selectElement) return;
-                selectElement.innerHTML = '';
-                categories.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = cat;
-                    selectElement.appendChild(option);
-                });
-            }
-
-            function getCondoHighRiskCount(name) {
-                const all = [...tasks, ...archivedTasks];
-                return all
-                    .filter(t => t.condominio.trim().toLowerCase() === name.trim().toLowerCase())
-                    .reduce((count, t) => {
-                        if (t.ocorrencias && t.ocorrencias.length >= 3) {
-                            return count + 1;
-                        }
-                        return count;
-                    }, 0);
-            }
-
-            // FUNÇÃO PARA EXPORTAR RELATÓRIO COMPLETO
-            function exportCompletedReport() {
-                // Filtra as concluídas da lista ATIVA
-                const completed = tasks.filter(t => t.statusAnalise === 'Concluída');
-                completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
-
-                if (completed.length === 0) {
-                    showNotification('Não há análises concluídas para exportar.');
-                    return;
+                function saveTasks() {
+                    localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
+                    localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
                 }
 
-                let report = `*RELATÓRIO DE ANÁLISES CONCLUÍDAS - ${new Date().toLocaleDateString('pt-BR')}*\n`;
-                report += `--------------------------------------------------\n\n`;
-
-                completed.forEach((task, index) => {
-                    report += `*${index + 1}. ${task.condominio}* - ${formatDate(task.dataAnalise)}\n`;
-                    
-                    if (task.ocorrencias && task.ocorrencias.length > 0) {
-                        report += `🚨 *Ocorrências:* ${task.ocorrencias.length}\n`;
-                        task.ocorrencias.forEach((oc, idx) => {
-                            const inconcl = oc.inconclusiva ? ' (INCONCLUSIVA)' : '';
-                            report += `   - [${oc.categoria}] ${oc.desc} (${oc.horarioInicial} - ${oc.horarioFinal})${inconcl}\n`;
-                        });
-                    } else {
-                        report += `✅ Sem ocorrências registradas.\n`;
+                function showNotification(message) {
+                    const elMsg = document.getElementById('notification-message');
+                    const elModal = document.getElementById('notification-modal');
+                    if (elMsg && elModal) {
+                        elMsg.textContent = message;
+                        elModal.classList.remove('hidden');
                     }
-                    
-                    if (task.observacoes) {
-                        report += `📝 *Obs:* ${task.observacoes}\n`;
+                }
+
+                function formatDate(dateString) {
+                    if (!dateString) return 'N/A';
+                    // Tratamento seguro para data
+                    const parts = dateString.split('-');
+                    if(parts.length === 3) {
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
                     }
-                    report += `\n--------------------------------------------------\n\n`;
-                });
-
-                // Cria elemento temporário para copiar
-                const el = document.createElement('textarea');
-                el.value = report;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
+                    return dateString;
+                }
                 
-                showNotification('Relatório completo copiado para a área de transferência!');
-            }
-
-            // FUNÇÃO RENDERIZAR O RELATÓRIO
-            function renderCompletedReport() {
-                const tbody = document.getElementById('completed-report-list');
-                const search = document.getElementById('completed-report-search').value.toLowerCase();
-                
-                // Filtra apenas as concluídas da lista de TAREFAS ATIVAS (tasks), ignorando arquivados
-                const completed = tasks.filter(t => 
-                    t.statusAnalise === 'Concluída' && 
-                    (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search))
-                );
-
-                completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
-
-                tbody.innerHTML = '';
-
-                if (completed.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`;
-                    return;
+                function formatDateForInput(date) { 
+                    const offset = date.getTimezoneOffset() * 60000; 
+                    const localISOTime = (new Date(date - offset)).toISOString().slice(0, 10);
+                    return localISOTime;
                 }
 
-                completed.forEach(t => {
-                    const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
-                    const row = `
-                        <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600">
-                            <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap dark:text-white">${t.condominio}</td>
-                            <td class="px-4 py-3">${formatDate(t.dataAnalise)}</td>
-                            <td class="px-4 py-3 text-center">${ocCount}</td>
-                            <td class="px-4 py-3 text-right text-emerald-500 font-bold">Concluída</td>
-                        </tr>
-                    `;
-                    tbody.insertAdjacentHTML('beforeend', row);
-                });
-            }
-
-
-            function updateDashboard() {
-                // Filtra apenas ativas para o dashboard
-                const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
-                
-                const elTotal = document.getElementById('total-solicitacoes');
-                if (elTotal) elTotal.textContent = ft.length;
-                
-                const elUniquePdv = document.getElementById('total-pdvs-unicos');
-                if (elUniquePdv) {
-                    const concludedTasks = ft.filter(t => t.statusAnalise === 'Concluída');
-                    const uniquePdvs = new Set(concludedTasks.map(t => t.condominio.trim())).size;
-                    elUniquePdv.textContent = uniquePdvs;
+                function getDayName(dateString) {
+                    if (!dateString) return '';
+                    const date = new Date(dateString + 'T12:00:00');
+                    if(isNaN(date.getTime())) return '';
+                    const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+                    return dayName.charAt(0).toUpperCase() + dayName.slice(1);
                 }
-
-                const elBackups = document.getElementById('backups-pendentes');
-                if (elBackups) elBackups.textContent = ft.filter(t => t.statusBackup === 'Pendente').length;
                 
-                const elAnalises = document.getElementById('analises-pendentes');
-                if (elAnalises) elAnalises.textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
-                
-                const ct = ft.filter(t => t.statusAnalise === 'Concluída');
-                const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
-                
-                const elOcorrencias = document.getElementById('total-ocorrencias-semana');
-                if (elOcorrencias) elOcorrencias.textContent = totOc;
-                
-                const elProd = document.getElementById('produtividade-semanal');
-                if (elProd) elProd.textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
-            }
-
-            function updateCharts() {
-                const dataByCondo = tasks.reduce((acc, task) => {
-                    if (task.ocorrencia === 'Sim' && task.ocorrencias) {
-                        if (!acc[task.condominio]) acc[task.condominio] = 0;
-                        acc[task.condominio] += task.ocorrencias.length;
-                    }
-                    return acc;
-                }, {});
-                
-                const labels = Object.keys(dataByCondo);
-                const data = Object.values(dataByCondo);
-                
-                if (ocorrenciasChart) {
-                    ocorrenciasChart.data.labels = labels;
-                    ocorrenciasChart.data.datasets[0].data = data;
-                    ocorrenciasChart.update();
-                }
-            }
-
-            function renderTasks() {
-                const list = document.getElementById('task-list');
-                if (!list) return;
-                
-                const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
-                const filtroBackup = document.getElementById('filtro-backup').value;
-                const filtroAnalise = document.getElementById('filtro-analise').value;
-                const filtroData = document.getElementById('filtro-data').value;
-                const filtroSemana = document.getElementById('filtro-semana').value;
-                
-                // NOVO FILTRO: DIA DA SEMANA
-                const filtroDiaSemana = document.getElementById('filtro-dia-semana').value;
-
-                let filtered = tasks.filter(t => t.condominio.toLowerCase().includes(filtroCond));
-                
-                // Aplica filtros extras
-                if (filtroBackup) filtered = filtered.filter(t => t.statusBackup === filtroBackup);
-                if (filtroAnalise) filtered = filtered.filter(t => t.statusAnalise === filtroAnalise);
-                if (filtroData) filtered = filtered.filter(t => t.dataAnalise === filtroData);
-                if (filtroSemana) filtered = filtered.filter(t => t.semanaDeTrabalho == filtroSemana);
-                
-                // LÓGICA DO FILTRO POR DIA DA SEMANA
-                if (filtroDiaSemana !== "") {
-                    filtered = filtered.filter(t => {
-                        if (!t.dataAnalise) return false;
-                        // Cria data objeto (adicionando hora para evitar problemas de fuso)
-                        const d = new Date(t.dataAnalise + 'T12:00:00');
-                        // getDay() retorna 0 (Dom) a 6 (Sab)
-                        return d.getDay().toString() === filtroDiaSemana;
+                function populateCategorySelect(selectElement) {
+                    if (!selectElement) return;
+                    selectElement.innerHTML = '';
+                    categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat;
+                        selectElement.appendChild(option);
                     });
                 }
 
-                // Ordenação Alfabética
-                filtered.sort((a, b) => a.condominio.localeCompare(b.condominio));
+                function getCondoHighRiskCount(name) {
+                    const all = [...tasks, ...archivedTasks];
+                    return all
+                        .filter(t => t.condominio.trim().toLowerCase() === name.trim().toLowerCase())
+                        .reduce((count, t) => {
+                            if (t.ocorrencias && t.ocorrencias.length >= 3) {
+                                return count + 1;
+                            }
+                            return count;
+                        }, 0);
+                }
 
-                list.innerHTML = '';
-                if(filtered.length === 0) { list.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`; return; }
+                function exportCompletedReport() {
+                    const completed = tasks.filter(t => t.statusAnalise === 'Concluída');
+                    completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
 
-                filtered.forEach(task => {
-                    const card = document.createElement('div');
-                    let color = task.statusAnalise === 'Concluída' ? '#10b981' : (task.statusAnalise === 'Em Análise' ? '#f97316' : '#f59e0b');
-                    card.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 dark:bg-slate-800 dark:shadow-xl';
-                    card.style.borderLeftColor = color;
-                    
-                    const ocCount = task.ocorrencias ? task.ocorrencias.length : 0;
-                    const badge = ocCount > 0 ? `<div class="mt-1"><span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded-lg border border-red-300 dark:bg-red-900 dark:text-red-100 dark:border-red-700">OCs: ${ocCount}</span></div>` : '';
-                    
-                    const highRiskDays = getCondoHighRiskCount(task.condominio);
-                    let riskBadge = '';
-                    if (highRiskDays > 0) {
-                        riskBadge = `<span class="ml-2 text-lg" title="PDV Crítico">🔥</span>`;
+                    if (completed.length === 0) {
+                        showNotification('Não há análises concluídas para exportar.');
+                        return;
                     }
 
-                    const isCollapsed = !task.isExpanded;
-                    let editBtnHTML = (task.statusAnalise !== 'Arquivado') ? `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">${task.statusAnalise === 'Concluída' ? 'Ver/Editar Ocorrências' : 'Registrar Ocorrências'}</button>` : '';
-                    let obsHTML = task.observacoes ? `<div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700"><p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs:</p><p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p></div>` : '';
+                    let report = `*RELATÓRIO DE ANÁLISES CONCLUÍDAS - ${new Date().toLocaleDateString('pt-BR')}*\n`;
+                    report += `--------------------------------------------------\n\n`;
 
-                    // ADICIONADO O DIA DA SEMANA NO CARD
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-lg flex-1 flex items-center flex-wrap">
-                                ${task.condominio}
-                                ${riskBadge}
-                            </h3>
-                            <div class="flex items-center gap-2">
-                                <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-[#37c0a0] font-bold text-lg p-1" title="Arquivar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg></button>
-                                <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg p-1" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                    completed.forEach((task, index) => {
+                        report += `*${index + 1}. ${task.condominio}* - ${formatDate(task.dataAnalise)} (${getDayName(task.dataAnalise)})\n`;
+                        
+                        if (task.ocorrencias && task.ocorrencias.length > 0) {
+                            report += `🚨 *Ocorrências:* ${task.ocorrencias.length}\n`;
+                            task.ocorrencias.forEach((oc, idx) => {
+                                const inconcl = oc.inconclusiva ? ' (INCONCLUSIVA)' : '';
+                                report += `   - [${oc.categoria}] ${oc.desc} (${oc.horarioInicial} - ${oc.horarioFinal})${inconcl}\n`;
+                            });
+                        } else {
+                            report += `✅ Sem ocorrências registradas.\n`;
+                        }
+                        
+                        if (task.observacoes) {
+                            report += `📝 *Obs:* ${task.observacoes}\n`;
+                        }
+                        report += `\n--------------------------------------------------\n\n`;
+                    });
+
+                    const el = document.createElement('textarea');
+                    el.value = report;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    
+                    showNotification('Relatório completo copiado para a área de transferência!');
+                }
+
+                function renderCompletedReport() {
+                    const tbody = document.getElementById('completed-report-list');
+                    const search = document.getElementById('completed-report-search').value.toLowerCase();
+                    
+                    const completed = tasks.filter(t => 
+                        t.statusAnalise === 'Concluída' && 
+                        (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search))
+                    );
+
+                    completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
+
+                    tbody.innerHTML = '';
+
+                    if (completed.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`;
+                        return;
+                    }
+
+                    completed.forEach(t => {
+                        const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
+                        const row = `
+                            <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600">
+                                <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap dark:text-white">${t.condominio}</td>
+                                <td class="px-4 py-3">${formatDate(t.dataAnalise)}</td>
+                                <td class="px-4 py-3 text-center">${ocCount}</td>
+                                <td class="px-4 py-3 text-right text-emerald-500 font-bold">Concluída</td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+
+                function updateDashboard() {
+                    const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
+                    
+                    const elTotal = document.getElementById('total-solicitacoes');
+                    if (elTotal) elTotal.textContent = ft.length;
+                    
+                    const elUniquePdv = document.getElementById('total-pdvs-unicos');
+                    if (elUniquePdv) {
+                        const concludedTasks = ft.filter(t => t.statusAnalise === 'Concluída');
+                        const uniquePdvs = new Set(concludedTasks.map(t => t.condominio.trim())).size;
+                        elUniquePdv.textContent = uniquePdvs;
+                    }
+
+                    const elBackups = document.getElementById('backups-pendentes');
+                    if (elBackups) elBackups.textContent = ft.filter(t => t.statusBackup === 'Pendente').length;
+                    
+                    const elAnalises = document.getElementById('analises-pendentes');
+                    if (elAnalises) elAnalises.textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
+                    
+                    const ct = ft.filter(t => t.statusAnalise === 'Concluída');
+                    const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
+                    
+                    const elOcorrencias = document.getElementById('total-ocorrencias-semana');
+                    if (elOcorrencias) elOcorrencias.textContent = totOc;
+                    
+                    const elProd = document.getElementById('produtividade-semanal');
+                    if (elProd) elProd.textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
+                }
+
+                function updateCharts() {
+                    const dataByCondo = tasks.reduce((acc, task) => {
+                        if (task.ocorrencia === 'Sim' && task.ocorrencias) {
+                            if (!acc[task.condominio]) acc[task.condominio] = 0;
+                            acc[task.condominio] += task.ocorrencias.length;
+                        }
+                        return acc;
+                    }, {});
+                    
+                    const labels = Object.keys(dataByCondo);
+                    const data = Object.values(dataByCondo);
+                    
+                    if (ocorrenciasChart) {
+                        ocorrenciasChart.data.labels = labels;
+                        ocorrenciasChart.data.datasets[0].data = data;
+                        ocorrenciasChart.update();
+                    }
+                }
+
+                function renderTasks() {
+                    const list = document.getElementById('task-list');
+                    if (!list) return;
+                    
+                    const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
+                    const filtroBackup = document.getElementById('filtro-backup').value;
+                    const filtroAnalise = document.getElementById('filtro-analise').value;
+                    const filtroData = document.getElementById('filtro-data').value;
+                    const filtroSemana = document.getElementById('filtro-semana').value;
+                    const filtroDiaSemana = document.getElementById('filtro-dia-semana').value;
+
+                    let filtered = tasks.filter(t => t.condominio.toLowerCase().includes(filtroCond));
+                    
+                    if (filtroBackup) filtered = filtered.filter(t => t.statusBackup === filtroBackup);
+                    if (filtroAnalise) filtered = filtered.filter(t => t.statusAnalise === filtroAnalise);
+                    if (filtroData) filtered = filtered.filter(t => t.dataAnalise === filtroData);
+                    if (filtroSemana) filtered = filtered.filter(t => t.semanaDeTrabalho == filtroSemana);
+                    
+                    if (filtroDiaSemana !== "") {
+                        filtered = filtered.filter(t => {
+                            if (!t.dataAnalise) return false;
+                            const d = new Date(t.dataAnalise + 'T12:00:00');
+                            return d.getDay().toString() === filtroDiaSemana;
+                        });
+                    }
+
+                    filtered.sort((a, b) => a.condominio.localeCompare(b.condominio));
+
+                    list.innerHTML = '';
+                    if(filtered.length === 0) { list.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`; return; }
+
+                    filtered.forEach(task => {
+                        const card = document.createElement('div');
+                        let color = task.statusAnalise === 'Concluída' ? '#10b981' : (task.statusAnalise === 'Em Análise' ? '#f97316' : '#f59e0b');
+                        card.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 dark:bg-slate-800 dark:shadow-xl';
+                        card.style.borderLeftColor = color;
+                        
+                        const ocCount = task.ocorrencias ? task.ocorrencias.length : 0;
+                        const badge = ocCount > 0 ? `<div class="mt-1"><span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded-lg border border-red-300 dark:bg-red-900 dark:text-red-100 dark:border-red-700">OCs: ${ocCount}</span></div>` : '';
+                        
+                        const highRiskDays = getCondoHighRiskCount(task.condominio);
+                        let riskBadge = '';
+                        if (highRiskDays > 0) {
+                            riskBadge = `<span class="ml-2 text-lg" title="PDV Crítico">🔥</span>`;
+                        }
+
+                        const isCollapsed = !task.isExpanded;
+                        let editBtnHTML = (task.statusAnalise !== 'Arquivado') ? `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">${task.statusAnalise === 'Concluída' ? 'Ver/Editar Ocorrências' : 'Registrar Ocorrências'}</button>` : '';
+                        let obsHTML = task.observacoes ? `<div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700"><p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs:</p><p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p></div>` : '';
+
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-lg flex-1 flex items-center flex-wrap">
+                                    ${task.condominio}
+                                    ${riskBadge}
+                                </h3>
+                                <div class="flex items-center gap-2">
+                                    <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-[#37c0a0] font-bold text-lg p-1" title="Arquivar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg></button>
+                                    <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg p-1" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex justify-between items-center mt-2">
-                            <div>
-                                <p class="text-sm text-slate-500 dark:text-slate-400">
-                                    Data: <strong>${formatDate(task.dataAnalise)}</strong> 
-                                    <span class="text-xs text-slate-400 ml-1">(${getDayName(task.dataAnalise)})</span>
-                                </p>
-                                ${badge}
+                            <div class="flex justify-between items-center mt-2">
+                                <div>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                                        Data: <strong>${formatDate(task.dataAnalise)}</strong> 
+                                        <span class="text-xs text-slate-400 ml-1">(${getDayName(task.dataAnalise)})</span>
+                                    </p>
+                                    ${badge}
+                                </div>
+                                <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 dark:text-slate-100">${isCollapsed ? '&#9660;' : '&#9650;'}</button>
                             </div>
-                            <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 dark:text-slate-100">${isCollapsed ? '&#9660;' : '&#9650;'}</button>
-                        </div>
-                        <div class="${isCollapsed ? 'hidden' : ''} mt-4 details-content">
-                            <div class="space-y-3 text-sm mt-4">
-                                <div class="flex justify-between items-center text-sm mb-1"><span class="font-semibold text-slate-600 dark:text-slate-300">Backup:</span> <select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option></select></div>
-                                <div class="flex justify-between items-center text-sm"><span class="font-semibold text-slate-600 dark:text-slate-300">Análise:</span> <select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option></select></div>
+                            <div class="${isCollapsed ? 'hidden' : ''} mt-4 details-content">
+                                <div class="space-y-3 text-sm mt-4">
+                                    <div class="flex justify-between items-center text-sm mb-1"><span class="font-semibold text-slate-600 dark:text-slate-300">Backup:</span> <select data-id="${task.id}" data-type="backup" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusBackup]}"><option value="Pendente" ${task.statusBackup === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Andamento" ${task.statusBackup === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option><option value="Concluído" ${task.statusBackup === 'Concluído' ? 'selected' : ''}>Concluído</option></select></div>
+                                    <div class="flex justify-between items-center text-sm"><span class="font-semibold text-slate-600 dark:text-slate-300">Análise:</span> <select data-id="${task.id}" data-type="analise" class="status-select border-none text-right font-semibold text-sm rounded-lg p-1 ${statusClasses[task.statusAnalise]}"><option value="Pendente" ${task.statusAnalise === 'Pendente' ? 'selected' : ''}>Pendente</option><option value="Em Análise" ${task.statusAnalise === 'Em Análise' ? 'selected' : ''}>Em Análise</option><option value="Concluída" ${task.statusAnalise === 'Concluída' ? 'selected' : ''}>Concluída</option></select></div>
+                                </div>
+                                ${obsHTML}
+                                ${editBtnHTML}
                             </div>
-                            ${obsHTML}
-                            ${editBtnHTML}
-                        </div>
-                    `;
+                        `;
                     list.appendChild(card);
                 });
             }
@@ -1061,9 +1006,30 @@
                 }
             });
 
+            function updateChartsTheme() {
+                const isDark = true; 
+                const fontColor = '#f1f5f9'; 
+                const commonOptions = { scales: { y: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } }, x: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } } }, plugins: { legend: { labels: { color: fontColor } } } };
+                if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
+            }
+
+            function setupCharts() {
+                const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
+                ocorrenciasChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] },
+                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                });
+            }
+
             // Inicialização
             setupCharts();
             refreshUI();
+
+            } catch (error) {
+                console.error("Erro crítico na inicialização:", error);
+                alert("Ocorreu um erro ao carregar o painel. Verifique o console para mais detalhes. Erro: " + error.message);
+            }
         });
     </script>
 </body>
