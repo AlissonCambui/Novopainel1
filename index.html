@@ -4,7 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Monitoramento de Minimercados</title>
+    <!-- Carrega o Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configura as cores personalizadas OFICIALMENTE para o Tailwind -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#37c0a0', // Sua cor Turquesa
+                            hover: '#2a9d82',   // Tom mais escuro para hover
+                            light: 'rgba(55, 192, 160, 0.1)' // Fundo claro
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     
@@ -39,18 +57,6 @@
         .occ-actions {
             opacity: 1; 
         }
-
-        /* Configuração de Cores Personalizadas (Baseado em #37c0a0) */
-        .text-brand { color: #37c0a0; }
-        .bg-brand { background-color: #37c0a0; }
-        .bg-brand-hover:hover { background-color: #2a9d82; } 
-        .border-brand { border-color: #37c0a0; }
-        .ring-brand:focus { --tw-ring-color: #37c0a0; }
-        
-        .bg-brand-light { background-color: rgba(55, 192, 160, 0.1); }
-        .border-brand-light { border-color: rgba(55, 192, 160, 0.3); }
-        .text-brand-dark { color: #2a9d82; }
-
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
@@ -66,7 +72,7 @@
         <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
-                <p id="total-solicitacoes" class="text-3xl font-bold text-[#37c0a0] mt-1">0</p>
+                <p id="total-solicitacoes" class="text-3xl font-bold text-brand mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">PDVs Visualizados</h3>
@@ -90,12 +96,11 @@
         <section class="bg-white p-4 rounded-xl shadow-md mb-8 dark:bg-slate-800 dark:shadow-xl">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-4 flex-grow">
-                    <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] flex-grow md:flex-grow-0 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <input type="text" id="filtro-condominio" placeholder="Filtrar por condomínio..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand flex-grow md:flex-grow-0 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                     
-                    <input type="date" id="filtro-data" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <input type="date" id="filtro-data" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                     
-                    <!-- FILTRO: DIA DA SEMANA -->
-                    <select id="filtro-dia-semana" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <select id="filtro-dia-semana" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                         <option value="">Dia da Semana (Todos)</option>
                         <option value="1">Segunda-feira</option>
                         <option value="2">Terça-feira</option>
@@ -106,15 +111,15 @@
                         <option value="0">Domingo</option>
                     </select>
 
-                    <input type="number" id="filtro-semana" placeholder="Semana (Ex: 43)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] w-32 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <input type="number" id="filtro-semana" placeholder="Semana (Ex: 43)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand w-32 bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                     
-                    <select id="filtro-backup" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <select id="filtro-backup" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                         <option value="">Backup (Todos)</option>
                         <option value="Pendente">Pendente</option>
                         <option value="Em Andamento">Em Andamento</option>
                         <option value="Concluído">Concluído</option>
                     </select>
-                    <select id="filtro-analise" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#37c0a0] focus:border-[#37c0a0] bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <select id="filtro-analise" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                         <option value="">Análise (Todos)</option>
                         <option value="Pendente">Pendente</option>
                         <option value="Em Análise">Em Análise</option>
@@ -126,15 +131,14 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button id="add-task-btn" class="bg-[#37c0a0] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#2a9d82] transition-colors w-full sm:w-auto flex-grow">
+                    <button id="add-task-btn" class="bg-brand text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-hover transition-colors w-full sm:w-auto flex-grow">
                         + Adicionar
                     </button>
                     <div class="relative inline-block text-left" id="actions-menu-container">
-                        <button type="button" id="actions-menu-btn" class="inline-flex justify-center w-full rounded-lg border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 focus:ring-[#37c0a0] dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-600">
+                        <button type="button" id="actions-menu-btn" class="inline-flex justify-center w-full rounded-lg border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-100 focus:ring-brand dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-600">
                             Ações
                             <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
-                        <!-- MENU AÇÕES -->
                         <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20 dark:bg-slate-700 dark:ring-slate-600">
                             <div class="py-1">
                                 <button id="bulk-add-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Importar Planilha</button>
@@ -179,7 +183,7 @@
     <div id="custom-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-60">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm text-center dark:bg-slate-800 dark:shadow-xl border border-slate-200 dark:border-slate-700">
             <div class="mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-[#37c0a0] mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-brand mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
@@ -187,7 +191,7 @@
             <p class="text-slate-600 dark:text-slate-300 mb-6 text-sm" id="confirm-modal-msg">Essa ação não pode ser desfeita.</p>
             <div class="flex justify-center gap-3">
                 <button id="confirm-modal-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600 flex-1">Cancelar</button>
-                <button id="confirm-modal-yes-btn" class="bg-[#37c0a0] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#2a9d82] flex-1">Sim, confirmar</button>
+                <button id="confirm-modal-yes-btn" class="bg-brand text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-hover flex-1">Sim, confirmar</button>
             </div>
         </div>
     </div>
@@ -201,26 +205,26 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Condomínio</label>
                         <div class="relative">
-                            <input type="text" id="form-condominio" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-[#37c0a0] focus:border-[#37c0a0] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required autocomplete="off">
+                            <input type="text" id="form-condominio" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-brand focus:border-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required autocomplete="off">
                             <div id="autocomplete-list" class="absolute z-10 w-full bg-white border border-slate-300 rounded-lg mt-1 hidden max-h-40 overflow-y-auto shadow-lg dark:bg-slate-700 dark:border-slate-600"></div>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-                        <input type="date" id="form-data-analise" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-[#37c0a0] focus:border-[#37c0a0] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required>
+                        <input type="date" id="form-data-analise" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-brand focus:border-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" required>
                     </div>
                 </div>
                  <div class="mt-4">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Semana (Nº)</label>
-                    <input type="number" id="form-semana-trabalho" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-[#37c0a0] focus:border-[#37c0a0] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <input type="number" id="form-semana-trabalho" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-brand focus:border-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                  </div>
                  <div class="mt-4">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Observações</label>
-                    <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-[#37c0a0] focus:border-[#37c0a0] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></textarea>
+                    <textarea id="form-observacoes" rows="3" class="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-brand focus:border-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></textarea>
                  </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" id="cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
-                    <button type="submit" class="bg-[#37c0a0] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#2a9d82]">Salvar</button>
+                    <button type="submit" class="bg-brand text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-hover">Salvar</button>
                 </div>
             </form>
         </div>
@@ -262,7 +266,7 @@
                     </div>
                      <div class="mt-3">
                         <label class="flex items-center cursor-pointer">
-                            <input type="checkbox" id="add-ocorrencia-inconclusiva" class="h-4 w-4 text-[#37c0a0] border-gray-300 rounded focus:ring-[#37c0a0] dark:bg-slate-700 dark:border-slate-600">
+                            <input type="checkbox" id="add-ocorrencia-inconclusiva" class="h-4 w-4 text-brand border-gray-300 rounded focus:ring-brand dark:bg-slate-700 dark:border-slate-600">
                             <span class="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300">Inconclusiva</span>
                         </label>
                     </div>
@@ -270,7 +274,7 @@
                 </div>
                 <div class="mt-6 flex justify-end gap-3 flex-shrink-0">
                     <button type="button" id="ocorrencia-cancel-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
-                    <button type="submit" class="bg-[#37c0a0] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#2a9d82]">Salvar Alterações</button>
+                    <button type="submit" class="bg-brand text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-hover">Salvar Alterações</button>
                 </div>
             </form>
         </div>
@@ -285,7 +289,7 @@
                 <textarea id="bulk-input-area" rows="10" class="w-full border border-slate-300 rounded-lg p-2 mb-4 text-xs font-mono dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Cole aqui..."></textarea>
                 <div class="flex justify-end gap-2">
                     <button type="button" id="bulk-cancel-btn" class="bg-slate-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Cancelar</button>
-                    <button type="submit" class="bg-[#37c0a0] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#2a9d82]">Importar</button>
+                    <button type="submit" class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-hover">Importar</button>
                 </div>
             </form>
         </div>
@@ -328,7 +332,7 @@
         </div>
     </div>
 
-    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-[70]"><div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm text-center dark:bg-slate-800 dark:shadow-xl"><p id="notification-message" class="mb-4 text-lg text-slate-700 dark:text-slate-300"></p><button id="notification-close-btn" class="bg-[#37c0a0] text-white px-6 py-2 rounded-lg">OK</button></div></div>
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-[70]"><div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm text-center dark:bg-slate-800 dark:shadow-xl"><p id="notification-message" class="mb-4 text-lg text-slate-700 dark:text-slate-300"></p><button id="notification-close-btn" class="bg-brand text-white px-6 py-2 rounded-lg">OK</button></div></div>
     
     <!-- Modal Arquivar -->
     <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Arquivar</h2><form id="archive-form"><div class="space-y-2 mb-4"><button type="button" id="view-archive-btn" class="w-full bg-slate-500 text-white px-4 py-2 rounded-lg mb-4">Ver Arquivo</button><div class="flex gap-2"><button type="button" id="archive-cancel-btn" class="bg-slate-200 w-full px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></div></form></div></div>
@@ -356,7 +360,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            try { // BLOCO TRY-CATCH GLOBAL PARA DEPURAÇÃO
+            try { 
                 const statusClasses = {
                     'Pendente': 'bg-amber-100 text-amber-600',
                     'Em Andamento': 'bg-orange-100 text-orange-600',
@@ -388,10 +392,9 @@
 
                 function formatDate(dateString) {
                     if (!dateString) return 'N/A';
-                    // Tratamento seguro para data
                     const parts = dateString.split('-');
                     if(parts.length === 3) {
-                        return `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
                     }
                     return dateString;
                 }
