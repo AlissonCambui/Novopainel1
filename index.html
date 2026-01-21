@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Monitoramento de Minimercados</title>
-    <!-- Carrega o Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configura as cores personalizadas OFICIALMENTE para o Tailwind -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -14,9 +12,9 @@
                 extend: {
                     colors: {
                         brand: {
-                            DEFAULT: '#37c0a0', // Sua cor Turquesa
-                            hover: '#2a9d82',   // Tom mais escuro para hover
-                            light: 'rgba(55, 192, 160, 0.1)' // Fundo claro
+                            DEFAULT: '#37c0a0', 
+                            hover: '#2a9d82',   
+                            light: 'rgba(55, 192, 160, 0.1)' 
                         }
                     }
                 }
@@ -27,7 +25,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     
     <style>
-        /* CSS Personalizado */
         .chart-container {
             position: relative;
             width: 100%;
@@ -53,22 +50,18 @@
         }
         .z-50 { z-index: 50; }
         .z-60 { z-index: 60; }
-        
-        .occ-actions {
-            opacity: 1; 
-        }
+        .occ-actions { opacity: 1; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
         
         <header class="mb-8 text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Painel de Monitoramento</h1>
             <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
         </header>
 
-        <!-- Resumo do Dashboard -->
         <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
@@ -92,7 +85,6 @@
             </div>
         </section>
 
-        <!-- Filtros e Ações -->
         <section class="bg-white p-4 rounded-xl shadow-md mb-8 dark:bg-slate-800 dark:shadow-xl">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-4 flex-grow">
@@ -143,6 +135,7 @@
                             <div class="py-1">
                                 <button id="bulk-add-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Importar Planilha</button>
                                 <button id="completed-report-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Relatório Concluídas</button>
+                                <button id="detailed-pdv-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 font-semibold text-brand">Análise Detalhada PDV</button>
                                 <button id="archive-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Arquivar</button>
                             </div>
                         </div>
@@ -151,12 +144,9 @@
             </div>
         </section>
 
-        <!-- Lista de Tarefas -->
         <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Cards Renderizados via JS -->
-        </main>
+            </main>
         
-        <!-- Gráficos -->
         <section class="mt-12">
             <h2 class="text-2xl font-bold text-center mb-8 text-slate-800 dark:text-slate-100">Ocorrências da Semana (por Condomínio)</h2>
             <div class="flex justify-center">
@@ -166,7 +156,6 @@
                      </div>
                 </div>
             </div>
-            <!-- Produtividade Semanal -->
              <div id="weekly-productivity" class="mt-8">
                  <div class="bg-white p-4 rounded-xl shadow-md text-center max-w-sm mx-auto dark:bg-slate-800 dark:shadow-xl">
                     <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Produtividade Semanal (Ocorrências / Análise)</h3>
@@ -177,9 +166,48 @@
         </section>
     </div>
 
-    <!-- MODAIS -->
+    <footer class="p-4 text-center text-xs text-slate-400 dark:text-slate-600">
+        v3.0 (Corrigido)
+    </footer>
 
-    <!-- NOVO MODAL DE CONFIRMAÇÃO (GENÉRICO) -->
+    <div id="pdv-detailed-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-60">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl flex flex-col dark:bg-slate-800 dark:shadow-xl max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Análise Detalhada por PDV</h2>
+                <button id="pdv-detailed-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Selecione o Condomínio:</label>
+                <select id="pdv-analysis-select" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-brand focus:border-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    <option value="">Escolha um PDV...</option>
+                </select>
+            </div>
+            <div id="pdv-analysis-results" class="hidden flex-grow overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-brand-light p-4 rounded-xl text-center border border-brand-light">
+                        <h3 class="text-sm font-bold text-brand-dark uppercase tracking-wider">Dia Crítico</h3>
+                        <p id="pdv-critical-day" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-2">-</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Maior incidência de ocorrências</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-xl text-center border border-red-100 dark:bg-red-900/20 dark:border-red-800/30">
+                        <h3 class="text-sm font-bold text-red-600 uppercase tracking-wider dark:text-red-400">Horário Crítico</h3>
+                        <p id="pdv-critical-time" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-2">-</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Pico de atividade suspeita</p>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl dark:bg-slate-900 border border-slate-200 dark:border-slate-700 mb-4">
+                    <h3 class="text-center font-semibold mb-4 text-slate-700 dark:text-slate-300">Ocorrências por Dia da Semana</h3>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="pdvAnalysisChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-auto flex justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button id="pdv-detailed-footer-close-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="custom-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-60">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm text-center dark:bg-slate-800 dark:shadow-xl border border-slate-200 dark:border-slate-700">
             <div class="mb-4">
@@ -196,7 +224,6 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar Análise -->
     <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
             <h2 class="text-2xl font-bold mb-4">Adicionar Nova Análise</h2>
@@ -230,18 +257,14 @@
         </div>
     </div>
 
-    <!-- Modal Gerenciamento de Ocorrências (EDITAR/ADICIONAR/EXCLUIR) -->
     <div id="ocorrencia-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:shadow-xl">
             <h2 class="text-2xl font-bold mb-4">Gerenciar Ocorrências</h2>
             <form id="ocorrencia-form" class="flex-grow flex flex-col min-h-0">
                 <input type="hidden" id="ocorrencia-task-id">
                 
-                <!-- Lista de Ocorrências com Edição -->
                 <div class="flex-grow overflow-y-auto mb-4 bg-slate-50 rounded-lg p-2 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                    <div id="ocorrencia-list" class="space-y-2">
-                        <!-- Itens renderizados aqui via JS -->
-                    </div>
+                    <div id="ocorrencia-list" class="space-y-2"></div>
                 </div>
                 
                 <div class="flex-shrink-0 pt-4 border-t border-slate-200 dark:border-slate-700">
@@ -280,7 +303,6 @@
         </div>
     </div>
 
-    <!-- Modais Secundários -->
     <div id="bulk-add-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg dark:bg-slate-800 dark:shadow-xl">
             <h2 class="text-2xl font-bold mb-4">Importar Planilha</h2>
@@ -295,7 +317,6 @@
         </div>
     </div>
 
-    <!-- Novo Modal Relatório Concluídas (ATUALIZADO COM BOTÃO DE EXPORTAÇÃO) -->
     <div id="completed-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl h-5/6 flex flex-col dark:bg-slate-800 dark:shadow-xl">
             <div class="flex justify-between items-center mb-4">
@@ -315,16 +336,12 @@
                             <th scope="col" class="px-4 py-3 text-right rounded-tr-lg">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="completed-report-list">
-                        <!-- Itens do relatório aqui -->
-                    </tbody>
+                    <tbody id="completed-report-list"></tbody>
                 </table>
             </div>
             <div class="mt-4 flex justify-end gap-3">
                  <button id="export-report-btn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
                     Copiar Relatório
                  </button>
                  <button id="completed-report-footer-close-btn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">Fechar</button>
@@ -334,10 +351,8 @@
 
     <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-[70]"><div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm text-center dark:bg-slate-800 dark:shadow-xl"><p id="notification-message" class="mb-4 text-lg text-slate-700 dark:text-slate-300"></p><button id="notification-close-btn" class="bg-brand text-white px-6 py-2 rounded-lg">OK</button></div></div>
     
-    <!-- Modal Arquivar -->
     <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50"><div class="bg-white rounded-xl p-6 w-full max-w-md dark:bg-slate-800 dark:shadow-xl"><h2 class="text-2xl font-bold mb-4">Arquivar</h2><form id="archive-form"><div class="space-y-2 mb-4"><button type="button" id="view-archive-btn" class="w-full bg-slate-500 text-white px-4 py-2 rounded-lg mb-4">Ver Arquivo</button><div class="flex gap-2"><button type="button" id="archive-cancel-btn" class="bg-slate-200 w-full px-4 py-2 rounded-lg dark:bg-slate-700 dark:text-slate-100">Cancelar</button></div></div></form></div></div>
     
-    <!-- Modal Arquivados (Visualizar) -->
     <div id="view-archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:shadow-xl">
             <div class="flex justify-between items-center mb-4">
@@ -360,7 +375,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            try { 
+            // CORREÇÃO 1: Início correto do bloco try
+            try {
+                console.log("Painel de Monitoramento v3.0 - Corrigido."); 
+
+                // --- 1. VARIÁVEIS GLOBAIS ---
+                let ocorrenciasChart;
+                let pdvAnalysisChart;
+                let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
+                let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
+                let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
+                let currentEditingTaskOcorrencias = [];
+
                 const statusClasses = {
                     'Pendente': 'bg-amber-100 text-amber-600',
                     'Em Andamento': 'bg-orange-100 text-orange-600',
@@ -370,11 +396,7 @@
                     'Não visualizar': 'bg-slate-100 text-slate-500'
                 };
 
-                let ocorrenciasChart;
-                let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
-                let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
-                let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
-                let currentEditingTaskOcorrencias = [];
+                // --- 2. FUNÇÕES ---
 
                 function saveTasks() {
                     localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
@@ -421,6 +443,27 @@
                         option.value = cat;
                         option.textContent = cat;
                         selectElement.appendChild(option);
+                    });
+                }
+
+                // CORREÇÃO 2: Implementação da função que faltava
+                function populatePdvAnalysisSelect() {
+                    const select = document.getElementById('pdv-analysis-select');
+                    if (!select) return;
+                    select.innerHTML = '<option value="">Escolha um PDV...</option>';
+                    
+                    // Une condomínios ativos e arquivados para listar todos
+                    const allCondos = [...tasks, ...archivedTasks].map(t => t.condominio.trim());
+                    // Remove duplicatas e ordena
+                    const uniqueCondos = [...new Set(allCondos)].sort();
+
+                    uniqueCondos.forEach(name => {
+                        if(name) {
+                            const option = document.createElement('option');
+                            option.value = name;
+                            option.textContent = name;
+                            select.appendChild(option);
+                        }
                     });
                 }
 
@@ -556,6 +599,13 @@
                         ocorrenciasChart.update();
                     }
                 }
+                
+                function updateChartsTheme() {
+                    const isDark = true; 
+                    const fontColor = '#f1f5f9'; 
+                    const commonOptions = { scales: { y: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } }, x: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } } }, plugins: { legend: { labels: { color: fontColor } } } };
+                    if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
+                }
 
                 function renderTasks() {
                     const list = document.getElementById('task-list');
@@ -614,7 +664,7 @@
                                     ${riskBadge}
                                 </h3>
                                 <div class="flex items-center gap-2">
-                                    <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-[#37c0a0] font-bold text-lg p-1" title="Arquivar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg></button>
+                                    <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-brand font-bold text-lg p-1" title="Arquivar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg></button>
                                     <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg p-1" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                                 </div>
                             </div>
@@ -622,7 +672,7 @@
                                 <div>
                                     <p class="text-sm text-slate-500 dark:text-slate-400">
                                         Data: <strong>${formatDate(task.dataAnalise)}</strong> 
-                                        <span class="text-xs text-slate-400 ml-1">(${getDayName(task.dataAnalise)})</span>
+                                        <span class="text-xs text-slate-400 ml-1 font-semibold">(${getDayName(task.dataAnalise)})</span>
                                     </p>
                                     ${badge}
                                 </div>
@@ -637,397 +687,532 @@
                                 ${editBtnHTML}
                             </div>
                         `;
-                    list.appendChild(card);
-                });
-            }
-
-            function refreshUI() {
-                saveTasks();
-                renderTasks();
-                updateDashboard();
-                updateCharts();
-                updateChartsTheme();
-            }
-
-            function renderArchivedList() {
-                const container = document.getElementById('view-archive-list-container');
-                const filter = document.getElementById('archive-search-input').value.toLowerCase();
-                const filtered = archivedTasks.filter(t => t.condominio.toLowerCase().includes(filter) || (t.dataAnalise && t.dataAnalise.includes(filter)));
-
-                if (filtered.length === 0) {
-                    container.innerHTML = '<p class="text-center text-slate-500 mt-4">Nenhuma análise arquivada.</p>';
-                    return;
+                        list.appendChild(card);
+                    });
                 }
 
-                container.innerHTML = filtered.map(t => `
-                    <div class="flex justify-between items-center p-3 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                        <div>
-                            <p class="font-bold text-slate-700 dark:text-slate-200">${t.condominio}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">${formatDate(t.dataAnalise)}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button data-id="${t.id}" class="unarchive-btn text-xs font-semibold bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg hover:bg-orange-200 dark:bg-orange-900 dark:text-orange-100 dark:hover:bg-orange-800 transition-colors">Desarquivar</button>
-                            <button data-id="${t.id}" class="delete-archive-btn text-xs font-semibold bg-red-100 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800 transition-colors">Excluir</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
+                function renderArchivedList() {
+                    const container = document.getElementById('view-archive-list-container');
+                    const filter = document.getElementById('archive-search-input').value.toLowerCase();
+                    const filtered = archivedTasks.filter(t => t.condominio.toLowerCase().includes(filter) || (t.dataAnalise && t.dataAnalise.includes(filter)));
 
-            function renderModalOcorrenciasList() {
-                const list = document.getElementById('ocorrencia-list');
-                list.innerHTML = '';
-                if (currentEditingTaskOcorrencias.length === 0) {
-                    list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>';
-                    return;
-                }
-                currentEditingTaskOcorrencias.forEach((ocor, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'ocorrencia-item-row p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center group dark:bg-slate-800 dark:border-slate-700';
-                    
-                    const inconclusivaBadge = ocor.inconclusiva 
-                        ? `<span class="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-800">INCONCLUSIVA</span>` 
-                        : '';
-
-                    div.innerHTML = `
-                        <div class="flex-grow">
-                            <p class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center flex-wrap">
-                                ${ocor.categoria}
-                                ${inconclusivaBadge}
-                            </p>
-                            <p class="text-xs text-slate-600 dark:text-slate-400">${ocor.desc}</p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-1">${ocor.horarioInicial} - ${ocor.horarioFinal}</p>
-                        </div>
-                        <div class="flex gap-2 occ-actions">
-                            <button type="button" data-index="${index}" class="edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                            <button type="button" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700" title="Remover"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-            }
-
-            function handleTaskSubmit(e) {
-                e.preventDefault();
-                const condominio = document.getElementById('form-condominio').value;
-                const dataAnalise = document.getElementById('form-data-analise').value;
-                if (tasks.some(t => t.condominio === condominio && t.dataAnalise === dataAnalise)) {
-                    showNotification('Análise já existe.'); return; 
-                }
-                tasks.unshift({
-                    id: Date.now(),
-                    condominio: condominio,
-                    dataAnalise: dataAnalise,
-                    semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || 0,
-                    observacoes: document.getElementById('form-observacoes').value,
-                    statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencia: 'Pendente', isExpanded: true, ocorrencias: []
-                });
-                refreshUI();
-                document.getElementById('task-modal').classList.add('hidden');
-                showNotification('Nova análise adicionada.');
-            }
-
-            function handleBulkAddSubmit(e) {
-                e.preventDefault();
-                const inputArea = document.getElementById('bulk-input-area').value.trim();
-                if (!inputArea) { showNotification('Cole os dados.'); return; }
-                const lines = inputArea.split('\n').filter(line => line.trim().length > 0);
-                const newTasks = [];
-                let ignoredCount = 0;
-
-                lines.forEach((line, index) => {
-                    const lineLower = line.toLowerCase();
-                    if ((lineLower.includes('semana') || lineLower.includes('data')) && (lineLower.includes('unidade') || lineLower.includes('status'))) return;
-
-                    let parts = line.split(/\s{2,}|\t/).map(p => p.trim()).filter(p => p.length > 0);
-                    if (parts.length < 5) { ignoredCount++; return; }
-                    
-                    let unidadeRaw = parts[2] || '';
-                    let statusRaw = parts[parts.length - 1] || 'Pendente';
-                    let isoDate = '';
-                    if (parts[1] && parts[1].includes('/')) {
-                        const [d, m, y] = parts[1].split('/');
-                        if (d && m && y) isoDate = `${y}-${m}-${d}`;
-                    } else {
-                        isoDate = new Date().toISOString().split('T')[0];
+                    if (filtered.length === 0) {
+                        container.innerHTML = '<p class="text-center text-slate-500 mt-4">Nenhuma análise arquivada.</p>';
+                        return;
                     }
 
-                    const existsInDb = tasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
-                    const existsInBatch = newTasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
-
-                    if (existsInDb || existsInBatch) { ignoredCount++; return; }
-
-                    newTasks.push({
-                        id: Date.now() + index,
-                        condominio: unidadeRaw,
-                        dataAnalise: isoDate,
-                        semanaDeTrabalho: parseInt(parts[0].replace(/\D/g,'')) || 0,
-                        observacoes: '',
-                        statusBackup: statusRaw.toLowerCase().includes('finalizado') ? 'Concluído' : 'Pendente',
-                        statusAnalise: statusRaw.toLowerCase().includes('finalizado') ? 'Concluída' : 'Pendente',
-                        ocorrencia: 'Não', isExpanded: true, ocorrencias: []
-                    });
-                });
-
-                if (newTasks.length > 0) { 
-                    tasks.unshift(...newTasks); refreshUI(); 
-                    document.getElementById('bulk-add-modal').classList.add('hidden'); 
-                    document.getElementById('bulk-input-area').value = ''; 
-                    showNotification(`${newTasks.length} análises importadas. (${ignoredCount} duplicadas/ignoradas)`); 
-                } else {
-                    showNotification('Nenhum dado importado.');
+                    container.innerHTML = filtered.map(t => `
+                        <div class="flex justify-between items-center p-3 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <div>
+                                <p class="font-bold text-slate-700 dark:text-slate-200">${t.condominio}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">${formatDate(t.dataAnalise)}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button data-id="${t.id}" class="unarchive-btn text-xs font-semibold bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg hover:bg-orange-200 dark:bg-orange-900 dark:text-orange-100 dark:hover:bg-orange-800 transition-colors">Desarquivar</button>
+                                <button data-id="${t.id}" class="delete-archive-btn text-xs font-semibold bg-red-100 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800 transition-colors">Excluir</button>
+                            </div>
+                        </div>
+                    `).join('');
                 }
-            }
 
-            // --- 2. MODAL CONFIRM LOGIC ---
-            const confirmModal = document.getElementById('custom-confirm-modal');
-            const confirmTitle = document.getElementById('confirm-modal-title');
-            const confirmMsg = document.getElementById('confirm-modal-msg');
-            const confirmYesBtn = document.getElementById('confirm-modal-yes-btn');
-            const confirmCancelBtn = document.getElementById('confirm-modal-cancel-btn');
-            let currentConfirmCallback = null;
-
-            function showConfirm(title, msg, callback) {
-                confirmTitle.textContent = title;
-                confirmMsg.textContent = msg;
-                currentConfirmCallback = callback;
-                confirmModal.classList.remove('hidden');
-            }
-
-            confirmYesBtn.addEventListener('click', () => {
-                if (currentConfirmCallback) currentConfirmCallback();
-                confirmModal.classList.add('hidden');
-                currentConfirmCallback = null;
-            });
-
-            confirmCancelBtn.addEventListener('click', () => {
-                confirmModal.classList.add('hidden');
-                currentConfirmCallback = null;
-            });
-
-            // --- 3. EVENT LISTENERS ---
-
-            document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
-            document.getElementById('filtro-data').addEventListener('change', refreshUI); 
-            document.getElementById('filtro-semana').addEventListener('input', refreshUI);
-            document.getElementById('filtro-dia-semana').addEventListener('change', refreshUI); 
-            document.getElementById('filtro-backup').addEventListener('change', refreshUI); 
-            document.getElementById('filtro-analise').addEventListener('change', refreshUI); 
-            
-            document.getElementById('expand-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = true); refreshUI(); });
-            document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
-            document.getElementById('add-task-btn').addEventListener('click', () => {
-                document.getElementById('task-form').reset();
-                document.getElementById('form-data-analise').value = formatDateForInput(new Date());
-                document.getElementById('task-modal').classList.remove('hidden');
-            });
-            document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
-            document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
-            document.getElementById('bulk-add-form').addEventListener('submit', handleBulkAddSubmit);
-            
-            const actionsMenu = document.getElementById('actions-menu');
-            document.getElementById('actions-menu-btn').addEventListener('click', (e) => { e.stopPropagation(); actionsMenu.classList.toggle('hidden'); });
-            document.addEventListener('click', (event) => { if (!document.getElementById('actions-menu-container').contains(event.target)) actionsMenu.classList.add('hidden'); });
-            
-            // MENU AÇÕES E NOVOS BOTÕES
-            const modals = { 
-                'bulk-add-btn': 'bulk-add-modal', 
-                'archive-btn': 'archive-modal',
-                'completed-report-btn': 'completed-report-modal' 
-            };
-            
-            Object.keys(modals).forEach(k => {
-                const el = document.getElementById(k);
-                if(el) {
-                    el.addEventListener('click', () => { 
-                        actionsMenu.classList.add('hidden'); 
-                        document.getElementById(modals[k]).classList.remove('hidden');
-                        if (k === 'completed-report-btn') {
-                            document.getElementById('completed-report-search').value = '';
-                            renderCompletedReport();
-                        }
-                    });
-                }
-            });
-            
-            const reportSearch = document.getElementById('completed-report-search');
-            if (reportSearch) reportSearch.addEventListener('input', renderCompletedReport);
-
-            const exportReportBtn = document.getElementById('export-report-btn');
-            if(exportReportBtn) exportReportBtn.addEventListener('click', exportCompletedReport);
-
-            const closeIds = ['bulk-cancel-btn', 'archive-cancel-btn', 'view-archive-close-btn', 'view-archive-close-footer-btn', 'notification-close-btn', 'ocorrencia-cancel-btn', 'completed-report-close-btn', 'completed-report-footer-close-btn'];
-            closeIds.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.addEventListener('click', () => el.closest('.fixed').classList.add('hidden'));
-            });
-
-            document.getElementById('view-archive-btn').addEventListener('click', () => {
-                document.getElementById('archive-modal').classList.add('hidden');
-                document.getElementById('view-archive-modal').classList.remove('hidden');
-                document.getElementById('archive-search-input').value = '';
-                renderArchivedList();
-            });
-            document.getElementById('archive-search-input').addEventListener('input', renderArchivedList);
-            
-            document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
-                const unarchiveBtn = e.target.closest('.unarchive-btn');
-                const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
-
-                if (unarchiveBtn) {
-                    const id = unarchiveBtn.dataset.id;
-                    showConfirm('Desarquivar', 'Restaurar esta análise para o quadro principal?', () => {
-                        const index = archivedTasks.findIndex(t => t.id == id);
-                        if (index > -1) {
-                            const taskToRestore = archivedTasks[index];
-                            archivedTasks.splice(index, 1);
-                            tasks.unshift(taskToRestore); 
-                            saveTasks();
-                            refreshUI(); 
-                            renderArchivedList(); 
-                            showNotification('Análise restaurada.');
-                        }
-                    });
-                } else if (deleteArchiveBtn) {
-                    const id = deleteArchiveBtn.dataset.id;
-                    showConfirm('Excluir do Arquivo', 'Excluir permanentemente esta análise?', () => {
-                        archivedTasks = archivedTasks.filter(t => t.id != id);
-                        saveTasks();
-                        renderArchivedList();
-                    });
-                }
-            });
-
-            document.getElementById('task-list').addEventListener('click', (e) => {
-                const target = e.target;
-                const delBtn = target.closest('.delete-task-btn');
-                const archBtn = target.closest('.archive-single-btn');
-                const toggleBtn = target.closest('.toggle-details-btn');
-                const editOcBtn = target.closest('.edit-ocorrencia-btn');
-
-                if (delBtn) {
-                    showConfirm('Excluir Análise', 'Tem certeza que deseja excluir esta análise?', () => {
-                        tasks = tasks.filter(t => t.id != delBtn.dataset.id);
-                        refreshUI();
-                        showNotification('Análise excluída.');
-                    });
-                } else if (archBtn) {
-                    showConfirm('Arquivar Análise', 'Mover esta análise para o arquivo?', () => {
-                        const idx = tasks.findIndex(t => t.id == archBtn.dataset.id);
-                        if(idx > -1) {
-                            archivedTasks.push(tasks[idx]);
-                            tasks.splice(idx, 1);
-                            refreshUI();
-                            showNotification('Análise arquivada.');
-                        }
-                    });
-                } else if (toggleBtn) {
-                    const t = tasks.find(x => x.id == toggleBtn.dataset.id);
-                    if(t) { t.isExpanded = !t.isExpanded; refreshUI(); }
-                } else if (editOcBtn) {
-                    const t = tasks.find(x => x.id == editOcBtn.dataset.id);
-                    if(t) {
-                        document.getElementById('ocorrencia-task-id').value = t.id;
-                        const list = document.getElementById('ocorrencia-list');
-                        list.innerHTML = '';
-                        currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || []));
-                        renderModalOcorrenciasList();
-                        populateCategorySelect(document.getElementById('add-ocorrencia-categoria'));
-                        document.getElementById('add-ocorrencia-desc').value = ''; 
-                        document.getElementById('ocorrencia-modal').classList.remove('hidden');
+                function renderModalOcorrenciasList() {
+                    const list = document.getElementById('ocorrencia-list');
+                    list.innerHTML = '';
+                    if (currentEditingTaskOcorrencias.length === 0) {
+                        list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>';
+                        return;
                     }
-                }
-            });
+                    currentEditingTaskOcorrencias.forEach((ocor, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'ocorrencia-item-row p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center group dark:bg-slate-800 dark:border-slate-700';
+                        
+                        const inconclusivaBadge = ocor.inconclusiva 
+                            ? `<span class="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-800">INCONCLUSIVA</span>` 
+                            : '';
 
-            document.getElementById('task-list').addEventListener('change', (e) => {
-                if (e.target.classList.contains('status-select')) {
-                    const t = tasks.find(x => x.id == e.target.dataset.id);
-                    if (t) {
-                        if (e.target.dataset.type === 'backup') t.statusBackup = e.target.value;
-                        if (e.target.dataset.type === 'analise') t.statusAnalise = e.target.value;
-                        refreshUI();
-                    }
-                }
-            });
-
-            document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
-                const desc = document.getElementById('add-ocorrencia-desc').value;
-                const cat = document.getElementById('add-ocorrencia-categoria').value;
-                const ini = document.getElementById('add-horario-inicial').value;
-                const fim = document.getElementById('add-horario-final').value;
-                const isInconclusiva = document.getElementById('add-ocorrencia-inconclusiva').checked;
-                
-                if (desc) {
-                    currentEditingTaskOcorrencias.push({ 
-                        categoria: cat, 
-                        desc: desc, 
-                        horarioInicial: ini, 
-                        horarioFinal: fim,
-                        inconclusiva: isInconclusiva 
+                        div.innerHTML = `
+                            <div class="flex-grow">
+                                <p class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center flex-wrap">
+                                    ${ocor.categoria}
+                                    ${inconclusivaBadge}
+                                </p>
+                                <p class="text-xs text-slate-600 dark:text-slate-400">${ocor.desc}</p>
+                                <p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-1">${ocor.horarioInicial} - ${ocor.horarioFinal}</p>
+                            </div>
+                            <div class="flex gap-2 occ-actions">
+                                <button type="button" data-index="${index}" class="edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                                <button type="button" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700" title="Remover"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                            </div>
+                        `;
+                        list.appendChild(div);
                     });
-                    renderModalOcorrenciasList();
-                    
-                    document.getElementById('add-ocorrencia-desc').value = '';
-                    document.getElementById('add-horario-inicial').value = '';
-                    document.getElementById('add-horario-final').value = '';
-                    document.getElementById('add-ocorrencia-inconclusiva').checked = false;
                 }
-            });
 
-            document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const taskId = document.getElementById('ocorrencia-task-id').value;
-                const task = tasks.find(t => t.id == taskId);
-                if (task) {
-                    task.ocorrencias = [...currentEditingTaskOcorrencias];
-                    task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não';
+                function handleTaskSubmit(e) {
+                    e.preventDefault();
+                    const condominio = document.getElementById('form-condominio').value;
+                    const dataAnalise = document.getElementById('form-data-analise').value;
+                    if (tasks.some(t => t.condominio === condominio && t.dataAnalise === dataAnalise)) {
+                        showNotification('Análise já existe.'); return; 
+                    }
+                    tasks.unshift({
+                        id: Date.now(),
+                        condominio: condominio,
+                        dataAnalise: dataAnalise,
+                        semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || 0,
+                        observacoes: document.getElementById('form-observacoes').value,
+                        statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencia: 'Pendente', isExpanded: true, ocorrencias: []
+                    });
                     refreshUI();
-                    document.getElementById('ocorrencia-modal').classList.add('hidden');
-                    showNotification('Ocorrências atualizadas com sucesso.');
+                    document.getElementById('task-modal').classList.add('hidden');
+                    showNotification('Nova análise adicionada.');
                 }
-            });
-            
-            document.getElementById('ocorrencia-cancel-btn').addEventListener('click', () => document.getElementById('ocorrencia-modal').classList.add('hidden'));
-            
-            document.getElementById('ocorrencia-list').addEventListener('click', (e) => {
-                const deleteBtn = e.target.closest('.delete-item-btn');
-                const editBtn = e.target.closest('.edit-item-btn');
 
-                if (deleteBtn) {
-                    const index = parseInt(deleteBtn.dataset.index);
-                    currentEditingTaskOcorrencias.splice(index, 1);
-                    renderModalOcorrenciasList();
-                } else if (editBtn) {
-                    const index = parseInt(editBtn.dataset.index);
-                    const item = currentEditingTaskOcorrencias[index];
-                    document.getElementById('add-ocorrencia-categoria').value = item.categoria;
-                    document.getElementById('add-ocorrencia-desc').value = item.desc;
-                    document.getElementById('add-horario-inicial').value = item.horarioInicial;
-                    document.getElementById('add-horario-final').value = item.horarioFinal;
-                    document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false;
-                    currentEditingTaskOcorrencias.splice(index, 1);
-                    renderModalOcorrenciasList();
+                function handleBulkAddSubmit(e) {
+                    e.preventDefault();
+                    const inputArea = document.getElementById('bulk-input-area').value.trim();
+                    if (!inputArea) { showNotification('Cole os dados.'); return; }
+                    const lines = inputArea.split('\n').filter(line => line.trim().length > 0);
+                    const newTasks = [];
+                    let ignoredCount = 0;
+
+                    lines.forEach((line, index) => {
+                        const lineLower = line.toLowerCase();
+                        if ((lineLower.includes('semana') || lineLower.includes('data')) && (lineLower.includes('unidade') || lineLower.includes('status'))) return;
+
+                        let parts = line.split(/\s{2,}|\t/).map(p => p.trim()).filter(p => p.length > 0);
+                        if (parts.length < 5) { ignoredCount++; return; }
+                        
+                        let unidadeRaw = parts[2] || '';
+                        let statusRaw = parts[parts.length - 1] || 'Pendente';
+                        let isoDate = '';
+                        if (parts[1] && parts[1].includes('/')) {
+                            const [d, m, y] = parts[1].split('/');
+                            if (d && m && y) isoDate = `${y}-${m}-${d}`;
+                        } else {
+                            isoDate = new Date().toISOString().split('T')[0];
+                        }
+
+                        const existsInDb = tasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
+                        const existsInBatch = newTasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
+
+                        if (existsInDb || existsInBatch) { ignoredCount++; return; }
+
+                        newTasks.push({
+                            id: Date.now() + index,
+                            condominio: unidadeRaw,
+                            dataAnalise: isoDate,
+                            semanaDeTrabalho: parseInt(parts[0].replace(/\D/g,'')) || 0,
+                            observacoes: '',
+                            statusBackup: statusRaw.toLowerCase().includes('finalizado') ? 'Concluído' : 'Pendente',
+                            statusAnalise: statusRaw.toLowerCase().includes('finalizado') ? 'Concluída' : 'Pendente',
+                            ocorrencia: 'Não', isExpanded: true, ocorrencias: []
+                        });
+                    });
+
+                    if (newTasks.length > 0) { 
+                        tasks.unshift(...newTasks); refreshUI(); 
+                        document.getElementById('bulk-add-modal').classList.add('hidden'); 
+                        document.getElementById('bulk-input-area').value = ''; 
+                        showNotification(`${newTasks.length} análises importadas. (${ignoredCount} duplicadas/ignoradas)`); 
+                    } else {
+                        showNotification('Nenhum dado importado.');
+                    }
                 }
-            });
 
-            function updateChartsTheme() {
-                const isDark = true; 
-                const fontColor = '#f1f5f9'; 
-                const commonOptions = { scales: { y: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } }, x: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } } }, plugins: { legend: { labels: { color: fontColor } } } };
-                if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
-            }
+                function generatePdvReport(pdvName) {
+                    if (!pdvName) return;
 
-            function setupCharts() {
-                const ctx = document.getElementById('ocorrenciasChart').getContext('2d');
-                ocorrenciasChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] },
-                    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                    const allTasks = [...tasks, ...archivedTasks].filter(t => t.condominio.trim() === pdvName);
+                    
+                    if (allTasks.length === 0) return;
+
+                    const daysCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0}; 
+                    const hoursCount = {};
+
+                    allTasks.forEach(t => {
+                        if (t.ocorrencias && t.ocorrencias.length > 0) {
+                            if (t.dataAnalise) {
+                                const d = new Date(t.dataAnalise + 'T12:00:00');
+                                const dayIndex = d.getDay();
+                                daysCount[dayIndex] += t.ocorrencias.length; 
+                            }
+
+                            t.ocorrencias.forEach(oc => {
+                                if (oc.horarioInicial) {
+                                    const hour = parseInt(oc.horarioInicial.split(':')[0]);
+                                    if (!isNaN(hour)) {
+                                        hoursCount[hour] = (hoursCount[hour] || 0) + 1;
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    let maxDay = -1;
+                    let maxDayCount = -1;
+                    for (let d = 0; d <= 6; d++) {
+                        if (daysCount[d] > maxDayCount) {
+                            maxDayCount = daysCount[d];
+                            maxDay = d;
+                        }
+                    }
+                    const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                    document.getElementById('pdv-critical-day').textContent = maxDayCount > 0 ? dayNames[maxDay] : "N/A";
+
+                    let maxHour = -1;
+                    let maxHourCount = -1;
+                    Object.keys(hoursCount).forEach(h => {
+                        if (hoursCount[h] > maxHourCount) {
+                            maxHourCount = hoursCount[h];
+                            maxHour = h;
+                        }
+                    });
+                    document.getElementById('pdv-critical-time').textContent = maxHourCount > 0 ? `${maxHour}h - ${parseInt(maxHour)+1}h` : "N/A";
+
+                    const ctx = document.getElementById('pdvAnalysisChart').getContext('2d');
+                    
+                    if (pdvAnalysisChart) {
+                        pdvAnalysisChart.destroy();
+                    }
+
+                    pdvAnalysisChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: dayNames,
+                            datasets: [{
+                                label: 'Total de Ocorrências',
+                                data: [0, 1, 2, 3, 4, 5, 6].map(d => daysCount[d]),
+                                backgroundColor: 'rgba(55, 192, 160, 0.6)',
+                                borderColor: '#37c0a0',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                            }
+                        }
+                    });
+
+                    document.getElementById('pdv-analysis-results').classList.remove('hidden');
+                }
+
+                function setupCharts() {
+                    const el = document.getElementById('ocorrenciasChart');
+                    if(!el) return;
+                    const ctx = el.getContext('2d');
+                    ocorrenciasChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] },
+                        options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                    });
+                }
+
+                function showConfirm(title, msg, callback) {
+                    const confirmModal = document.getElementById('custom-confirm-modal');
+                    const confirmTitle = document.getElementById('confirm-modal-title');
+                    const confirmMsg = document.getElementById('confirm-modal-msg');
+                    const confirmYesBtn = document.getElementById('confirm-modal-yes-btn');
+                    const confirmCancelBtn = document.getElementById('confirm-modal-cancel-btn');
+
+                    confirmTitle.textContent = title;
+                    confirmMsg.textContent = msg;
+                    
+                    const newYesBtn = confirmYesBtn.cloneNode(true);
+                    confirmYesBtn.parentNode.replaceChild(newYesBtn, confirmYesBtn);
+                    
+                    const newCancelBtn = confirmCancelBtn.cloneNode(true);
+                    confirmCancelBtn.parentNode.replaceChild(newCancelBtn, confirmCancelBtn);
+
+                    newYesBtn.addEventListener('click', () => {
+                        if (callback) callback();
+                        confirmModal.classList.add('hidden');
+                    });
+
+                    newCancelBtn.addEventListener('click', () => {
+                        confirmModal.classList.add('hidden');
+                    });
+
+                    confirmModal.classList.remove('hidden');
+                }
+
+                function refreshUI() {
+                    saveTasks();
+                    renderTasks();
+                    updateDashboard();
+                    updateCharts();
+                }
+
+                // --- 3. LISTENERS ---
+
+                document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
+                document.getElementById('filtro-data').addEventListener('change', refreshUI); 
+                document.getElementById('filtro-semana').addEventListener('input', refreshUI);
+                document.getElementById('filtro-dia-semana').addEventListener('change', refreshUI); 
+                document.getElementById('filtro-backup').addEventListener('change', refreshUI); 
+                document.getElementById('filtro-analise').addEventListener('change', refreshUI); 
+                
+                document.getElementById('expand-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = true); refreshUI(); });
+                document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
+                document.getElementById('add-task-btn').addEventListener('click', () => {
+                    document.getElementById('task-form').reset();
+                    document.getElementById('form-data-analise').value = formatDateForInput(new Date());
+                    document.getElementById('task-modal').classList.remove('hidden');
                 });
-            }
+                document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
+                document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
+                document.getElementById('bulk-add-form').addEventListener('submit', handleBulkAddSubmit);
+                
+                const actionsMenu = document.getElementById('actions-menu');
+                document.getElementById('actions-menu-btn').addEventListener('click', (e) => { e.stopPropagation(); actionsMenu.classList.toggle('hidden'); });
+                document.addEventListener('click', (event) => { if (!document.getElementById('actions-menu-container').contains(event.target)) actionsMenu.classList.add('hidden'); });
+                
+                const modals = { 
+                    'bulk-add-btn': 'bulk-add-modal', 
+                    'archive-btn': 'archive-modal',
+                    'completed-report-btn': 'completed-report-modal',
+                    'detailed-pdv-btn': 'pdv-detailed-modal' 
+                };
+                
+                Object.keys(modals).forEach(k => {
+                    const el = document.getElementById(k);
+                    if(el) {
+                        el.addEventListener('click', () => { 
+                            actionsMenu.classList.add('hidden'); 
+                            document.getElementById(modals[k]).classList.remove('hidden');
+                            
+                            if (k === 'completed-report-btn') {
+                                document.getElementById('completed-report-search').value = '';
+                                renderCompletedReport();
+                            }
+                            if (k === 'detailed-pdv-btn') {
+                                populatePdvAnalysisSelect(); // Chamada para função corrigida
+                                document.getElementById('pdv-analysis-results').classList.add('hidden');
+                                if(pdvAnalysisChart) pdvAnalysisChart.destroy();
+                            }
+                        });
+                    }
+                });
+                
+                const reportSearch = document.getElementById('completed-report-search');
+                if (reportSearch) reportSearch.addEventListener('input', renderCompletedReport);
 
-            // Inicialização
-            setupCharts();
-            refreshUI();
+                const exportReportBtn = document.getElementById('export-report-btn');
+                if(exportReportBtn) exportReportBtn.addEventListener('click', exportCompletedReport);
+
+                const pdvSelect = document.getElementById('pdv-analysis-select');
+                if(pdvSelect) {
+                    pdvSelect.addEventListener('change', (e) => {
+                        generatePdvReport(e.target.value);
+                    });
+                }
+                
+                const closePdvModalBtn = document.getElementById('pdv-detailed-close-btn');
+                if(closePdvModalBtn) closePdvModalBtn.addEventListener('click', () => document.getElementById('pdv-detailed-modal').classList.add('hidden'));
+                
+                const closePdvFooterBtn = document.getElementById('pdv-detailed-footer-close-btn');
+                if(closePdvFooterBtn) closePdvFooterBtn.addEventListener('click', () => document.getElementById('pdv-detailed-modal').classList.add('hidden'));
+
+                const closeIds = ['bulk-cancel-btn', 'archive-cancel-btn', 'view-archive-close-btn', 'view-archive-close-footer-btn', 'notification-close-btn', 'ocorrencia-cancel-btn', 'completed-report-close-btn', 'completed-report-footer-close-btn'];
+                closeIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.addEventListener('click', () => el.closest('.fixed').classList.add('hidden'));
+                });
+
+                document.getElementById('view-archive-btn').addEventListener('click', () => {
+                    document.getElementById('archive-modal').classList.add('hidden');
+                    document.getElementById('view-archive-modal').classList.remove('hidden');
+                    document.getElementById('archive-search-input').value = '';
+                    renderArchivedList();
+                });
+                document.getElementById('archive-search-input').addEventListener('input', renderArchivedList);
+                
+                document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
+                    const unarchiveBtn = e.target.closest('.unarchive-btn');
+                    const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
+
+                    if (unarchiveBtn) {
+                        const id = unarchiveBtn.dataset.id;
+                        showConfirm('Desarquivar', 'Restaurar esta análise para o quadro principal?', () => {
+                            const index = archivedTasks.findIndex(t => t.id == id);
+                            if (index > -1) {
+                                const taskToRestore = archivedTasks[index];
+                                archivedTasks.splice(index, 1);
+                                tasks.unshift(taskToRestore); 
+                                saveTasks();
+                                refreshUI(); 
+                                renderArchivedList(); 
+                                showNotification('Análise restaurada.');
+                            }
+                        });
+                    } else if (deleteArchiveBtn) {
+                        const id = deleteArchiveBtn.dataset.id;
+                        showConfirm('Excluir do Arquivo', 'Excluir permanentemente esta análise?', () => {
+                            archivedTasks = archivedTasks.filter(t => t.id != id);
+                            saveTasks();
+                            renderArchivedList();
+                        });
+                    }
+                });
+
+                document.getElementById('task-list').addEventListener('click', (e) => {
+                    const target = e.target;
+                    const delBtn = target.closest('.delete-task-btn');
+                    const archBtn = target.closest('.archive-single-btn');
+                    const toggleBtn = target.closest('.toggle-details-btn');
+                    const editOcBtn = target.closest('.edit-ocorrencia-btn');
+
+                    if (delBtn) {
+                        showConfirm('Excluir Análise', 'Tem certeza que deseja excluir esta análise?', () => {
+                            tasks = tasks.filter(t => t.id != delBtn.dataset.id);
+                            refreshUI();
+                            showNotification('Análise excluída.');
+                        });
+                    } else if (archBtn) {
+                        showConfirm('Arquivar Análise', 'Mover esta análise para o arquivo?', () => {
+                            const idx = tasks.findIndex(t => t.id == archBtn.dataset.id);
+                            if(idx > -1) {
+                                archivedTasks.push(tasks[idx]);
+                                tasks.splice(idx, 1);
+                                refreshUI();
+                                showNotification('Análise arquivada.');
+                            }
+                        });
+                    } else if (toggleBtn) {
+                        const t = tasks.find(x => x.id == toggleBtn.dataset.id);
+                        if(t) { t.isExpanded = !t.isExpanded; refreshUI(); }
+                    } else if (editOcBtn) {
+                        const t = tasks.find(x => x.id == editOcBtn.dataset.id);
+                        if(t) {
+                            document.getElementById('ocorrencia-task-id').value = t.id;
+                            const list = document.getElementById('ocorrencia-list');
+                            list.innerHTML = '';
+                            currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || []));
+                            renderModalOcorrenciasList();
+                            populateCategorySelect(document.getElementById('add-ocorrencia-categoria'));
+                            document.getElementById('add-ocorrencia-desc').value = ''; 
+                            document.getElementById('ocorrencia-modal').classList.remove('hidden');
+                        }
+                    }
+                });
+
+                document.getElementById('task-list').addEventListener('change', (e) => {
+                    if (e.target.classList.contains('status-select')) {
+                        const t = tasks.find(x => x.id == e.target.dataset.id);
+                        if (t) {
+                            if (e.target.dataset.type === 'backup') t.statusBackup = e.target.value;
+                            if (e.target.dataset.type === 'analise') t.statusAnalise = e.target.value;
+                            refreshUI();
+                        }
+                    }
+                });
+
+                document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
+                    const desc = document.getElementById('add-ocorrencia-desc').value;
+                    const cat = document.getElementById('add-ocorrencia-categoria').value;
+                    const ini = document.getElementById('add-horario-inicial').value;
+                    const fim = document.getElementById('add-horario-final').value;
+                    const isInconclusiva = document.getElementById('add-ocorrencia-inconclusiva').checked;
+                    
+                    if (desc) {
+                        currentEditingTaskOcorrencias.push({ 
+                            categoria: cat, 
+                            desc: desc, 
+                            horarioInicial: ini, 
+                            horarioFinal: fim,
+                            inconclusiva: isInconclusiva 
+                        });
+                        renderModalOcorrenciasList();
+                        
+                        document.getElementById('add-ocorrencia-desc').value = '';
+                        document.getElementById('add-horario-inicial').value = '';
+                        document.getElementById('add-horario-final').value = '';
+                        document.getElementById('add-ocorrencia-inconclusiva').checked = false;
+                    }
+                });
+
+                document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const taskId = document.getElementById('ocorrencia-task-id').value;
+                    const task = tasks.find(t => t.id == taskId);
+                    if (task) {
+                        task.ocorrencias = [...currentEditingTaskOcorrencias];
+                        task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não';
+                        refreshUI();
+                        document.getElementById('ocorrencia-modal').classList.add('hidden');
+                        showNotification('Ocorrências atualizadas com sucesso.');
+                    }
+                });
+                
+                document.getElementById('ocorrencia-cancel-btn').addEventListener('click', () => document.getElementById('ocorrencia-modal').classList.add('hidden'));
+                
+                document.getElementById('ocorrencia-list').addEventListener('click', (e) => {
+                    const deleteBtn = e.target.closest('.delete-item-btn');
+                    const editBtn = e.target.closest('.edit-item-btn');
+
+                    if (deleteBtn) {
+                        const index = parseInt(deleteBtn.dataset.index);
+                        currentEditingTaskOcorrencias.splice(index, 1);
+                        renderModalOcorrenciasList();
+                    } else if (editBtn) {
+                        const index = parseInt(editBtn.dataset.index);
+                        const item = currentEditingTaskOcorrencias[index];
+                        document.getElementById('add-ocorrencia-categoria').value = item.categoria;
+                        document.getElementById('add-ocorrencia-desc').value = item.desc;
+                        document.getElementById('add-horario-inicial').value = item.horarioInicial;
+                        document.getElementById('add-horario-final').value = item.horarioFinal;
+                        document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false;
+                        currentEditingTaskOcorrencias.splice(index, 1);
+                        renderModalOcorrenciasList();
+                    }
+                });
+
+                // CORREÇÃO 3: Lógica de Autocomplete Adicionada
+                const condoInput = document.getElementById('form-condominio');
+                const autoList = document.getElementById('autocomplete-list');
+
+                if (condoInput && autoList) {
+                    condoInput.addEventListener('input', function() {
+                        const val = this.value.toLowerCase();
+                        autoList.innerHTML = '';
+                        if (!val) {
+                            autoList.classList.add('hidden');
+                            return;
+                        }
+
+                        // Busca histórico de condomínios já cadastrados
+                        const history = [...new Set([...tasks, ...archivedTasks].map(t => t.condominio))];
+                        const matches = history.filter(h => h.toLowerCase().includes(val));
+
+                        if (matches.length > 0) {
+                            autoList.classList.remove('hidden');
+                            matches.forEach(m => {
+                                const div = document.createElement('div');
+                                div.className = "p-2 hover:bg-slate-100 cursor-pointer text-sm dark:hover:bg-slate-600 dark:text-slate-100";
+                                div.textContent = m;
+                                div.addEventListener('click', () => {
+                                    condoInput.value = m;
+                                    autoList.classList.add('hidden');
+                                });
+                                autoList.appendChild(div);
+                            });
+                        } else {
+                            autoList.classList.add('hidden');
+                        }
+                    });
+
+                    document.addEventListener('click', (e) => {
+                        if (e.target !== condoInput) {
+                            autoList.classList.add('hidden');
+                        }
+                    });
+                }
+
+                // Inicialização
+                setupCharts();
+                refreshUI();
 
             } catch (error) {
                 console.error("Erro crítico na inicialização:", error);
