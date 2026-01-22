@@ -39,18 +39,16 @@
                 height: 350px;
             }
         }
-        .details-content.hidden {
-            display: none;
-        }
-        .toggle-details-btn svg {
-            transition: transform 0.2s ease-in-out;
-        }
-        .toggle-details-btn.collapsed svg {
-            transform: rotate(180deg);
-        }
+        .details-content.hidden { display: none; }
+        .toggle-details-btn svg { transition: transform 0.2s ease-in-out; }
+        .toggle-details-btn.collapsed svg { transform: rotate(180deg); }
         .z-50 { z-index: 50; }
         .z-60 { z-index: 60; }
+        .z-70 { z-index: 70; }
         .occ-actions { opacity: 1; }
+        /* Estilos específicos do Analytics */
+        .analytics-card { transition: all 0.3s ease; }
+        .analytics-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -62,6 +60,7 @@
             <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
         </header>
 
+        <!-- Resumo do Dashboard -->
         <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
@@ -85,6 +84,7 @@
             </div>
         </section>
 
+        <!-- Filtros e Ações -->
         <section class="bg-white p-4 rounded-xl shadow-md mb-8 dark:bg-slate-800 dark:shadow-xl">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-4 flex-grow">
@@ -134,8 +134,9 @@
                         <div id="actions-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20 dark:bg-slate-700 dark:ring-slate-600">
                             <div class="py-1">
                                 <button id="bulk-add-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Importar Planilha</button>
+                                <button id="open-analytics-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 font-semibold text-brand">Analytics de Produtividade</button>
                                 <button id="completed-report-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Relatório Concluídas</button>
-                                <button id="detailed-pdv-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 font-semibold text-brand">Análise Detalhada PDV</button>
+                                <button id="detailed-pdv-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise Detalhada PDV</button>
                                 <button id="archive-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Arquivar</button>
                             </div>
                         </div>
@@ -144,9 +145,12 @@
             </div>
         </section>
 
+        <!-- Lista de Tarefas -->
         <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            </main>
+            <!-- Cards Renderizados via JS -->
+        </main>
         
+        <!-- Gráficos -->
         <section class="mt-12">
             <h2 class="text-2xl font-bold text-center mb-8 text-slate-800 dark:text-slate-100">Ocorrências da Semana (por Condomínio)</h2>
             <div class="flex justify-center">
@@ -166,9 +170,162 @@
         </section>
     </div>
 
+    <!-- Indicador de Versão no Rodapé -->
     <footer class="p-4 text-center text-xs text-slate-400 dark:text-slate-600">
-        v3.0 (Corrigido)
+        v3.5 (Com Analytics Integrado)
     </footer>
+
+    <!-- MODAIS EXISTENTES -->
+    <!-- (Mantidos: task-modal, ocorrencia-modal, bulk-add-modal, etc.) -->
+
+    <!-- [INÍCIO] NOVO MODAL: ANALYTICS E RELATÓRIO PDV -->
+    <div id="analytics-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-0 hidden z-70">
+        <div class="bg-slate-100 w-full h-full md:h-[95vh] md:w-[95vw] md:rounded-xl overflow-hidden flex flex-col dark:bg-slate-900 shadow-2xl">
+            <!-- Header Analytics -->
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    <h2 class="text-xl font-bold">Analytics & Importação (Beta)</h2>
+                </div>
+                <div class="flex gap-2">
+                    <button id="analytics-back-to-input-btn" class="hidden px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm text-white transition-colors">Nova Importação</button>
+                    <button id="analytics-close-btn" class="p-2 hover:bg-slate-700 rounded-full transition-colors text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                </div>
+            </div>
+
+            <!-- Corpo Analytics -->
+            <div class="flex-grow overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-6" id="analytics-body">
+                
+                <!-- 1. TELA DE IMPORTAÇÃO (INPUT) -->
+                <div id="analytics-input-view" class="max-w-4xl mx-auto animate-fade-in">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-slate-700 dark:text-slate-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                            Importar Dados (Novo Formato)
+                        </h2>
+                        
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 dark:bg-blue-900/20 dark:border-blue-700">
+                            <h3 class="font-bold text-blue-800 dark:text-blue-200 text-sm">Instruções:</h3>
+                            <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                Copie as linhas da planilha de produtividade (colunas: Data Vis, Data Prod, Cód, Unidade, OC, Operador, Obs).<br>
+                                O sistema identificará automaticamente as colunas.
+                            </p>
+                        </div>
+
+                        <textarea id="analytics-raw-input" class="w-full h-64 p-4 border border-slate-300 rounded-lg font-mono text-xs focus:ring-2 focus:ring-brand focus:border-transparent mb-4 whitespace-pre dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Cole aqui seus dados... Exemplo: 16/04/2025  15/04/2025  346  RESIDENCIAL TERRACO  1  1  7  Dayane  ..."></textarea>
+
+                        <div class="flex gap-3 justify-end">
+                            <button id="analytics-load-example-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-medium text-sm transition-colors dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">Carregar Exemplo</button>
+                            <button id="analytics-process-btn" class="bg-brand hover:bg-brand-hover text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-transform hover:scale-105">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                                Gerar Relatório
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. TELA DE DASHBOARD (RESULTADOS) -->
+                <div id="analytics-dashboard-view" class="hidden space-y-6">
+                    
+                    <!-- Filtro de Semanas -->
+                    <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h1 class="text-lg font-bold text-slate-800 dark:text-slate-100">Dashboard de Produtividade</h1>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Análise de dados importados</p>
+                        </div>
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <span class="text-sm text-slate-500 dark:text-slate-400">Filtrar Semana:</span>
+                            <select id="analytics-week-filter" class="flex-grow md:w-64 p-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 text-sm focus:ring-2 focus:ring-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                                <option value="all">Todas as Semanas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Cards de KPI -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
+                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Monitoramentos</p>
+                            <h3 id="kpi-visitas" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">0</h3>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
+                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Ocorrências (OC)</p>
+                            <h3 id="kpi-ocs" class="text-2xl font-bold text-red-600 mt-1">0</h3>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
+                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Falhas Técnicas</p>
+                            <h3 id="kpi-issues" class="text-2xl font-bold text-orange-500 mt-1">0</h3>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
+                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">PDV Crítico</p>
+                            <h3 id="kpi-critical-pdv" class="text-lg font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">N/A</h3>
+                            <p id="kpi-critical-count" class="text-xs text-red-500 font-bold">0 OCs</p>
+                        </div>
+                    </div>
+
+                    <!-- ALERTA DE SPAM (RISCO) -->
+                    <div id="analytics-spam-section" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-red-200 dark:border-red-800 overflow-hidden">
+                        <div class="bg-gradient-to-r from-red-600 to-orange-600 p-3 flex justify-between items-center text-white">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                <div>
+                                    <h3 class="text-sm font-bold">Sugestões de Prioridade (Spam de Alerta)</h3>
+                                    <p class="text-[10px] text-red-100 opacity-90">Locais com alto índice de furto sem análise recente (>5 dias).</p>
+                                </div>
+                            </div>
+                            <span id="spam-count-badge" class="bg-white/20 px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                        </div>
+                        <div id="spam-list-container" class="p-3 bg-slate-50 dark:bg-slate-900 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+                            <!-- Items inseridos via JS -->
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICOS -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Top 5 PDVs (Ocorrências)</h3>
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="chart-top-pdvs"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Ocorrências por Dia da Semana</h3>
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="chart-days-week"></canvas>
+                            </div>
+                        </div>
+                         <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 lg:col-span-2">
+                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Produtividade por Operador</h3>
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="chart-operators"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABELA DE PICOS MENSAIS -->
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Picos Mensais (Top 10)</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left text-slate-500 dark:text-slate-400">
+                                <thead class="bg-slate-50 dark:bg-slate-900 font-medium">
+                                    <tr>
+                                        <th class="px-4 py-2">PDV</th>
+                                        <th class="px-4 py-2">Mês Crítico</th>
+                                        <th class="px-4 py-2 text-center">OCs no Mês</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-peaks-body" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- [FIM] NOVO MODAL -->
 
     <div id="pdv-detailed-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-60">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl flex flex-col dark:bg-slate-800 dark:shadow-xl max-h-[90vh]">
@@ -377,11 +534,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             // CORREÇÃO 1: Início correto do bloco try
             try {
-                console.log("Painel de Monitoramento v3.0 - Corrigido."); 
+                console.log("Painel de Monitoramento v3.5 - Analytics Integrado"); 
 
                 // --- 1. VARIÁVEIS GLOBAIS ---
                 let ocorrenciasChart;
                 let pdvAnalysisChart;
+                // Variáveis dos Gráficos do Analytics
+                let chartTopPdvs, chartDaysWeek, chartOperators;
+                // Variável para dados do Analytics Importados
+                let analyticsData = null; 
+
                 let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
                 let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
                 let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
@@ -395,8 +557,17 @@
                     'Concluída': 'bg-emerald-100 text-emerald-600',
                     'Não visualizar': 'bg-slate-100 text-slate-500'
                 };
+                
+                // Exemplo para Analytics
+                const analyticsExampleData = `16/04/2025\t15/04/2025\t346\tRESIDENCIAL TERRACO\t1\t1\t7\tDayane\t
+28/03/2025\t29/04/2025\t281\tSKY PAULICEIA\t1\t1\t0\tMarcelo\tcamera 1 não possui gravação
+17/04/2025\t30/04/2025\t168\tMORADAS DA FLORA\t1\t1\t1\tDayane\tVisualizado por Vitória
+24/04/2025\t30/04/2025\t286\tSPAZIO MARESIAS\t1\t1\t6\tJoao Pablo\t
+29/03/2025\t30/04/2025\t275\tMUNDI GUARULHOS\t1\t1\t2\tMarcelo\t
+28/03/2025\t29/04/2025\t245\tFLORESTA CAMPO LIMPO\t1\t1\t3\tMarcelo\tCamera 2 corrompeu às 09h00`;
 
-                // --- 2. FUNÇÕES ---
+
+                // --- 2. FUNÇÕES DO SISTEMA PRINCIPAL ---
 
                 function saveTasks() {
                     localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
@@ -945,7 +1116,268 @@
                     updateCharts();
                 }
 
-                // --- 3. LISTENERS ---
+                // --- 3. NOVA LÓGICA DE ANALYTICS (Mesclada) ---
+
+                function getWeekInfo(dateStr) {
+                    if (!dateStr) return null;
+                    const parts = dateStr.split('/');
+                    if (parts.length !== 3) return null;
+                    
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    const year = parseInt(parts[2], 10);
+                    
+                    const date = new Date(year, month, day);
+                    if (isNaN(date.getTime())) return null;
+
+                    const dayOfWeek = date.getDay();
+                    const startOfWeek = new Date(date);
+                    startOfWeek.setDate(date.getDate() - dayOfWeek);
+                    startOfWeek.setHours(0, 0, 0, 0);
+                    
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+                    const fmt = d => `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`;
+                    
+                    return {
+                        key: startOfWeek.getTime(),
+                        label: `Semana ${fmt(startOfWeek)} a ${fmt(endOfWeek)}`,
+                        startDate: startOfWeek
+                    };
+                }
+
+                function processAnalyticsData() {
+                    const rawInput = document.getElementById('analytics-raw-input').value;
+                    if (!rawInput.trim()) { showNotification("Insira dados antes de gerar."); return; }
+
+                    try {
+                        const rows = rawInput.trim().split('\n');
+                        const parsed = rows.map((row, index) => {
+                            let cols = row.split('\t');
+                            if (cols.length < 5) return null;
+
+                            const dataVisualizacao = cols[0]?.trim();
+                            const dataProdutividade = cols[1]?.trim();
+                            const pdvNome = cols[3]?.trim();
+                            const ocorrencias = parseInt(cols[6]?.trim()) || 0;
+                            
+                            let operadorRaw = cols[7]?.trim() || '';
+                            const operador = operadorRaw.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                            const obs = cols[8]?.trim() || '';
+
+                            if (dataVisualizacao.toLowerCase().includes('data') || pdvNome.toLowerCase().includes('unidade') || !pdvNome) return null;
+
+                            const weekInfo = getWeekInfo(dataProdutividade);
+
+                            return {
+                                id: index,
+                                dataVis: dataVisualizacao,
+                                dataProd: dataProdutividade,
+                                weekKey: weekInfo ? weekInfo.key : 0,
+                                weekLabel: weekInfo ? weekInfo.label : 'Data Inválida',
+                                pdv: pdvNome,
+                                oc: ocorrencias,
+                                operador: operador,
+                                obs: obs,
+                                hasIssue: obs.toLowerCase().match(/(corrompido|sem gravação|cortes|travando|off|desconectad|problema)/)
+                            };
+                        }).filter(i => i !== null);
+
+                        if (parsed.length === 0) { showNotification("Nenhum dado válido identificado."); return; }
+                        
+                        analyticsData = parsed;
+                        updateAnalyticsUI('all');
+                        
+                        // Troca de view
+                        document.getElementById('analytics-input-view').classList.add('hidden');
+                        document.getElementById('analytics-dashboard-view').classList.remove('hidden');
+                        document.getElementById('analytics-back-to-input-btn').classList.remove('hidden');
+                        
+                    } catch (err) {
+                        console.error(err);
+                        showNotification("Erro ao processar dados.");
+                    }
+                }
+
+                function updateAnalyticsUI(selectedWeekKey) {
+                    if (!analyticsData) return;
+
+                    // 1. Popular filtro de semanas
+                    const weeksMap = new Map();
+                    analyticsData.forEach(item => { if (item.weekKey !== 0) weeksMap.set(item.weekKey, item.weekLabel); });
+                    const weeks = Array.from(weeksMap.entries()).sort((a,b) => a[0] - b[0]);
+                    
+                    const select = document.getElementById('analytics-week-filter');
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="all">Todas as Semanas</option>';
+                    weeks.forEach(([key, label]) => {
+                        const opt = document.createElement('option');
+                        opt.value = key;
+                        opt.textContent = label;
+                        select.appendChild(opt);
+                    });
+                    // Tenta manter a seleção se possível, ou usa o argumento
+                    if(selectedWeekKey !== undefined) select.value = selectedWeekKey;
+                    else select.value = currentVal || 'all';
+
+                    // 2. Filtrar dados
+                    const filterVal = select.value;
+                    const filtered = filterVal === 'all' ? analyticsData : analyticsData.filter(i => i.weekKey == filterVal);
+
+                    // 3. KPIs
+                    const totalVis = filtered.length;
+                    const totalOc = filtered.reduce((acc, c) => acc + c.oc, 0);
+                    const totalIssues = filtered.filter(i => i.hasIssue).length;
+
+                    document.getElementById('kpi-visitas').textContent = totalVis;
+                    document.getElementById('kpi-ocs').textContent = totalOc;
+                    document.getElementById('kpi-issues').textContent = totalIssues;
+
+                    // 4. Rankings (PDV, Dia, Operador)
+                    const pdvStats = {};
+                    const opStats = {};
+                    const dayStats = { 'Domingo':0, 'Segunda-feira':0, 'Terça-feira':0, 'Quarta-feira':0, 'Quinta-feira':0, 'Sexta-feira':0, 'Sábado':0 };
+
+                    filtered.forEach(item => {
+                        pdvStats[item.pdv] = (pdvStats[item.pdv] || 0) + item.oc;
+                        if(item.operador) opStats[item.operador] = (opStats[item.operador] || 0) + item.oc;
+                        
+                        if (item.oc > 0 && item.dataProd) {
+                            const parts = item.dataProd.split('/');
+                            if(parts.length===3) {
+                                const dt = new Date(parts[2], parts[1]-1, parts[0]);
+                                if(!isNaN(dt)) {
+                                    const dName = dt.toLocaleDateString('pt-BR', { weekday: 'long' });
+                                    const dCap = dName.charAt(0).toUpperCase() + dName.slice(1);
+                                    if(dayStats[dCap] !== undefined) dayStats[dCap] += item.oc;
+                                }
+                            }
+                        }
+                    });
+
+                    // Top PDV KPI
+                    const sortedPdvs = Object.entries(pdvStats).sort((a,b) => b[1] - a[1]);
+                    if (sortedPdvs.length > 0) {
+                        document.getElementById('kpi-critical-pdv').textContent = sortedPdvs[0][0];
+                        document.getElementById('kpi-critical-count').textContent = sortedPdvs[0][1] + ' OCs';
+                    } else {
+                        document.getElementById('kpi-critical-pdv').textContent = 'N/A';
+                        document.getElementById('kpi-critical-count').textContent = '0 OCs';
+                    }
+
+                    // 5. Spam / Risco (Baseado em TODOS os dados, não só filtro)
+                    let maxTs = 0;
+                    const pdvRiskMap = {};
+                    analyticsData.forEach(item => {
+                         if (item.dataProd) {
+                            const parts = item.dataProd.split('/');
+                            const dt = new Date(parts[2], parts[1]-1, parts[0]);
+                            if (!isNaN(dt) && dt.getTime() > maxTs) maxTs = dt.getTime();
+                             
+                            if (!pdvRiskMap[item.pdv]) pdvRiskMap[item.pdv] = { name: item.pdv, total: 0, lastTs: 0 };
+                            pdvRiskMap[item.pdv].total += item.oc;
+                            if (!isNaN(dt) && dt.getTime() > pdvRiskMap[item.pdv].lastTs) pdvRiskMap[item.pdv].lastTs = dt.getTime();
+                        }
+                    });
+                    
+                    const spamList = Object.values(pdvRiskMap)
+                        .map(p => ({ ...p, daysInactive: Math.floor((maxTs - p.lastTs) / (86400000)) }))
+                        .filter(p => p.total >= 3 && p.daysInactive >= 5)
+                        .sort((a,b) => b.total - a.total);
+
+                    const spamContainer = document.getElementById('spam-list-container');
+                    const spamBadge = document.getElementById('spam-count-badge');
+                    spamContainer.innerHTML = '';
+                    if (spamList.length > 0) {
+                        document.getElementById('analytics-spam-section').classList.remove('hidden');
+                        spamBadge.textContent = spamList.length;
+                        spamList.forEach(p => {
+                            const el = document.createElement('div');
+                            el.className = 'bg-white border-l-4 border-red-500 p-2 rounded shadow-sm text-xs flex justify-between items-center';
+                            el.innerHTML = `<div><strong>${p.name}</strong><br><span class="text-slate-500">Inativo há ${p.daysInactive} dias</span></div><div class="text-right font-bold text-red-600">${p.total} OCs</div>`;
+                            spamContainer.appendChild(el);
+                        });
+                    } else {
+                        document.getElementById('analytics-spam-section').classList.add('hidden');
+                    }
+
+                    // 6. Atualizar Gráficos Chart.js
+                    updateAnalyticsCharts(sortedPdvs.slice(0,5), dayStats, opStats);
+
+                    // 7. Tabela Picos Mensais
+                    const pdvMonths = {};
+                    analyticsData.forEach(item => {
+                         if (item.oc > 0 && item.dataProd) {
+                            const parts = item.dataProd.split('/');
+                            if(parts.length===3) {
+                                const mKey = `${parts[2]}-${parts[1]}`;
+                                const dt = new Date(parts[2], parts[1]-1, 1);
+                                const mName = dt.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+                                if(!pdvMonths[item.pdv]) pdvMonths[item.pdv] = {};
+                                if(!pdvMonths[item.pdv][mKey]) pdvMonths[item.pdv][mKey] = { name: mName, count: 0 };
+                                pdvMonths[item.pdv][mKey].count += item.oc;
+                            }
+                        }
+                    });
+                    
+                    const peaks = Object.keys(pdvMonths).map(pdv => {
+                        const months = Object.values(pdvMonths[pdv]);
+                        if(months.length === 0) return null;
+                        const peak = months.reduce((max, c) => c.count > max.count ? c : max, months[0]);
+                        return { name: pdv, month: peak.name, count: peak.count };
+                    }).filter(i => i!==null).sort((a,b) => b.count - a.count).slice(0,10);
+
+                    const peakBody = document.getElementById('table-peaks-body');
+                    peakBody.innerHTML = '';
+                    peaks.forEach(p => {
+                        peakBody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50"><td class="px-4 py-2 font-medium">${p.name}</td><td class="px-4 py-2 text-blue-600 font-bold uppercase">${p.month}</td><td class="px-4 py-2 text-center"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">${p.count}</span></td></tr>`);
+                    });
+                }
+
+                function updateAnalyticsCharts(topPdvs, dayStats, opStats) {
+                    // Helper para destruir charts antigos
+                    const destroy = (chart) => { if(chart) chart.destroy(); }
+                    destroy(chartTopPdvs); destroy(chartDaysWeek); destroy(chartOperators);
+
+                    // 1. Top PDVs
+                    const ctxPdv = document.getElementById('chart-top-pdvs').getContext('2d');
+                    chartTopPdvs = new Chart(ctxPdv, {
+                        type: 'bar',
+                        data: {
+                            labels: topPdvs.map(i => i[0]),
+                            datasets: [{ label: 'Ocorrências', data: topPdvs.map(i => i[1]), backgroundColor: '#ef4444', borderRadius: 4 }]
+                        },
+                        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+
+                    // 2. Dias da Semana
+                    const daysOrder = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                    const ctxDays = document.getElementById('chart-days-week').getContext('2d');
+                    chartDaysWeek = new Chart(ctxDays, {
+                        type: 'bar',
+                        data: {
+                            labels: daysOrder,
+                            datasets: [{ label: 'Volume', data: daysOrder.map(d => dayStats[d]), backgroundColor: '#3b82f6', borderRadius: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+
+                    // 3. Operadores
+                    const sortedOps = Object.entries(opStats).sort((a,b) => b[1] - a[1]).slice(0, 15); // Top 15
+                    const ctxOps = document.getElementById('chart-operators').getContext('2d');
+                    chartOperators = new Chart(ctxOps, {
+                        type: 'bar',
+                        data: {
+                            labels: sortedOps.map(i => i[0]),
+                            datasets: [{ label: 'OCs Captadas', data: sortedOps.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+
+
+                // --- 4. LISTENERS E INICIALIZAÇÃO ---
 
                 document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
                 document.getElementById('filtro-data').addEventListener('change', refreshUI); 
@@ -973,7 +1405,8 @@
                     'bulk-add-btn': 'bulk-add-modal', 
                     'archive-btn': 'archive-modal',
                     'completed-report-btn': 'completed-report-modal',
-                    'detailed-pdv-btn': 'pdv-detailed-modal' 
+                    'detailed-pdv-btn': 'pdv-detailed-modal',
+                    'open-analytics-btn': 'analytics-modal'
                 };
                 
                 Object.keys(modals).forEach(k => {
@@ -988,7 +1421,7 @@
                                 renderCompletedReport();
                             }
                             if (k === 'detailed-pdv-btn') {
-                                populatePdvAnalysisSelect(); // Chamada para função corrigida
+                                populatePdvAnalysisSelect();
                                 document.getElementById('pdv-analysis-results').classList.add('hidden');
                                 if(pdvAnalysisChart) pdvAnalysisChart.destroy();
                             }
@@ -996,6 +1429,20 @@
                     }
                 });
                 
+                // Analytics Listeners
+                document.getElementById('analytics-load-example-btn').addEventListener('click', () => {
+                    document.getElementById('analytics-raw-input').value = analyticsExampleData;
+                });
+                document.getElementById('analytics-process-btn').addEventListener('click', processAnalyticsData);
+                document.getElementById('analytics-back-to-input-btn').addEventListener('click', () => {
+                    document.getElementById('analytics-input-view').classList.remove('hidden');
+                    document.getElementById('analytics-dashboard-view').classList.add('hidden');
+                    document.getElementById('analytics-back-to-input-btn').classList.add('hidden');
+                });
+                document.getElementById('analytics-close-btn').addEventListener('click', () => document.getElementById('analytics-modal').classList.add('hidden'));
+                document.getElementById('analytics-week-filter').addEventListener('change', (e) => updateAnalyticsUI(e.target.value));
+
+                // Outros Listeners
                 const reportSearch = document.getElementById('completed-report-search');
                 if (reportSearch) reportSearch.addEventListener('input', renderCompletedReport);
 
@@ -1169,7 +1616,7 @@
                     }
                 });
 
-                // CORREÇÃO 3: Lógica de Autocomplete Adicionada
+                // Lógica de Autocomplete Adicionada
                 const condoInput = document.getElementById('form-condominio');
                 const autoList = document.getElementById('autocomplete-list');
 
