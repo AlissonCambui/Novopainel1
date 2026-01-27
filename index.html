@@ -28,16 +28,7 @@
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
             height: 300px;
-            max-height: 400px;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
         }
         .details-content.hidden { display: none; }
         .toggle-details-btn svg { transition: transform 0.2s ease-in-out; }
@@ -46,9 +37,30 @@
         .z-60 { z-index: 60; }
         .z-70 { z-index: 70; }
         .occ-actions { opacity: 1; }
-        /* Estilos específicos do Analytics */
-        .analytics-card { transition: all 0.3s ease; }
-        .analytics-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        /* Estilos do Analytics Limpo */
+        .analytics-tab-btn {
+            border-bottom-width: 2px;
+            border-color: transparent;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .analytics-tab-btn.active {
+            border-color: #37c0a0;
+            color: #37c0a0;
+            font-weight: 600;
+        }
+        .dark .analytics-tab-btn { color: #94a3b8; }
+        .dark .analytics-tab-btn.active { color: #37c0a0; }
+        
+        /* Animação suave entre abas */
+        .tab-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -172,20 +184,20 @@
 
     <!-- Indicador de Versão no Rodapé -->
     <footer class="p-4 text-center text-xs text-slate-400 dark:text-slate-600">
-        v3.5 (Com Analytics Integrado)
+        v3.8.1 (Correção Fonte Cards)
     </footer>
 
     <!-- MODAIS EXISTENTES -->
     <!-- (Mantidos: task-modal, ocorrencia-modal, bulk-add-modal, etc.) -->
 
-    <!-- [INÍCIO] NOVO MODAL: ANALYTICS E RELATÓRIO PDV -->
+    <!-- [INÍCIO] NOVO MODAL: ANALYTICS E RELATÓRIO PDV (OTIMIZADO) -->
     <div id="analytics-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-0 hidden z-70">
         <div class="bg-slate-100 w-full h-full md:h-[95vh] md:w-[95vw] md:rounded-xl overflow-hidden flex flex-col dark:bg-slate-900 shadow-2xl">
             <!-- Header Analytics -->
-            <div class="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0 shadow-md">
                 <div class="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                    <h2 class="text-xl font-bold">Analytics & Importação (Beta)</h2>
+                    <h2 class="text-xl font-bold">Analytics de Produtividade</h2>
                 </div>
                 <div class="flex gap-2">
                     <button id="analytics-back-to-input-btn" class="hidden px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm text-white transition-colors">Nova Importação</button>
@@ -225,101 +237,126 @@
                 </div>
 
                 <!-- 2. TELA DE DASHBOARD (RESULTADOS) -->
-                <div id="analytics-dashboard-view" class="hidden space-y-6">
+                <div id="analytics-dashboard-view" class="hidden flex-col h-full space-y-4">
                     
-                    <!-- Filtro de Semanas -->
-                    <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <!-- Header e Filtro Simplificado -->
+                    <div class="flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                         <div>
-                            <h1 class="text-lg font-bold text-slate-800 dark:text-slate-100">Dashboard de Produtividade</h1>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Análise de dados importados</p>
+                            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Resultado da Análise</h2>
+                            <p class="text-xs text-slate-500">Dados importados com sucesso.</p>
                         </div>
-                        <div class="flex items-center gap-2 w-full md:w-auto">
-                            <span class="text-sm text-slate-500 dark:text-slate-400">Filtrar Semana:</span>
-                            <select id="analytics-week-filter" class="flex-grow md:w-64 p-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 text-sm focus:ring-2 focus:ring-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
-                                <option value="all">Todas as Semanas</option>
-                            </select>
+                        <div class="flex items-center gap-2 w-full md:w-auto mt-3 md:mt-0">
+                            <span class="text-xs text-slate-500">Filtrar Semana:</span>
+                            <select id="analytics-week-filter" class="p-1.5 border border-slate-300 rounded text-sm bg-slate-50 text-slate-700 focus:ring-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"></select>
                         </div>
                     </div>
 
-                    <!-- Cards de KPI -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
-                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Monitoramentos</p>
-                            <h3 id="kpi-visitas" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">0</h3>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
-                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Ocorrências (OC)</p>
-                            <h3 id="kpi-ocs" class="text-2xl font-bold text-red-600 mt-1">0</h3>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
-                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">Falhas Técnicas</p>
-                            <h3 id="kpi-issues" class="text-2xl font-bold text-orange-500 mt-1">0</h3>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 analytics-card">
-                            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase">PDV Crítico</p>
-                            <h3 id="kpi-critical-pdv" class="text-lg font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">N/A</h3>
-                            <p id="kpi-critical-count" class="text-xs text-red-500 font-bold">0 OCs</p>
-                        </div>
+                    <!-- NAVEGAÇÃO POR ABAS -->
+                    <div class="flex border-b border-slate-200 dark:border-slate-700 space-x-6 px-2">
+                        <button onclick="switchAnalyticsTab('general')" id="tab-btn-general" class="analytics-tab-btn active py-2 px-1 text-sm font-medium">
+                            📊 Visão Geral
+                        </button>
+                        <button onclick="switchAnalyticsTab('team')" id="tab-btn-team" class="analytics-tab-btn py-2 px-1 text-sm font-medium">
+                            👥 Equipe & Tempo
+                        </button>
+                        <button onclick="switchAnalyticsTab('risk')" id="tab-btn-risk" class="analytics-tab-btn py-2 px-1 text-sm font-medium">
+                            ⚠️ Risco & Padrões
+                        </button>
                     </div>
 
-                    <!-- ALERTA DE SPAM (RISCO) -->
-                    <div id="analytics-spam-section" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-red-200 dark:border-red-800 overflow-hidden">
-                        <div class="bg-gradient-to-r from-red-600 to-orange-600 p-3 flex justify-between items-center text-white">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                <div>
-                                    <h3 class="text-sm font-bold">Sugestões de Prioridade (Spam de Alerta)</h3>
-                                    <p class="text-[10px] text-red-100 opacity-90">Locais com alto índice de furto sem análise recente (>5 dias).</p>
+                    <!-- CONTEÚDO DAS ABAS -->
+                    <div class="flex-grow overflow-y-auto pr-1 pb-4">
+                        
+                        <!-- ABA 1: VISÃO GERAL (KPIS + TOP PDV) -->
+                        <div id="tab-content-general" class="tab-content space-y-6">
+                            <!-- Cards de KPI -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide">Monitoramentos</p>
+                                    <h3 id="kpi-visitas" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">0</h3>
+                                </div>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide">Ocorrências (OC)</p>
+                                    <h3 id="kpi-ocs" class="text-2xl font-bold text-red-600 mt-1">0</h3>
+                                </div>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide">Falhas Técnicas</p>
+                                    <h3 id="kpi-issues" class="text-2xl font-bold text-orange-500 mt-1">0</h3>
+                                </div>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide">PDV Crítico</p>
+                                    <h3 id="kpi-critical-pdv" class="text-lg font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">N/A</h3>
+                                    <p id="kpi-critical-count" class="text-xs text-red-500 font-bold">0 OCs</p>
                                 </div>
                             </div>
-                            <span id="spam-count-badge" class="bg-white/20 px-2 py-0.5 rounded-full text-xs font-bold">0</span>
-                        </div>
-                        <div id="spam-list-container" class="p-3 bg-slate-50 dark:bg-slate-900 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-                            <!-- Items inseridos via JS -->
-                        </div>
-                    </div>
 
-                    <!-- GRÁFICOS -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Top 5 PDVs (Ocorrências)</h3>
-                            <div class="chart-container" style="height: 250px;">
-                                <canvas id="chart-top-pdvs"></canvas>
+                            <!-- Gráfico Principal -->
+                            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 border-b pb-2 dark:border-slate-700">Top 10 Condomínios com Ocorrências</h3>
+                                <div class="chart-container" style="height: 400px;">
+                                    <canvas id="chart-top-pdvs"></canvas>
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Ocorrências por Dia da Semana</h3>
-                            <div class="chart-container" style="height: 250px;">
-                                <canvas id="chart-days-week"></canvas>
+
+                        <!-- ABA 2: EQUIPE & TEMPO -->
+                        <div id="tab-content-team" class="tab-content hidden space-y-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Volume por Dia da Semana</h3>
+                                    <div class="chart-container">
+                                        <canvas id="chart-days-week"></canvas>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Produtividade por Operador</h3>
+                                    <div class="chart-container">
+                                        <canvas id="chart-operators"></canvas>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                         <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 lg:col-span-2">
-                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Produtividade por Operador</h3>
-                            <div class="chart-container" style="height: 250px;">
-                                <canvas id="chart-operators"></canvas>
+
+                        <!-- ABA 3: RISCO & PADRÕES -->
+                        <div id="tab-content-risk" class="tab-content hidden space-y-6">
+                            <!-- ALERTA DE RISCO (SPAM) -->
+                            <div id="analytics-spam-section" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-red-200 dark:border-red-900 overflow-hidden hidden">
+                                <div class="bg-red-50 dark:bg-red-900/30 p-3 border-b border-red-100 dark:border-red-900 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-red-100 p-1.5 rounded-full text-red-600 dark:bg-red-900 dark:text-red-200">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Atenção Prioritária (Locais Esquecidos)</h3>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">Locais com histórico de furto sem análise recente (>5 dias).</p>
+                                        </div>
+                                    </div>
+                                    <span id="spam-count-badge" class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold dark:bg-red-900 dark:text-red-200">0</span>
+                                </div>
+                                <div id="spam-list-container" class="p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto"></div>
+                            </div>
+
+                            <!-- TABELA DE PICOS -->
+                            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                                <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Picos Mensais (Top 10)</h3>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-xs text-left text-slate-500 dark:text-slate-400">
+                                        <thead class="bg-slate-50 dark:bg-slate-900 font-medium text-slate-700 dark:text-slate-300">
+                                            <tr>
+                                                <th class="px-4 py-2">PDV</th>
+                                                <th class="px-4 py-2">Mês Crítico</th>
+                                                <th class="px-4 py-2 text-center">OCs no Mês</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-peaks-body" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- TABELA DE PICOS MENSAIS -->
-                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Picos Mensais (Top 10)</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-xs text-left text-slate-500 dark:text-slate-400">
-                                <thead class="bg-slate-50 dark:bg-slate-900 font-medium">
-                                    <tr>
-                                        <th class="px-4 py-2">PDV</th>
-                                        <th class="px-4 py-2">Mês Crítico</th>
-                                        <th class="px-4 py-2 text-center">OCs no Mês</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="table-peaks-body" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
-                            </table>
-                        </div>
                     </div>
-
                 </div>
 
             </div>
@@ -531,18 +568,31 @@
     <input type="file" id="restore-input" class="hidden" accept=".json">
 
     <script>
+        // Função para troca de abas no analytics (Escopo Global)
+        function switchAnalyticsTab(tabId) {
+            // Remove active class from buttons
+            document.querySelectorAll('.analytics-tab-btn').forEach(btn => btn.classList.remove('active'));
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            
+            // Activate selected
+            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // CORREÇÃO 1: Início correto do bloco try
             try {
-                console.log("Painel de Monitoramento v3.5 - Analytics Integrado"); 
+                console.log("Painel de Monitoramento v3.8 - Analytics Cumulativo"); 
 
                 // --- 1. VARIÁVEIS GLOBAIS ---
                 let ocorrenciasChart;
                 let pdvAnalysisChart;
-                // Variáveis dos Gráficos do Analytics
                 let chartTopPdvs, chartDaysWeek, chartOperators;
-                // Variável para dados do Analytics Importados
-                let analyticsData = null; 
+                let analyticsData = []; // Inicializado como array vazio
+
+                // CONFIGURAÇÃO GLOBAL DE CORES DO CHART.JS PARA DARK MODE VISÍVEL
+                Chart.defaults.color = '#cbd5e1'; // Slate 300 (Texto claro)
+                Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)'; // Linhas de grade sutis
 
                 let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
                 let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
@@ -558,7 +608,6 @@
                     'Não visualizar': 'bg-slate-100 text-slate-500'
                 };
                 
-                // Exemplo para Analytics
                 const analyticsExampleData = `16/04/2025\t15/04/2025\t346\tRESIDENCIAL TERRACO\t1\t1\t7\tDayane\t
 28/03/2025\t29/04/2025\t281\tSKY PAULICEIA\t1\t1\t0\tMarcelo\tcamera 1 não possui gravação
 17/04/2025\t30/04/2025\t168\tMORADAS DA FLORA\t1\t1\t1\tDayane\tVisualizado por Vitória
@@ -617,17 +666,12 @@
                     });
                 }
 
-                // CORREÇÃO 2: Implementação da função que faltava
                 function populatePdvAnalysisSelect() {
                     const select = document.getElementById('pdv-analysis-select');
                     if (!select) return;
                     select.innerHTML = '<option value="">Escolha um PDV...</option>';
-                    
-                    // Une condomínios ativos e arquivados para listar todos
                     const allCondos = [...tasks, ...archivedTasks].map(t => t.condominio.trim());
-                    // Remove duplicatas e ordena
                     const uniqueCondos = [...new Set(allCondos)].sort();
-
                     uniqueCondos.forEach(name => {
                         if(name) {
                             const option = document.createElement('option');
@@ -640,116 +684,63 @@
 
                 function getCondoHighRiskCount(name) {
                     const all = [...tasks, ...archivedTasks];
-                    return all
-                        .filter(t => t.condominio.trim().toLowerCase() === name.trim().toLowerCase())
-                        .reduce((count, t) => {
-                            if (t.ocorrencias && t.ocorrencias.length >= 3) {
-                                return count + 1;
-                            }
-                            return count;
-                        }, 0);
+                    return all.filter(t => t.condominio.trim().toLowerCase() === name.trim().toLowerCase()).reduce((count, t) => {
+                        if (t.ocorrencias && t.ocorrencias.length >= 3) return count + 1;
+                        return count;
+                    }, 0);
                 }
 
                 function exportCompletedReport() {
                     const completed = tasks.filter(t => t.statusAnalise === 'Concluída');
                     completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
-
-                    if (completed.length === 0) {
-                        showNotification('Não há análises concluídas para exportar.');
-                        return;
-                    }
-
-                    let report = `*RELATÓRIO DE ANÁLISES CONCLUÍDAS - ${new Date().toLocaleDateString('pt-BR')}*\n`;
-                    report += `--------------------------------------------------\n\n`;
-
+                    if (completed.length === 0) { showNotification('Não há análises concluídas para exportar.'); return; }
+                    let report = `*RELATÓRIO DE ANÁLISES CONCLUÍDAS - ${new Date().toLocaleDateString('pt-BR')}*\n--------------------------------------------------\n\n`;
                     completed.forEach((task, index) => {
                         report += `*${index + 1}. ${task.condominio}* - ${formatDate(task.dataAnalise)} (${getDayName(task.dataAnalise)})\n`;
-                        
                         if (task.ocorrencias && task.ocorrencias.length > 0) {
                             report += `🚨 *Ocorrências:* ${task.ocorrencias.length}\n`;
                             task.ocorrencias.forEach((oc, idx) => {
                                 const inconcl = oc.inconclusiva ? ' (INCONCLUSIVA)' : '';
                                 report += `   - [${oc.categoria}] ${oc.desc} (${oc.horarioInicial} - ${oc.horarioFinal})${inconcl}\n`;
                             });
-                        } else {
-                            report += `✅ Sem ocorrências registradas.\n`;
-                        }
-                        
-                        if (task.observacoes) {
-                            report += `📝 *Obs:* ${task.observacoes}\n`;
-                        }
+                        } else { report += `✅ Sem ocorrências registradas.\n`; }
+                        if (task.observacoes) { report += `📝 *Obs:* ${task.observacoes}\n`; }
                         report += `\n--------------------------------------------------\n\n`;
                     });
-
                     const el = document.createElement('textarea');
                     el.value = report;
                     document.body.appendChild(el);
                     el.select();
                     document.execCommand('copy');
                     document.body.removeChild(el);
-                    
                     showNotification('Relatório completo copiado para a área de transferência!');
                 }
 
                 function renderCompletedReport() {
                     const tbody = document.getElementById('completed-report-list');
                     const search = document.getElementById('completed-report-search').value.toLowerCase();
-                    
-                    const completed = tasks.filter(t => 
-                        t.statusAnalise === 'Concluída' && 
-                        (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search))
-                    );
-
+                    const completed = tasks.filter(t => t.statusAnalise === 'Concluída' && (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search)));
                     completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
-
                     tbody.innerHTML = '';
-
-                    if (completed.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`;
-                        return;
-                    }
-
+                    if (completed.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`; return; }
                     completed.forEach(t => {
                         const ocCount = t.ocorrencias ? t.ocorrencias.length : 0;
-                        const row = `
-                            <tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600">
-                                <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap dark:text-white">${t.condominio}</td>
-                                <td class="px-4 py-3">${formatDate(t.dataAnalise)}</td>
-                                <td class="px-4 py-3 text-center">${ocCount}</td>
-                                <td class="px-4 py-3 text-right text-emerald-500 font-bold">Concluída</td>
-                            </tr>
-                        `;
+                        const row = `<tr class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"><td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap dark:text-white">${t.condominio}</td><td class="px-4 py-3">${formatDate(t.dataAnalise)}</td><td class="px-4 py-3 text-center">${ocCount}</td><td class="px-4 py-3 text-right text-emerald-500 font-bold">Concluída</td></tr>`;
                         tbody.insertAdjacentHTML('beforeend', row);
                     });
                 }
 
                 function updateDashboard() {
                     const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
-                    
-                    const elTotal = document.getElementById('total-solicitacoes');
-                    if (elTotal) elTotal.textContent = ft.length;
-                    
-                    const elUniquePdv = document.getElementById('total-pdvs-unicos');
-                    if (elUniquePdv) {
-                        const concludedTasks = ft.filter(t => t.statusAnalise === 'Concluída');
-                        const uniquePdvs = new Set(concludedTasks.map(t => t.condominio.trim())).size;
-                        elUniquePdv.textContent = uniquePdvs;
-                    }
-
-                    const elBackups = document.getElementById('backups-pendentes');
-                    if (elBackups) elBackups.textContent = ft.filter(t => t.statusBackup === 'Pendente').length;
-                    
-                    const elAnalises = document.getElementById('analises-pendentes');
-                    if (elAnalises) elAnalises.textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
-                    
+                    document.getElementById('total-solicitacoes').textContent = ft.length;
                     const ct = ft.filter(t => t.statusAnalise === 'Concluída');
+                    const uniquePdvs = new Set(ct.map(t => t.condominio.trim())).size;
+                    document.getElementById('total-pdvs-unicos').textContent = uniquePdvs;
+                    document.getElementById('backups-pendentes').textContent = ft.filter(t => t.statusBackup === 'Pendente').length;
+                    document.getElementById('analises-pendentes').textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
                     const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
-                    
-                    const elOcorrencias = document.getElementById('total-ocorrencias-semana');
-                    if (elOcorrencias) elOcorrencias.textContent = totOc;
-                    
-                    const elProd = document.getElementById('produtividade-semanal');
-                    if (elProd) elProd.textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
+                    document.getElementById('total-ocorrencias-semana').textContent = totOc;
+                    document.getElementById('produtividade-semanal').textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
                 }
 
                 function updateCharts() {
@@ -760,28 +751,53 @@
                         }
                         return acc;
                     }, {});
-                    
                     const labels = Object.keys(dataByCondo);
                     const data = Object.values(dataByCondo);
-                    
                     if (ocorrenciasChart) {
                         ocorrenciasChart.data.labels = labels;
                         ocorrenciasChart.data.datasets[0].data = data;
                         ocorrenciasChart.update();
                     }
                 }
-                
-                function updateChartsTheme() {
-                    const isDark = true; 
-                    const fontColor = '#f1f5f9'; 
-                    const commonOptions = { scales: { y: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } }, x: { ticks: { color: fontColor }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { color: fontColor } } }, plugins: { legend: { labels: { color: fontColor } } } };
-                    if (ocorrenciasChart) { Object.assign(ocorrenciasChart.options, commonOptions); ocorrenciasChart.update(); }
+
+                function showConfirm(title, msg, callback) {
+                    const confirmModal = document.getElementById('custom-confirm-modal');
+                    const confirmTitle = document.getElementById('confirm-modal-title');
+                    const confirmMsg = document.getElementById('confirm-modal-msg');
+                    const confirmYesBtn = document.getElementById('confirm-modal-yes-btn');
+                    const confirmCancelBtn = document.getElementById('confirm-modal-cancel-btn');
+
+                    confirmTitle.textContent = title;
+                    confirmMsg.textContent = msg;
+                    
+                    const newYesBtn = confirmYesBtn.cloneNode(true);
+                    confirmYesBtn.parentNode.replaceChild(newYesBtn, confirmYesBtn);
+                    
+                    const newCancelBtn = confirmCancelBtn.cloneNode(true);
+                    confirmCancelBtn.parentNode.replaceChild(newCancelBtn, confirmCancelBtn);
+
+                    newYesBtn.addEventListener('click', () => {
+                        if (callback) callback();
+                        confirmModal.classList.add('hidden');
+                    });
+
+                    newCancelBtn.addEventListener('click', () => {
+                        confirmModal.classList.add('hidden');
+                    });
+
+                    confirmModal.classList.remove('hidden');
+                }
+
+                function refreshUI() {
+                    saveTasks();
+                    renderTasks();
+                    updateDashboard();
+                    updateCharts();
                 }
 
                 function renderTasks() {
                     const list = document.getElementById('task-list');
                     if (!list) return;
-                    
                     const filtroCond = document.getElementById('filtro-condominio').value.toLowerCase();
                     const filtroBackup = document.getElementById('filtro-backup').value;
                     const filtroAnalise = document.getElementById('filtro-analise').value;
@@ -790,12 +806,10 @@
                     const filtroDiaSemana = document.getElementById('filtro-dia-semana').value;
 
                     let filtered = tasks.filter(t => t.condominio.toLowerCase().includes(filtroCond));
-                    
                     if (filtroBackup) filtered = filtered.filter(t => t.statusBackup === filtroBackup);
                     if (filtroAnalise) filtered = filtered.filter(t => t.statusAnalise === filtroAnalise);
                     if (filtroData) filtered = filtered.filter(t => t.dataAnalise === filtroData);
                     if (filtroSemana) filtered = filtered.filter(t => t.semanaDeTrabalho == filtroSemana);
-                    
                     if (filtroDiaSemana !== "") {
                         filtered = filtered.filter(t => {
                             if (!t.dataAnalise) return false;
@@ -803,9 +817,7 @@
                             return d.getDay().toString() === filtroDiaSemana;
                         });
                     }
-
                     filtered.sort((a, b) => a.condominio.localeCompare(b.condominio));
-
                     list.innerHTML = '';
                     if(filtered.length === 0) { list.innerHTML = `<p class="text-slate-500 text-center col-span-full">Nenhuma tarefa encontrada.</p>`; return; }
 
@@ -814,39 +826,24 @@
                         let color = task.statusAnalise === 'Concluída' ? '#10b981' : (task.statusAnalise === 'Em Análise' ? '#f97316' : '#f59e0b');
                         card.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 dark:bg-slate-800 dark:shadow-xl';
                         card.style.borderLeftColor = color;
-                        
                         const ocCount = task.ocorrencias ? task.ocorrencias.length : 0;
                         const badge = ocCount > 0 ? `<div class="mt-1"><span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded-lg border border-red-300 dark:bg-red-900 dark:text-red-100 dark:border-red-700">OCs: ${ocCount}</span></div>` : '';
-                        
                         const highRiskDays = getCondoHighRiskCount(task.condominio);
-                        let riskBadge = '';
-                        if (highRiskDays > 0) {
-                            riskBadge = `<span class="ml-2 text-lg" title="PDV Crítico">🔥</span>`;
-                        }
-
+                        let riskBadge = highRiskDays > 0 ? `<span class="ml-2 text-lg" title="PDV Crítico">🔥</span>` : '';
                         const isCollapsed = !task.isExpanded;
                         let editBtnHTML = (task.statusAnalise !== 'Arquivado') ? `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">${task.statusAnalise === 'Concluída' ? 'Ver/Editar Ocorrências' : 'Registrar Ocorrências'}</button>` : '';
                         let obsHTML = task.observacoes ? `<div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700"><p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs:</p><p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p></div>` : '';
 
                         card.innerHTML = `
                             <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-lg flex-1 flex items-center flex-wrap">
-                                    ${task.condominio}
-                                    ${riskBadge}
-                                </h3>
+                                <h3 class="font-bold text-lg flex-1 flex items-center flex-wrap">${task.condominio}${riskBadge}</h3>
                                 <div class="flex items-center gap-2">
                                     <button data-id="${task.id}" class="archive-single-btn text-slate-400 hover:text-brand font-bold text-lg p-1" title="Arquivar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg></button>
                                     <button data-id="${task.id}" class="delete-task-btn text-slate-400 hover:text-red-600 font-bold text-lg p-1" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                                 </div>
                             </div>
                             <div class="flex justify-between items-center mt-2">
-                                <div>
-                                    <p class="text-sm text-slate-500 dark:text-slate-400">
-                                        Data: <strong>${formatDate(task.dataAnalise)}</strong> 
-                                        <span class="text-xs text-slate-400 ml-1 font-semibold">(${getDayName(task.dataAnalise)})</span>
-                                    </p>
-                                    ${badge}
-                                </div>
+                                <div><p class="text-sm text-slate-500 dark:text-slate-400">Data: <strong>${formatDate(task.dataAnalise)}</strong> <span class="text-xs text-slate-400 ml-1 font-semibold">(${getDayName(task.dataAnalise)})</span></p>${badge}</div>
                                 <button data-id="${task.id}" class="toggle-details-btn p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 dark:text-slate-100">${isCollapsed ? '&#9660;' : '&#9650;'}</button>
                             </div>
                             <div class="${isCollapsed ? 'hidden' : ''} mt-4 details-content">
@@ -862,16 +859,19 @@
                     });
                 }
 
+                // CORREÇÃO: Função renderArchivedList reintroduzida e corrigida
                 function renderArchivedList() {
                     const container = document.getElementById('view-archive-list-container');
-                    const filter = document.getElementById('archive-search-input').value.toLowerCase();
+                    const filterInput = document.getElementById('archive-search-input');
+                    const filter = filterInput ? filterInput.value.toLowerCase() : '';
+                    
                     const filtered = archivedTasks.filter(t => t.condominio.toLowerCase().includes(filter) || (t.dataAnalise && t.dataAnalise.includes(filter)));
-
-                    if (filtered.length === 0) {
-                        container.innerHTML = '<p class="text-center text-slate-500 mt-4">Nenhuma análise arquivada.</p>';
-                        return;
+                    
+                    if (filtered.length === 0) { 
+                        container.innerHTML = '<p class="text-center text-slate-500 mt-4">Nenhuma análise arquivada.</p>'; 
+                        return; 
                     }
-
+                    
                     container.innerHTML = filtered.map(t => `
                         <div class="flex justify-between items-center p-3 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                             <div>
@@ -889,32 +889,12 @@
                 function renderModalOcorrenciasList() {
                     const list = document.getElementById('ocorrencia-list');
                     list.innerHTML = '';
-                    if (currentEditingTaskOcorrencias.length === 0) {
-                        list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>';
-                        return;
-                    }
+                    if (currentEditingTaskOcorrencias.length === 0) { list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>'; return; }
                     currentEditingTaskOcorrencias.forEach((ocor, index) => {
                         const div = document.createElement('div');
                         div.className = 'ocorrencia-item-row p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center group dark:bg-slate-800 dark:border-slate-700';
-                        
-                        const inconclusivaBadge = ocor.inconclusiva 
-                            ? `<span class="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-800">INCONCLUSIVA</span>` 
-                            : '';
-
-                        div.innerHTML = `
-                            <div class="flex-grow">
-                                <p class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center flex-wrap">
-                                    ${ocor.categoria}
-                                    ${inconclusivaBadge}
-                                </p>
-                                <p class="text-xs text-slate-600 dark:text-slate-400">${ocor.desc}</p>
-                                <p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-1">${ocor.horarioInicial} - ${ocor.horarioFinal}</p>
-                            </div>
-                            <div class="flex gap-2 occ-actions">
-                                <button type="button" data-index="${index}" class="edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                                <button type="button" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700" title="Remover"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                            </div>
-                        `;
+                        const inconclusivaBadge = ocor.inconclusiva ? `<span class="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-800">INCONCLUSIVA</span>` : '';
+                        div.innerHTML = `<div class="flex-grow"><p class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center flex-wrap">${ocor.categoria}${inconclusivaBadge}</p><p class="text-xs text-slate-600 dark:text-slate-400">${ocor.desc}</p><p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-1">${ocor.horarioInicial} - ${ocor.horarioFinal}</p></div><div class="flex gap-2 occ-actions"><button type="button" data-index="${index}" class="edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button><button type="button" data-index="${index}" class="delete-item-btn text-red-500 hover:text-red-700" title="Remover"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div>`;
                         list.appendChild(div);
                     });
                 }
@@ -1070,171 +1050,86 @@
                     document.getElementById('pdv-analysis-results').classList.remove('hidden');
                 }
 
-                function setupCharts() {
-                    const el = document.getElementById('ocorrenciasChart');
-                    if(!el) return;
-                    const ctx = el.getContext('2d');
-                    ocorrenciasChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] },
-                        options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-                    });
-                }
-
-                function showConfirm(title, msg, callback) {
-                    const confirmModal = document.getElementById('custom-confirm-modal');
-                    const confirmTitle = document.getElementById('confirm-modal-title');
-                    const confirmMsg = document.getElementById('confirm-modal-msg');
-                    const confirmYesBtn = document.getElementById('confirm-modal-yes-btn');
-                    const confirmCancelBtn = document.getElementById('confirm-modal-cancel-btn');
-
-                    confirmTitle.textContent = title;
-                    confirmMsg.textContent = msg;
-                    
-                    const newYesBtn = confirmYesBtn.cloneNode(true);
-                    confirmYesBtn.parentNode.replaceChild(newYesBtn, confirmYesBtn);
-                    
-                    const newCancelBtn = confirmCancelBtn.cloneNode(true);
-                    confirmCancelBtn.parentNode.replaceChild(newCancelBtn, confirmCancelBtn);
-
-                    newYesBtn.addEventListener('click', () => {
-                        if (callback) callback();
-                        confirmModal.classList.add('hidden');
-                    });
-
-                    newCancelBtn.addEventListener('click', () => {
-                        confirmModal.classList.add('hidden');
-                    });
-
-                    confirmModal.classList.remove('hidden');
-                }
-
-                function refreshUI() {
-                    saveTasks();
-                    renderTasks();
-                    updateDashboard();
-                    updateCharts();
-                }
-
-                // --- 3. NOVA LÓGICA DE ANALYTICS (Mesclada) ---
+                // --- 3. ANALYTICS LOGIC (OTIMIZADO) ---
 
                 function getWeekInfo(dateStr) {
                     if (!dateStr) return null;
                     const parts = dateStr.split('/');
                     if (parts.length !== 3) return null;
-                    
-                    const day = parseInt(parts[0], 10);
-                    const month = parseInt(parts[1], 10) - 1;
-                    const year = parseInt(parts[2], 10);
-                    
-                    const date = new Date(year, month, day);
+                    const date = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
                     if (isNaN(date.getTime())) return null;
-
                     const dayOfWeek = date.getDay();
                     const startOfWeek = new Date(date);
                     startOfWeek.setDate(date.getDate() - dayOfWeek);
                     startOfWeek.setHours(0, 0, 0, 0);
-                    
                     const endOfWeek = new Date(startOfWeek);
                     endOfWeek.setDate(startOfWeek.getDate() + 6);
-
                     const fmt = d => `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`;
-                    
-                    return {
-                        key: startOfWeek.getTime(),
-                        label: `Semana ${fmt(startOfWeek)} a ${fmt(endOfWeek)}`,
-                        startDate: startOfWeek
-                    };
+                    return { key: startOfWeek.getTime(), label: `Semana ${fmt(startOfWeek)} a ${fmt(endOfWeek)}` };
                 }
 
                 function processAnalyticsData() {
                     const rawInput = document.getElementById('analytics-raw-input').value;
                     if (!rawInput.trim()) { showNotification("Insira dados antes de gerar."); return; }
-
                     try {
                         const rows = rawInput.trim().split('\n');
                         const parsed = rows.map((row, index) => {
                             let cols = row.split('\t');
                             if (cols.length < 5) return null;
-
-                            const dataVisualizacao = cols[0]?.trim();
-                            const dataProdutividade = cols[1]?.trim();
                             const pdvNome = cols[3]?.trim();
-                            const ocorrencias = parseInt(cols[6]?.trim()) || 0;
-                            
-                            let operadorRaw = cols[7]?.trim() || '';
-                            const operador = operadorRaw.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                            const obs = cols[8]?.trim() || '';
-
-                            if (dataVisualizacao.toLowerCase().includes('data') || pdvNome.toLowerCase().includes('unidade') || !pdvNome) return null;
-
+                            if (!pdvNome || pdvNome.toLowerCase().includes('unidade')) return null;
+                            const dataProdutividade = cols[1]?.trim();
                             const weekInfo = getWeekInfo(dataProdutividade);
-
                             return {
                                 id: index,
-                                dataVis: dataVisualizacao,
-                                dataProd: dataProdutividade,
                                 weekKey: weekInfo ? weekInfo.key : 0,
                                 weekLabel: weekInfo ? weekInfo.label : 'Data Inválida',
                                 pdv: pdvNome,
-                                oc: ocorrencias,
-                                operador: operador,
-                                obs: obs,
-                                hasIssue: obs.toLowerCase().match(/(corrompido|sem gravação|cortes|travando|off|desconectad|problema)/)
+                                oc: parseInt(cols[6]?.trim()) || 0,
+                                operador: (cols[7]?.trim() || '').toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                                hasIssue: (cols[8]?.trim() || '').toLowerCase().match(/(corrompido|sem gravação|cortes|travando|off|desconectad|problema)/),
+                                dataProd: dataProdutividade
                             };
                         }).filter(i => i !== null);
 
                         if (parsed.length === 0) { showNotification("Nenhum dado válido identificado."); return; }
-                        
                         analyticsData = parsed;
                         updateAnalyticsUI('all');
                         
-                        // Troca de view
                         document.getElementById('analytics-input-view').classList.add('hidden');
-                        document.getElementById('analytics-dashboard-view').classList.remove('hidden');
-                        document.getElementById('analytics-back-to-input-btn').classList.remove('hidden');
                         
-                    } catch (err) {
-                        console.error(err);
-                        showNotification("Erro ao processar dados.");
-                    }
+                        // CORREÇÃO: Separar as operações de classList
+                        const dashboard = document.getElementById('analytics-dashboard-view');
+                        dashboard.classList.remove('hidden');
+                        dashboard.classList.add('flex');
+                        
+                        document.getElementById('analytics-back-to-input-btn').classList.remove('hidden');
+                        switchAnalyticsTab('general'); // Reset to first tab
+                    } catch (err) { console.error(err); showNotification("Erro ao processar dados."); }
                 }
 
                 function updateAnalyticsUI(selectedWeekKey) {
                     if (!analyticsData) return;
-
-                    // 1. Popular filtro de semanas
+                    
+                    // Filter Logic
                     const weeksMap = new Map();
                     analyticsData.forEach(item => { if (item.weekKey !== 0) weeksMap.set(item.weekKey, item.weekLabel); });
-                    const weeks = Array.from(weeksMap.entries()).sort((a,b) => a[0] - b[0]);
-                    
                     const select = document.getElementById('analytics-week-filter');
                     const currentVal = select.value;
                     select.innerHTML = '<option value="all">Todas as Semanas</option>';
-                    weeks.forEach(([key, label]) => {
-                        const opt = document.createElement('option');
-                        opt.value = key;
-                        opt.textContent = label;
-                        select.appendChild(opt);
+                    Array.from(weeksMap.entries()).sort((a,b) => a[0] - b[0]).forEach(([key, label]) => {
+                        const opt = document.createElement('option'); opt.value = key; opt.textContent = label; select.appendChild(opt);
                     });
-                    // Tenta manter a seleção se possível, ou usa o argumento
-                    if(selectedWeekKey !== undefined) select.value = selectedWeekKey;
-                    else select.value = currentVal || 'all';
+                    select.value = selectedWeekKey !== undefined ? selectedWeekKey : (currentVal || 'all');
 
-                    // 2. Filtrar dados
-                    const filterVal = select.value;
-                    const filtered = filterVal === 'all' ? analyticsData : analyticsData.filter(i => i.weekKey == filterVal);
+                    const filtered = select.value === 'all' ? analyticsData : analyticsData.filter(i => i.weekKey == select.value);
 
-                    // 3. KPIs
-                    const totalVis = filtered.length;
-                    const totalOc = filtered.reduce((acc, c) => acc + c.oc, 0);
-                    const totalIssues = filtered.filter(i => i.hasIssue).length;
+                    // KPIs
+                    document.getElementById('kpi-visitas').textContent = filtered.length;
+                    document.getElementById('kpi-ocs').textContent = filtered.reduce((acc, c) => acc + c.oc, 0);
+                    document.getElementById('kpi-issues').textContent = filtered.filter(i => i.hasIssue).length;
 
-                    document.getElementById('kpi-visitas').textContent = totalVis;
-                    document.getElementById('kpi-ocs').textContent = totalOc;
-                    document.getElementById('kpi-issues').textContent = totalIssues;
-
-                    // 4. Rankings (PDV, Dia, Operador)
+                    // Stats Aggregation
                     const pdvStats = {};
                     const opStats = {};
                     const dayStats = { 'Domingo':0, 'Segunda-feira':0, 'Terça-feira':0, 'Quarta-feira':0, 'Quinta-feira':0, 'Sexta-feira':0, 'Sábado':0 };
@@ -1242,157 +1137,133 @@
                     filtered.forEach(item => {
                         pdvStats[item.pdv] = (pdvStats[item.pdv] || 0) + item.oc;
                         if(item.operador) opStats[item.operador] = (opStats[item.operador] || 0) + item.oc;
-                        
                         if (item.oc > 0 && item.dataProd) {
                             const parts = item.dataProd.split('/');
                             if(parts.length===3) {
-                                const dt = new Date(parts[2], parts[1]-1, parts[0]);
+                                const dt = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
                                 if(!isNaN(dt)) {
-                                    const dName = dt.toLocaleDateString('pt-BR', { weekday: 'long' });
-                                    const dCap = dName.charAt(0).toUpperCase() + dName.slice(1);
+                                    const dCap = dt.toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase());
                                     if(dayStats[dCap] !== undefined) dayStats[dCap] += item.oc;
                                 }
                             }
                         }
                     });
 
-                    // Top PDV KPI
+                    // Update Top PDV KPI
                     const sortedPdvs = Object.entries(pdvStats).sort((a,b) => b[1] - a[1]);
-                    if (sortedPdvs.length > 0) {
-                        document.getElementById('kpi-critical-pdv').textContent = sortedPdvs[0][0];
-                        document.getElementById('kpi-critical-count').textContent = sortedPdvs[0][1] + ' OCs';
-                    } else {
-                        document.getElementById('kpi-critical-pdv').textContent = 'N/A';
-                        document.getElementById('kpi-critical-count').textContent = '0 OCs';
-                    }
+                    document.getElementById('kpi-critical-pdv').textContent = sortedPdvs.length > 0 ? sortedPdvs[0][0] : 'N/A';
+                    document.getElementById('kpi-critical-count').textContent = sortedPdvs.length > 0 ? sortedPdvs[0][1] + ' OCs' : '0 OCs';
 
-                    // 5. Spam / Risco (Baseado em TODOS os dados, não só filtro)
+                    // Update Spam Section (Always based on ALL data to detect trends)
                     let maxTs = 0;
                     const pdvRiskMap = {};
                     analyticsData.forEach(item => {
                          if (item.dataProd) {
                             const parts = item.dataProd.split('/');
-                            const dt = new Date(parts[2], parts[1]-1, parts[0]);
+                            const dt = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
                             if (!isNaN(dt) && dt.getTime() > maxTs) maxTs = dt.getTime();
-                             
                             if (!pdvRiskMap[item.pdv]) pdvRiskMap[item.pdv] = { name: item.pdv, total: 0, lastTs: 0 };
                             pdvRiskMap[item.pdv].total += item.oc;
                             if (!isNaN(dt) && dt.getTime() > pdvRiskMap[item.pdv].lastTs) pdvRiskMap[item.pdv].lastTs = dt.getTime();
                         }
                     });
+                    const spamList = Object.values(pdvRiskMap).map(p => ({ ...p, daysInactive: Math.floor((maxTs - p.lastTs) / (86400000)) })).filter(p => p.total >= 3 && p.daysInactive >= 5).sort((a,b) => b.total - a.total);
                     
-                    const spamList = Object.values(pdvRiskMap)
-                        .map(p => ({ ...p, daysInactive: Math.floor((maxTs - p.lastTs) / (86400000)) }))
-                        .filter(p => p.total >= 3 && p.daysInactive >= 5)
-                        .sort((a,b) => b.total - a.total);
-
                     const spamContainer = document.getElementById('spam-list-container');
-                    const spamBadge = document.getElementById('spam-count-badge');
                     spamContainer.innerHTML = '';
                     if (spamList.length > 0) {
                         document.getElementById('analytics-spam-section').classList.remove('hidden');
-                        spamBadge.textContent = spamList.length;
+                        document.getElementById('spam-count-badge').textContent = spamList.length;
                         spamList.forEach(p => {
-                            const el = document.createElement('div');
-                            el.className = 'bg-white border-l-4 border-red-500 p-2 rounded shadow-sm text-xs flex justify-between items-center';
-                            el.innerHTML = `<div><strong>${p.name}</strong><br><span class="text-slate-500">Inativo há ${p.daysInactive} dias</span></div><div class="text-right font-bold text-red-600">${p.total} OCs</div>`;
-                            spamContainer.appendChild(el);
+                            spamContainer.innerHTML += `<div class="bg-white dark:bg-slate-700 border-l-4 border-red-500 p-2 rounded shadow-sm text-xs flex justify-between items-center text-slate-800 dark:text-slate-100"><div><strong>${p.name}</strong><br><span class="text-slate-500 dark:text-slate-400">Inativo há ${p.daysInactive} dias</span></div><div class="text-right font-bold text-red-600 dark:text-red-400">${p.total} OCs</div></div>`;
                         });
-                    } else {
-                        document.getElementById('analytics-spam-section').classList.add('hidden');
-                    }
+                    } else { document.getElementById('analytics-spam-section').classList.add('hidden'); }
 
-                    // 6. Atualizar Gráficos Chart.js
-                    updateAnalyticsCharts(sortedPdvs.slice(0,5), dayStats, opStats);
+                    // Update Charts
+                    // CORREÇÃO: Passar top 10 em vez de 5
+                    updateAnalyticsCharts(sortedPdvs.slice(0, 10), dayStats, opStats);
 
-                    // 7. Tabela Picos Mensais
+                    // Update Peaks Table
                     const pdvMonths = {};
                     analyticsData.forEach(item => {
                          if (item.oc > 0 && item.dataProd) {
                             const parts = item.dataProd.split('/');
                             if(parts.length===3) {
                                 const mKey = `${parts[2]}-${parts[1]}`;
-                                const dt = new Date(parts[2], parts[1]-1, 1);
-                                const mName = dt.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+                                const mName = new Date(parseInt(parts[2]), parseInt(parts[1])-1, 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
                                 if(!pdvMonths[item.pdv]) pdvMonths[item.pdv] = {};
                                 if(!pdvMonths[item.pdv][mKey]) pdvMonths[item.pdv][mKey] = { name: mName, count: 0 };
                                 pdvMonths[item.pdv][mKey].count += item.oc;
                             }
                         }
                     });
-                    
                     const peaks = Object.keys(pdvMonths).map(pdv => {
                         const months = Object.values(pdvMonths[pdv]);
                         if(months.length === 0) return null;
                         const peak = months.reduce((max, c) => c.count > max.count ? c : max, months[0]);
                         return { name: pdv, month: peak.name, count: peak.count };
                     }).filter(i => i!==null).sort((a,b) => b.count - a.count).slice(0,10);
-
+                    
                     const peakBody = document.getElementById('table-peaks-body');
                     peakBody.innerHTML = '';
-                    peaks.forEach(p => {
-                        peakBody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50"><td class="px-4 py-2 font-medium">${p.name}</td><td class="px-4 py-2 text-blue-600 font-bold uppercase">${p.month}</td><td class="px-4 py-2 text-center"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">${p.count}</span></td></tr>`);
-                    });
+                    peaks.forEach(p => peakBody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50"><td class="px-4 py-2 font-medium">${p.name}</td><td class="px-4 py-2 text-blue-600 font-bold uppercase">${p.month}</td><td class="px-4 py-2 text-center"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">${p.count}</span></td></tr>`));
                 }
 
                 function updateAnalyticsCharts(topPdvs, dayStats, opStats) {
-                    // Helper para destruir charts antigos
-                    const destroy = (chart) => { if(chart) chart.destroy(); }
-                    destroy(chartTopPdvs); destroy(chartDaysWeek); destroy(chartOperators);
+                    if(chartTopPdvs) chartTopPdvs.destroy();
+                    if(chartDaysWeek) chartDaysWeek.destroy();
+                    if(chartOperators) chartOperators.destroy();
 
-                    // 1. Top PDVs
-                    const ctxPdv = document.getElementById('chart-top-pdvs').getContext('2d');
-                    chartTopPdvs = new Chart(ctxPdv, {
+                    // CORREÇÃO: Configuração explícita de cores para eixos X e Y
+                    const commonOptions = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    };
+
+                    chartTopPdvs = new Chart(document.getElementById('chart-top-pdvs').getContext('2d'), {
                         type: 'bar',
-                        data: {
-                            labels: topPdvs.map(i => i[0]),
-                            datasets: [{ label: 'Ocorrências', data: topPdvs.map(i => i[1]), backgroundColor: '#ef4444', borderRadius: 4 }]
-                        },
-                        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        data: { labels: topPdvs.map(i => i[0]), datasets: [{ label: 'Ocorrências', data: topPdvs.map(i => i[1]), backgroundColor: '#ef4444', borderRadius: 4 }] },
+                        options: { 
+                            indexAxis: 'y', 
+                            ...commonOptions
+                        }
                     });
 
-                    // 2. Dias da Semana
-                    const daysOrder = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-                    const ctxDays = document.getElementById('chart-days-week').getContext('2d');
-                    chartDaysWeek = new Chart(ctxDays, {
+                    chartDaysWeek = new Chart(document.getElementById('chart-days-week').getContext('2d'), {
                         type: 'bar',
-                        data: {
-                            labels: daysOrder,
-                            datasets: [{ label: 'Volume', data: daysOrder.map(d => dayStats[d]), backgroundColor: '#3b82f6', borderRadius: 4 }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        data: { labels: Object.keys(dayStats), datasets: [{ label: 'Volume', data: Object.values(dayStats), backgroundColor: '#3b82f6', borderRadius: 4 }] },
+                        options: commonOptions
                     });
 
-                    // 3. Operadores
-                    const sortedOps = Object.entries(opStats).sort((a,b) => b[1] - a[1]).slice(0, 15); // Top 15
-                    const ctxOps = document.getElementById('chart-operators').getContext('2d');
-                    chartOperators = new Chart(ctxOps, {
+                    const sortedOps = Object.entries(opStats).sort((a,b) => b[1] - a[1]).slice(0, 15);
+                    chartOperators = new Chart(document.getElementById('chart-operators').getContext('2d'), {
                         type: 'bar',
-                        data: {
-                            labels: sortedOps.map(i => i[0]),
-                            datasets: [{ label: 'OCs Captadas', data: sortedOps.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 4 }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        data: { labels: sortedOps.map(i => i[0]), datasets: [{ label: 'OCs', data: sortedOps.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 4 }] },
+                        options: commonOptions
                     });
                 }
 
-
-                // --- 4. LISTENERS E INICIALIZAÇÃO ---
-
+                // --- 4. LISTENERS ---
                 document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
                 document.getElementById('filtro-data').addEventListener('change', refreshUI); 
                 document.getElementById('filtro-semana').addEventListener('input', refreshUI);
                 document.getElementById('filtro-dia-semana').addEventListener('change', refreshUI); 
                 document.getElementById('filtro-backup').addEventListener('change', refreshUI); 
                 document.getElementById('filtro-analise').addEventListener('change', refreshUI); 
-                
                 document.getElementById('expand-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = true); refreshUI(); });
                 document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
-                document.getElementById('add-task-btn').addEventListener('click', () => {
-                    document.getElementById('task-form').reset();
-                    document.getElementById('form-data-analise').value = formatDateForInput(new Date());
-                    document.getElementById('task-modal').classList.remove('hidden');
-                });
+                document.getElementById('add-task-btn').addEventListener('click', () => { document.getElementById('task-form').reset(); document.getElementById('form-data-analise').value = formatDateForInput(new Date()); document.getElementById('task-modal').classList.remove('hidden'); });
                 document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
                 document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
                 document.getElementById('bulk-add-form').addEventListener('submit', handleBulkAddSubmit);
@@ -1401,270 +1272,75 @@
                 document.getElementById('actions-menu-btn').addEventListener('click', (e) => { e.stopPropagation(); actionsMenu.classList.toggle('hidden'); });
                 document.addEventListener('click', (event) => { if (!document.getElementById('actions-menu-container').contains(event.target)) actionsMenu.classList.add('hidden'); });
                 
-                const modals = { 
-                    'bulk-add-btn': 'bulk-add-modal', 
-                    'archive-btn': 'archive-modal',
-                    'completed-report-btn': 'completed-report-modal',
-                    'detailed-pdv-btn': 'pdv-detailed-modal',
-                    'open-analytics-btn': 'analytics-modal'
-                };
-                
+                const modals = { 'bulk-add-btn': 'bulk-add-modal', 'archive-btn': 'archive-modal', 'completed-report-btn': 'completed-report-modal', 'detailed-pdv-btn': 'pdv-detailed-modal', 'open-analytics-btn': 'analytics-modal' };
                 Object.keys(modals).forEach(k => {
                     const el = document.getElementById(k);
-                    if(el) {
-                        el.addEventListener('click', () => { 
-                            actionsMenu.classList.add('hidden'); 
-                            document.getElementById(modals[k]).classList.remove('hidden');
-                            
-                            if (k === 'completed-report-btn') {
-                                document.getElementById('completed-report-search').value = '';
-                                renderCompletedReport();
-                            }
-                            if (k === 'detailed-pdv-btn') {
-                                populatePdvAnalysisSelect();
-                                document.getElementById('pdv-analysis-results').classList.add('hidden');
-                                if(pdvAnalysisChart) pdvAnalysisChart.destroy();
-                            }
-                        });
-                    }
+                    if(el) el.addEventListener('click', () => { 
+                        actionsMenu.classList.add('hidden'); 
+                        document.getElementById(modals[k]).classList.remove('hidden');
+                        if (k === 'completed-report-btn') { document.getElementById('completed-report-search').value = ''; renderCompletedReport(); }
+                        if (k === 'detailed-pdv-btn') { populatePdvAnalysisSelect(); document.getElementById('pdv-analysis-results').classList.add('hidden'); if(pdvAnalysisChart) pdvAnalysisChart.destroy(); }
+                        if (k === 'open-analytics-btn') { document.getElementById('analytics-dashboard-view').classList.remove('flex'); document.getElementById('analytics-dashboard-view').classList.add('hidden'); document.getElementById('analytics-input-view').classList.remove('hidden'); document.getElementById('analytics-back-to-input-btn').classList.add('hidden'); }
+                    });
                 });
                 
-                // Analytics Listeners
-                document.getElementById('analytics-load-example-btn').addEventListener('click', () => {
-                    document.getElementById('analytics-raw-input').value = analyticsExampleData;
-                });
+                document.getElementById('analytics-load-example-btn').addEventListener('click', () => { document.getElementById('analytics-raw-input').value = analyticsExampleData; });
                 document.getElementById('analytics-process-btn').addEventListener('click', processAnalyticsData);
-                document.getElementById('analytics-back-to-input-btn').addEventListener('click', () => {
-                    document.getElementById('analytics-input-view').classList.remove('hidden');
-                    document.getElementById('analytics-dashboard-view').classList.add('hidden');
-                    document.getElementById('analytics-back-to-input-btn').classList.add('hidden');
-                });
+                document.getElementById('analytics-back-to-input-btn').addEventListener('click', () => { document.getElementById('analytics-input-view').classList.remove('hidden'); document.getElementById('analytics-dashboard-view').classList.add('hidden'); document.getElementById('analytics-dashboard-view').classList.remove('flex'); document.getElementById('analytics-back-to-input-btn').classList.add('hidden'); });
                 document.getElementById('analytics-close-btn').addEventListener('click', () => document.getElementById('analytics-modal').classList.add('hidden'));
                 document.getElementById('analytics-week-filter').addEventListener('change', (e) => updateAnalyticsUI(e.target.value));
 
-                // Outros Listeners
-                const reportSearch = document.getElementById('completed-report-search');
-                if (reportSearch) reportSearch.addEventListener('input', renderCompletedReport);
-
-                const exportReportBtn = document.getElementById('export-report-btn');
-                if(exportReportBtn) exportReportBtn.addEventListener('click', exportCompletedReport);
-
-                const pdvSelect = document.getElementById('pdv-analysis-select');
-                if(pdvSelect) {
-                    pdvSelect.addEventListener('change', (e) => {
-                        generatePdvReport(e.target.value);
-                    });
-                }
-                
-                const closePdvModalBtn = document.getElementById('pdv-detailed-close-btn');
-                if(closePdvModalBtn) closePdvModalBtn.addEventListener('click', () => document.getElementById('pdv-detailed-modal').classList.add('hidden'));
-                
-                const closePdvFooterBtn = document.getElementById('pdv-detailed-footer-close-btn');
-                if(closePdvFooterBtn) closePdvFooterBtn.addEventListener('click', () => document.getElementById('pdv-detailed-modal').classList.add('hidden'));
-
+                const reportSearch = document.getElementById('completed-report-search'); if (reportSearch) reportSearch.addEventListener('input', renderCompletedReport);
+                const exportReportBtn = document.getElementById('export-report-btn'); if(exportReportBtn) exportReportBtn.addEventListener('click', exportCompletedReport);
+                const pdvSelect = document.getElementById('pdv-analysis-select'); if(pdvSelect) pdvSelect.addEventListener('change', (e) => generatePdvReport(e.target.value));
+                document.getElementById('pdv-detailed-close-btn').addEventListener('click', () => document.getElementById('pdv-detailed-modal').classList.add('hidden'));
+                document.getElementById('pdv-detailed-footer-close-btn').addEventListener('click', () => document.getElementById('pdv-detailed-modal').classList.add('hidden'));
                 const closeIds = ['bulk-cancel-btn', 'archive-cancel-btn', 'view-archive-close-btn', 'view-archive-close-footer-btn', 'notification-close-btn', 'ocorrencia-cancel-btn', 'completed-report-close-btn', 'completed-report-footer-close-btn'];
-                closeIds.forEach(id => {
-                    const el = document.getElementById(id);
-                    if(el) el.addEventListener('click', () => el.closest('.fixed').classList.add('hidden'));
-                });
+                closeIds.forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener('click', () => el.closest('.fixed').classList.add('hidden')); });
 
-                document.getElementById('view-archive-btn').addEventListener('click', () => {
-                    document.getElementById('archive-modal').classList.add('hidden');
-                    document.getElementById('view-archive-modal').classList.remove('hidden');
-                    document.getElementById('archive-search-input').value = '';
-                    renderArchivedList();
-                });
+                document.getElementById('view-archive-btn').addEventListener('click', () => { document.getElementById('archive-modal').classList.add('hidden'); document.getElementById('view-archive-modal').classList.remove('hidden'); document.getElementById('archive-search-input').value = ''; renderArchivedList(); });
                 document.getElementById('archive-search-input').addEventListener('input', renderArchivedList);
-                
                 document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
-                    const unarchiveBtn = e.target.closest('.unarchive-btn');
-                    const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
-
-                    if (unarchiveBtn) {
-                        const id = unarchiveBtn.dataset.id;
-                        showConfirm('Desarquivar', 'Restaurar esta análise para o quadro principal?', () => {
-                            const index = archivedTasks.findIndex(t => t.id == id);
-                            if (index > -1) {
-                                const taskToRestore = archivedTasks[index];
-                                archivedTasks.splice(index, 1);
-                                tasks.unshift(taskToRestore); 
-                                saveTasks();
-                                refreshUI(); 
-                                renderArchivedList(); 
-                                showNotification('Análise restaurada.');
-                            }
-                        });
-                    } else if (deleteArchiveBtn) {
-                        const id = deleteArchiveBtn.dataset.id;
-                        showConfirm('Excluir do Arquivo', 'Excluir permanentemente esta análise?', () => {
-                            archivedTasks = archivedTasks.filter(t => t.id != id);
-                            saveTasks();
-                            renderArchivedList();
-                        });
-                    }
+                    const unarchiveBtn = e.target.closest('.unarchive-btn'); const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
+                    if (unarchiveBtn) showConfirm('Desarquivar', 'Restaurar esta análise?', () => { const index = archivedTasks.findIndex(t => t.id == unarchiveBtn.dataset.id); if (index > -1) { tasks.unshift(archivedTasks.splice(index, 1)[0]); saveTasks(); refreshUI(); renderArchivedList(); showNotification('Análise restaurada.'); } });
+                    else if (deleteArchiveBtn) showConfirm('Excluir do Arquivo', 'Excluir permanentemente?', () => { archivedTasks = archivedTasks.filter(t => t.id != deleteArchiveBtn.dataset.id); saveTasks(); renderArchivedList(); });
                 });
 
                 document.getElementById('task-list').addEventListener('click', (e) => {
-                    const target = e.target;
-                    const delBtn = target.closest('.delete-task-btn');
-                    const archBtn = target.closest('.archive-single-btn');
-                    const toggleBtn = target.closest('.toggle-details-btn');
-                    const editOcBtn = target.closest('.edit-ocorrencia-btn');
-
-                    if (delBtn) {
-                        showConfirm('Excluir Análise', 'Tem certeza que deseja excluir esta análise?', () => {
-                            tasks = tasks.filter(t => t.id != delBtn.dataset.id);
-                            refreshUI();
-                            showNotification('Análise excluída.');
-                        });
-                    } else if (archBtn) {
-                        showConfirm('Arquivar Análise', 'Mover esta análise para o arquivo?', () => {
-                            const idx = tasks.findIndex(t => t.id == archBtn.dataset.id);
-                            if(idx > -1) {
-                                archivedTasks.push(tasks[idx]);
-                                tasks.splice(idx, 1);
-                                refreshUI();
-                                showNotification('Análise arquivada.');
-                            }
-                        });
-                    } else if (toggleBtn) {
-                        const t = tasks.find(x => x.id == toggleBtn.dataset.id);
-                        if(t) { t.isExpanded = !t.isExpanded; refreshUI(); }
-                    } else if (editOcBtn) {
-                        const t = tasks.find(x => x.id == editOcBtn.dataset.id);
-                        if(t) {
-                            document.getElementById('ocorrencia-task-id').value = t.id;
-                            const list = document.getElementById('ocorrencia-list');
-                            list.innerHTML = '';
-                            currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || []));
-                            renderModalOcorrenciasList();
-                            populateCategorySelect(document.getElementById('add-ocorrencia-categoria'));
-                            document.getElementById('add-ocorrencia-desc').value = ''; 
-                            document.getElementById('ocorrencia-modal').classList.remove('hidden');
-                        }
-                    }
+                    const delBtn = e.target.closest('.delete-task-btn'); const archBtn = e.target.closest('.archive-single-btn'); const toggleBtn = e.target.closest('.toggle-details-btn'); const editOcBtn = e.target.closest('.edit-ocorrencia-btn');
+                    if (delBtn) showConfirm('Excluir Análise', 'Tem certeza?', () => { tasks = tasks.filter(t => t.id != delBtn.dataset.id); refreshUI(); showNotification('Análise excluída.'); });
+                    else if (archBtn) showConfirm('Arquivar Análise', 'Mover para arquivo?', () => { const idx = tasks.findIndex(t => t.id == archBtn.dataset.id); if(idx > -1) { archivedTasks.push(tasks.splice(idx, 1)[0]); refreshUI(); showNotification('Análise arquivada.'); } });
+                    else if (toggleBtn) { const t = tasks.find(x => x.id == toggleBtn.dataset.id); if(t) { t.isExpanded = !t.isExpanded; refreshUI(); } }
+                    else if (editOcBtn) { const t = tasks.find(x => x.id == editOcBtn.dataset.id); if(t) { document.getElementById('ocorrencia-task-id').value = t.id; currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || [])); renderModalOcorrenciasList(); populateCategorySelect(document.getElementById('add-ocorrencia-categoria')); document.getElementById('add-ocorrencia-desc').value = ''; document.getElementById('ocorrencia-modal').classList.remove('hidden'); } }
                 });
 
-                document.getElementById('task-list').addEventListener('change', (e) => {
-                    if (e.target.classList.contains('status-select')) {
-                        const t = tasks.find(x => x.id == e.target.dataset.id);
-                        if (t) {
-                            if (e.target.dataset.type === 'backup') t.statusBackup = e.target.value;
-                            if (e.target.dataset.type === 'analise') t.statusAnalise = e.target.value;
-                            refreshUI();
-                        }
-                    }
-                });
-
-                document.getElementById('add-ocorrencia-btn').addEventListener('click', () => {
-                    const desc = document.getElementById('add-ocorrencia-desc').value;
-                    const cat = document.getElementById('add-ocorrencia-categoria').value;
-                    const ini = document.getElementById('add-horario-inicial').value;
-                    const fim = document.getElementById('add-horario-final').value;
-                    const isInconclusiva = document.getElementById('add-ocorrencia-inconclusiva').checked;
-                    
-                    if (desc) {
-                        currentEditingTaskOcorrencias.push({ 
-                            categoria: cat, 
-                            desc: desc, 
-                            horarioInicial: ini, 
-                            horarioFinal: fim,
-                            inconclusiva: isInconclusiva 
-                        });
-                        renderModalOcorrenciasList();
-                        
-                        document.getElementById('add-ocorrencia-desc').value = '';
-                        document.getElementById('add-horario-inicial').value = '';
-                        document.getElementById('add-horario-final').value = '';
-                        document.getElementById('add-ocorrencia-inconclusiva').checked = false;
-                    }
-                });
-
-                document.getElementById('ocorrencia-form').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const taskId = document.getElementById('ocorrencia-task-id').value;
-                    const task = tasks.find(t => t.id == taskId);
-                    if (task) {
-                        task.ocorrencias = [...currentEditingTaskOcorrencias];
-                        task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não';
-                        refreshUI();
-                        document.getElementById('ocorrencia-modal').classList.add('hidden');
-                        showNotification('Ocorrências atualizadas com sucesso.');
-                    }
-                });
-                
+                document.getElementById('task-list').addEventListener('change', (e) => { if (e.target.classList.contains('status-select')) { const t = tasks.find(x => x.id == e.target.dataset.id); if (t) { if (e.target.dataset.type === 'backup') t.statusBackup = e.target.value; if (e.target.dataset.type === 'analise') t.statusAnalise = e.target.value; refreshUI(); } } });
+                document.getElementById('add-ocorrencia-btn').addEventListener('click', () => { const desc = document.getElementById('add-ocorrencia-desc').value; if (desc) { currentEditingTaskOcorrencias.push({ categoria: document.getElementById('add-ocorrencia-categoria').value, desc: desc, horarioInicial: document.getElementById('add-horario-inicial').value, horarioFinal: document.getElementById('add-horario-final').value, inconclusiva: document.getElementById('add-ocorrencia-inconclusiva').checked }); renderModalOcorrenciasList(); document.getElementById('add-ocorrencia-desc').value = ''; document.getElementById('add-horario-inicial').value = ''; document.getElementById('add-horario-final').value = ''; document.getElementById('add-ocorrencia-inconclusiva').checked = false; } });
+                document.getElementById('ocorrencia-form').addEventListener('submit', (e) => { e.preventDefault(); const task = tasks.find(t => t.id == document.getElementById('ocorrencia-task-id').value); if (task) { task.ocorrencias = [...currentEditingTaskOcorrencias]; task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não'; refreshUI(); document.getElementById('ocorrencia-modal').classList.add('hidden'); showNotification('Ocorrências atualizadas.'); } });
                 document.getElementById('ocorrencia-cancel-btn').addEventListener('click', () => document.getElementById('ocorrencia-modal').classList.add('hidden'));
-                
                 document.getElementById('ocorrencia-list').addEventListener('click', (e) => {
-                    const deleteBtn = e.target.closest('.delete-item-btn');
-                    const editBtn = e.target.closest('.edit-item-btn');
-
-                    if (deleteBtn) {
-                        const index = parseInt(deleteBtn.dataset.index);
-                        currentEditingTaskOcorrencias.splice(index, 1);
-                        renderModalOcorrenciasList();
-                    } else if (editBtn) {
-                        const index = parseInt(editBtn.dataset.index);
-                        const item = currentEditingTaskOcorrencias[index];
-                        document.getElementById('add-ocorrencia-categoria').value = item.categoria;
-                        document.getElementById('add-ocorrencia-desc').value = item.desc;
-                        document.getElementById('add-horario-inicial').value = item.horarioInicial;
-                        document.getElementById('add-horario-final').value = item.horarioFinal;
-                        document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false;
-                        currentEditingTaskOcorrencias.splice(index, 1);
-                        renderModalOcorrenciasList();
-                    }
+                    const delBtn = e.target.closest('.delete-item-btn'); const editBtn = e.target.closest('.edit-item-btn');
+                    if (delBtn) { currentEditingTaskOcorrencias.splice(parseInt(delBtn.dataset.index), 1); renderModalOcorrenciasList(); }
+                    else if (editBtn) { const item = currentEditingTaskOcorrencias[parseInt(editBtn.dataset.index)]; document.getElementById('add-ocorrencia-categoria').value = item.categoria; document.getElementById('add-ocorrencia-desc').value = item.desc; document.getElementById('add-horario-inicial').value = item.horarioInicial; document.getElementById('add-horario-final').value = item.horarioFinal; document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false; currentEditingTaskOcorrencias.splice(parseInt(editBtn.dataset.index), 1); renderModalOcorrenciasList(); }
                 });
 
-                // Lógica de Autocomplete Adicionada
-                const condoInput = document.getElementById('form-condominio');
-                const autoList = document.getElementById('autocomplete-list');
-
+                // Autocomplete
+                const condoInput = document.getElementById('form-condominio'); const autoList = document.getElementById('autocomplete-list');
                 if (condoInput && autoList) {
                     condoInput.addEventListener('input', function() {
-                        const val = this.value.toLowerCase();
-                        autoList.innerHTML = '';
-                        if (!val) {
-                            autoList.classList.add('hidden');
-                            return;
-                        }
-
-                        // Busca histórico de condomínios já cadastrados
-                        const history = [...new Set([...tasks, ...archivedTasks].map(t => t.condominio))];
-                        const matches = history.filter(h => h.toLowerCase().includes(val));
-
-                        if (matches.length > 0) {
-                            autoList.classList.remove('hidden');
-                            matches.forEach(m => {
-                                const div = document.createElement('div');
-                                div.className = "p-2 hover:bg-slate-100 cursor-pointer text-sm dark:hover:bg-slate-600 dark:text-slate-100";
-                                div.textContent = m;
-                                div.addEventListener('click', () => {
-                                    condoInput.value = m;
-                                    autoList.classList.add('hidden');
-                                });
-                                autoList.appendChild(div);
-                            });
-                        } else {
-                            autoList.classList.add('hidden');
-                        }
+                        const val = this.value.toLowerCase(); autoList.innerHTML = ''; if (!val) { autoList.classList.add('hidden'); return; }
+                        const matches = [...new Set([...tasks, ...archivedTasks].map(t => t.condominio))].filter(h => h.toLowerCase().includes(val));
+                        if (matches.length > 0) { autoList.classList.remove('hidden'); matches.forEach(m => { const div = document.createElement('div'); div.className = "p-2 hover:bg-slate-100 cursor-pointer text-sm dark:hover:bg-slate-600 dark:text-slate-100"; div.textContent = m; div.addEventListener('click', () => { condoInput.value = m; autoList.classList.add('hidden'); }); autoList.appendChild(div); }); } else { autoList.classList.add('hidden'); }
                     });
-
-                    document.addEventListener('click', (e) => {
-                        if (e.target !== condoInput) {
-                            autoList.classList.add('hidden');
-                        }
-                    });
+                    document.addEventListener('click', (e) => { if (e.target !== condoInput) autoList.classList.add('hidden'); });
                 }
 
-                // Inicialização
-                setupCharts();
+                // Setup
+                const ctxOc = document.getElementById('ocorrenciasChart');
+                if(ctxOc) ocorrenciasChart = new Chart(ctxOc.getContext('2d'), { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
                 refreshUI();
 
-            } catch (error) {
-                console.error("Erro crítico na inicialização:", error);
-                alert("Ocorreu um erro ao carregar o painel. Verifique o console para mais detalhes. Erro: " + error.message);
-            }
+            } catch (error) { console.error("Erro crítico:", error); alert("Erro ao carregar o painel: " + error.message); }
         });
     </script>
 </body>
