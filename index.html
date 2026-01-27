@@ -184,7 +184,7 @@
 
     <!-- Indicador de Versão no Rodapé -->
     <footer class="p-4 text-center text-xs text-slate-400 dark:text-slate-600">
-        v3.8.1 (Correção Fonte Cards)
+        v3.9 (Desempenho Individual)
     </footer>
 
     <!-- MODAIS EXISTENTES -->
@@ -252,15 +252,18 @@
                     </div>
 
                     <!-- NAVEGAÇÃO POR ABAS -->
-                    <div class="flex border-b border-slate-200 dark:border-slate-700 space-x-6 px-2">
-                        <button onclick="switchAnalyticsTab('general')" id="tab-btn-general" class="analytics-tab-btn active py-2 px-1 text-sm font-medium">
+                    <div class="flex border-b border-slate-200 dark:border-slate-700 space-x-6 px-2 overflow-x-auto">
+                        <button onclick="switchAnalyticsTab('general')" id="tab-btn-general" class="analytics-tab-btn active py-2 px-1 text-sm font-medium whitespace-nowrap">
                             📊 Visão Geral
                         </button>
-                        <button onclick="switchAnalyticsTab('team')" id="tab-btn-team" class="analytics-tab-btn py-2 px-1 text-sm font-medium">
+                        <button onclick="switchAnalyticsTab('team')" id="tab-btn-team" class="analytics-tab-btn py-2 px-1 text-sm font-medium whitespace-nowrap">
                             👥 Equipe & Tempo
                         </button>
-                        <button onclick="switchAnalyticsTab('risk')" id="tab-btn-risk" class="analytics-tab-btn py-2 px-1 text-sm font-medium">
+                        <button onclick="switchAnalyticsTab('risk')" id="tab-btn-risk" class="analytics-tab-btn py-2 px-1 text-sm font-medium whitespace-nowrap">
                             ⚠️ Risco & Padrões
+                        </button>
+                        <button onclick="switchAnalyticsTab('individual')" id="tab-btn-individual" class="analytics-tab-btn py-2 px-1 text-sm font-medium whitespace-nowrap text-blue-500 border-blue-500">
+                            👤 Desempenho Individual
                         </button>
                     </div>
 
@@ -353,6 +356,78 @@
                                         <tbody id="table-peaks-body" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
                                     </table>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA 4: DESEMPENHO INDIVIDUAL -->
+                        <div id="tab-content-individual" class="tab-content hidden space-y-6">
+                            <!-- Seletor de Colaborador -->
+                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row items-center gap-4">
+                                <label class="text-sm font-semibold text-slate-600 dark:text-slate-300">Selecione o Colaborador:</label>
+                                <select id="individual-operator-select" class="flex-grow md:w-1/2 p-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-700 focus:ring-2 focus:ring-brand dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                                    <option value="">Escolha um operador...</option>
+                                </select>
+                            </div>
+
+                            <!-- Dashboard Individual (Inicialmente Oculto) -->
+                            <div id="individual-dashboard-container" class="hidden space-y-6">
+                                
+                                <!-- Cabeçalho do Perfil -->
+                                <div class="bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl p-6 text-white shadow-lg flex items-center gap-4">
+                                    <div class="bg-white/20 p-3 rounded-full">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-2xl font-bold" id="ind-profile-name">Nome do Colaborador</h3>
+                                        <p class="text-blue-100 text-sm">Relatório de Performance Individual</p>
+                                    </div>
+                                </div>
+
+                                <!-- KPIs Individuais -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+                                        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">Volume Total</p>
+                                        <h3 id="ind-kpi-volume" class="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">0</h3>
+                                        <p class="text-xs text-slate-400">Análises Realizadas</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+                                        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">Capturas (OC)</p>
+                                        <h3 id="ind-kpi-ocs" class="text-3xl font-bold text-blue-600 mt-1">0</h3>
+                                        <p class="text-xs text-slate-400">Ocorrências Encontradas</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+                                        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">Taxa de Eficácia</p>
+                                        <h3 id="ind-kpi-efficiency" class="text-3xl font-bold text-emerald-500 mt-1">0%</h3>
+                                        <p class="text-xs text-slate-400">OCs por Análise</p>
+                                    </div>
+                                </div>
+
+                                <!-- Feedback: Pontos Fortes e a Melhorar -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-emerald-500 dark:border-emerald-600">
+                                        <h4 class="font-bold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            Pontos Fortes
+                                        </h4>
+                                        <ul id="ind-list-strengths" class="space-y-2 text-sm text-slate-600 dark:text-slate-300 list-disc list-inside"></ul>
+                                    </div>
+                                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-orange-500 dark:border-orange-600">
+                                        <h4 class="font-bold text-orange-700 dark:text-orange-400 mb-3 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                            Pontos a Melhorar
+                                        </h4>
+                                        <ul id="ind-list-improvements" class="space-y-2 text-sm text-slate-600 dark:text-slate-300 list-disc list-inside"></ul>
+                                    </div>
+                                </div>
+
+                                <!-- Gráfico de Evolução -->
+                                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Atividade Diária (Volume de Análises)</h3>
+                                    <div class="chart-container" style="height: 300px;">
+                                        <canvas id="chart-individual-activity"></canvas>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
@@ -582,12 +657,12 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                console.log("Painel de Monitoramento v3.8 - Analytics Cumulativo"); 
+                console.log("Painel de Monitoramento v3.9 - Desempenho Individual"); 
 
                 // --- 1. VARIÁVEIS GLOBAIS ---
                 let ocorrenciasChart;
                 let pdvAnalysisChart;
-                let chartTopPdvs, chartDaysWeek, chartOperators;
+                let chartTopPdvs, chartDaysWeek, chartOperators, chartIndividualActivity;
                 let analyticsData = []; // Inicializado como array vazio
 
                 // CONFIGURAÇÃO GLOBAL DE CORES DO CHART.JS PARA DARK MODE VISÍVEL
@@ -859,7 +934,6 @@
                     });
                 }
 
-                // CORREÇÃO: Função renderArchivedList reintroduzida e corrigida
                 function renderArchivedList() {
                     const container = document.getElementById('view-archive-list-container');
                     const filterInput = document.getElementById('archive-search-input');
@@ -1180,7 +1254,6 @@
                     } else { document.getElementById('analytics-spam-section').classList.add('hidden'); }
 
                     // Update Charts
-                    // CORREÇÃO: Passar top 10 em vez de 5
                     updateAnalyticsCharts(sortedPdvs.slice(0, 10), dayStats, opStats);
 
                     // Update Peaks Table
@@ -1207,6 +1280,117 @@
                     const peakBody = document.getElementById('table-peaks-body');
                     peakBody.innerHTML = '';
                     peaks.forEach(p => peakBody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50"><td class="px-4 py-2 font-medium">${p.name}</td><td class="px-4 py-2 text-blue-600 font-bold uppercase">${p.month}</td><td class="px-4 py-2 text-center"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">${p.count}</span></td></tr>`));
+
+                    // --- POPULAR SELETOR DE COLABORADOR (NOVO) ---
+                    const individualSelect = document.getElementById('individual-operator-select');
+                    if (individualSelect) {
+                        individualSelect.innerHTML = '<option value="">Escolha um operador...</option>';
+                        // Extrair lista única de operadores
+                        const uniqueOperators = [...new Set(analyticsData.map(i => i.operador).filter(op => op))].sort();
+                        uniqueOperators.forEach(op => {
+                            const option = document.createElement('option');
+                            option.value = op;
+                            option.textContent = op;
+                            individualSelect.appendChild(option);
+                        });
+                        // Listener para mudança
+                        individualSelect.onchange = (e) => updateIndividualStats(e.target.value);
+                    }
+                }
+
+                function updateIndividualStats(operatorName) {
+                    const container = document.getElementById('individual-dashboard-container');
+                    if (!operatorName) {
+                        container.classList.add('hidden');
+                        return;
+                    }
+                    container.classList.remove('hidden');
+
+                    // 1. Filtrar dados do operador
+                    const opData = analyticsData.filter(i => i.operador === operatorName);
+                    
+                    // 2. Calcular KPIs
+                    const totalVolume = opData.length;
+                    const totalOcs = opData.reduce((acc, curr) => acc + curr.oc, 0);
+                    const efficiency = totalVolume > 0 ? ((totalOcs / totalVolume) * 100).toFixed(1) : "0.0";
+
+                    // Calcular médias da equipe para comparação
+                    const allOps = [...new Set(analyticsData.map(i => i.operador).filter(op => op))];
+                    const avgVolume = analyticsData.length / allOps.length;
+                    const totalGlobalOcs = analyticsData.reduce((a,b) => a+b.oc, 0);
+                    const avgEfficiency = (totalGlobalOcs / analyticsData.length * 100);
+
+                    // Atualizar UI dos KPIs
+                    document.getElementById('ind-profile-name').textContent = operatorName;
+                    document.getElementById('ind-kpi-volume').textContent = totalVolume;
+                    document.getElementById('ind-kpi-ocs').textContent = totalOcs;
+                    document.getElementById('ind-kpi-efficiency').textContent = efficiency + '%';
+
+                    // 3. Gerar Pontos Fortes e a Melhorar
+                    const strengthsList = document.getElementById('ind-list-strengths');
+                    const improvementsList = document.getElementById('ind-list-improvements');
+                    strengthsList.innerHTML = '';
+                    improvementsList.innerHTML = '';
+
+                    // Lógica de Feedback
+                    if (totalVolume > avgVolume * 1.1) strengthsList.innerHTML += `<li>Alto volume de monitoramento (acima da média).</li>`;
+                    else if (totalVolume < avgVolume * 0.8) improvementsList.innerHTML += `<li>Aumentar o volume de análises diárias.</li>`;
+
+                    if (parseFloat(efficiency) > avgEfficiency * 1.2) strengthsList.innerHTML += `<li>Excelente taxa de detecção de ocorrências.</li>`;
+                    else if (parseFloat(efficiency) < avgEfficiency * 0.8 && totalVolume > 10) improvementsList.innerHTML += `<li>Atenção aos detalhes: taxa de conversão abaixo da média.</li>`;
+
+                    // Verificar constância (dias distintos trabalhados)
+                    const uniqueDays = new Set(opData.map(i => i.dataProd)).size;
+                    if (uniqueDays >= 5) strengthsList.innerHTML += `<li>Boa constância e presença nas escalas.</li>`;
+
+                    // Verificar qualidade técnica (reportou issues?)
+                    const issuesReported = opData.filter(i => i.hasIssue).length;
+                    if (issuesReported > 2) strengthsList.innerHTML += `<li>Proativo no reporte de falhas técnicas.</li>`;
+
+                    // Fallback se listas vazias
+                    if (strengthsList.innerHTML === '') strengthsList.innerHTML = `<li>Performance consistente dentro do esperado.</li>`;
+                    if (improvementsList.innerHTML === '') improvementsList.innerHTML = `<li>Manter a constância atual.</li>`;
+
+                    // 4. Gráfico de Atividade Diária
+                    const dailyActivity = {};
+                    opData.forEach(item => {
+                        if (item.dataProd) {
+                            dailyActivity[item.dataProd] = (dailyActivity[item.dataProd] || 0) + 1; // Contar volume
+                        }
+                    });
+                    
+                    // Ordenar datas
+                    const sortedDates = Object.keys(dailyActivity).sort((a, b) => {
+                        const partsA = a.split('/'); const partsB = b.split('/');
+                        return new Date(partsA[2], partsA[1]-1, partsA[0]) - new Date(partsB[2], partsB[1]-1, partsB[0]);
+                    });
+
+                    if (chartIndividualActivity) chartIndividualActivity.destroy();
+                    const ctxInd = document.getElementById('chart-individual-activity').getContext('2d');
+                    
+                    chartIndividualActivity = new Chart(ctxInd, {
+                        type: 'line',
+                        data: {
+                            labels: sortedDates,
+                            datasets: [{
+                                label: 'Análises por Dia',
+                                data: sortedDates.map(d => dailyActivity[d]),
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { stepSize: 1, color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                                x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                            }
+                        }
+                    });
                 }
 
                 function updateAnalyticsCharts(topPdvs, dayStats, opStats) {
