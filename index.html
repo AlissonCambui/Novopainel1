@@ -63,17 +63,30 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen transition-colors duration-200">
+
+    <!-- Botão de Tema (Dark/Light) -->
+    <button id="theme-toggle-btn" class="absolute top-4 right-4 p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-yellow-400 transition-colors shadow-md z-50" title="Alternar Tema">
+        <!-- Ícone Sol (Light) -->
+        <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <!-- Ícone Lua (Dark) -->
+        <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+    </button>
 
     <div class="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
         
-        <header class="mb-8 text-center">
+        <header class="mb-8 text-center relative">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Painel de Monitoramento</h1>
             <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
         </header>
 
         <!-- Resumo do Dashboard -->
-        <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
+        <!-- Alterado lg:grid-cols-5 para xl:grid-cols-6 para acomodar o novo card -->
+        <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
                 <p id="total-solicitacoes" class="text-3xl font-bold text-brand mt-1">0</p>
@@ -89,6 +102,11 @@
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Análises Pendentes</h3>
                 <p id="analises-pendentes" class="text-3xl font-bold text-red-500 mt-1">0</p>
+            </div>
+            <!-- NOVO CARD: Análises Concluídas -->
+            <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Análises Concluídas</h3>
+                <p id="analises-concluidas" class="text-3xl font-bold text-emerald-500 mt-1">0</p>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Ocorrências (Semana)</h3>
@@ -149,6 +167,11 @@
                                 <button id="open-analytics-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 font-semibold text-brand">Analytics de Produtividade</button>
                                 <button id="completed-report-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Relatório Concluídas</button>
                                 <button id="detailed-pdv-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Análise Detalhada PDV</button>
+                                <!-- Novas Ações de Backup -->
+                                <div class="border-t border-slate-100 dark:border-slate-600 my-1"></div>
+                                <button id="export-backup-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 text-blue-600 dark:text-blue-400 font-medium">⬇️ Exportar Backup (JSON)</button>
+                                <button id="restore-backup-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 text-amber-600 dark:text-amber-400 font-medium">⬆️ Restaurar Backup</button>
+                                <div class="border-t border-slate-100 dark:border-slate-600 my-1"></div>
                                 <button id="archive-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Arquivar</button>
                             </div>
                         </div>
@@ -184,7 +207,7 @@
 
     <!-- Indicador de Versão no Rodapé -->
     <footer class="p-4 text-center text-xs text-slate-400 dark:text-slate-600">
-        v3.9 (Desempenho Individual)
+        v3.9.2 (Card Concluídas)
     </footer>
 
     <!-- MODAIS EXISTENTES -->
@@ -592,6 +615,23 @@
                 <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Relatório de Análises Concluídas</h2>
                 <button id="completed-report-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold dark:text-slate-300 dark:hover:text-slate-100">&times;</button>
             </div>
+            
+            <!-- NOVO: Resumo Estatístico do Relatório -->
+            <div id="report-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="bg-slate-100 p-3 rounded-lg text-center dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Total Análises</h4>
+                    <p id="report-total-analyses" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
+                </div>
+                <div class="bg-slate-100 p-3 rounded-lg text-center dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase dark:text-slate-400">PDVs Únicos</h4>
+                    <p id="report-total-pdvs" class="text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
+                </div>
+                <div class="bg-slate-100 p-3 rounded-lg text-center dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase dark:text-slate-400">Total Ocorrências</h4>
+                    <p id="report-total-ocs" class="text-2xl font-bold text-red-600 dark:text-red-400">0</p>
+                </div>
+            </div>
+
             <div class="mb-4">
                  <input type="text" id="completed-report-search" placeholder="Filtrar relatório (nome, data)..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
             </div>
@@ -657,7 +697,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                console.log("Painel de Monitoramento v3.9 - Desempenho Individual"); 
+                console.log("Painel de Monitoramento v3.9.2 - Card Concluídas"); 
 
                 // --- 1. VARIÁVEIS GLOBAIS ---
                 let ocorrenciasChart;
@@ -697,6 +737,97 @@
                     localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
                     localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
                 }
+
+                // --- GESTÃO DE TEMA (DARK MODE) ---
+                function initTheme() {
+                    const savedTheme = localStorage.getItem('theme');
+                    const html = document.documentElement;
+                    const sunIcon = document.getElementById('icon-sun');
+                    const moonIcon = document.getElementById('icon-moon');
+
+                    // Lógica: Se estiver salvo como 'light', remove a classe dark. Caso contrário (dark ou null), mantém dark.
+                    if (savedTheme === 'light') {
+                        html.classList.remove('dark');
+                        sunIcon.classList.remove('hidden');
+                        moonIcon.classList.add('hidden');
+                    } else {
+                        html.classList.add('dark');
+                        sunIcon.classList.add('hidden');
+                        moonIcon.classList.remove('hidden');
+                    }
+                }
+
+                function toggleTheme() {
+                    const html = document.documentElement;
+                    const sunIcon = document.getElementById('icon-sun');
+                    const moonIcon = document.getElementById('icon-moon');
+                    
+                    if (html.classList.contains('dark')) {
+                        html.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
+                        sunIcon.classList.remove('hidden');
+                        moonIcon.classList.add('hidden');
+                    } else {
+                        html.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
+                        sunIcon.classList.add('hidden');
+                        moonIcon.classList.remove('hidden');
+                    }
+                }
+
+                // --- FUNÇÕES DE BACKUP E RESTAURO ---
+                function exportBackup() {
+                    const data = {
+                        version: "3.9.1",
+                        exportDate: new Date().toISOString(),
+                        tasks: tasks,
+                        archivedTasks: archivedTasks,
+                        categories: categories
+                    };
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+                    const downloadAnchorNode = document.createElement('a');
+                    const dateStr = new Date().toISOString().split('T')[0];
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", `monitoramento_backup_${dateStr}.json`);
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                    showNotification('Backup exportado com sucesso!');
+                }
+
+                function handleRestore(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if (data.tasks && Array.isArray(data.tasks)) {
+                                showConfirm('Restaurar Backup', `Isso substituirá seus dados atuais por ${data.tasks.length} tarefas do arquivo. Continuar?`, () => {
+                                    tasks = data.tasks;
+                                    archivedTasks = data.archivedTasks || [];
+                                    if(data.categories) {
+                                        categories = data.categories;
+                                        localStorage.setItem('monitoramentoCategorias', JSON.stringify(categories));
+                                    }
+                                    saveTasks();
+                                    refreshUI();
+                                    showNotification('Dados restaurados com sucesso!');
+                                });
+                            } else {
+                                showNotification('Arquivo de backup inválido.');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            showNotification('Erro ao ler arquivo.');
+                        }
+                        // Reset input para permitir selecionar o mesmo arquivo novamente
+                        event.target.value = '';
+                    };
+                    reader.readAsText(file);
+                }
+
 
                 function showNotification(message) {
                     const elMsg = document.getElementById('notification-message');
@@ -794,8 +925,26 @@
                 function renderCompletedReport() {
                     const tbody = document.getElementById('completed-report-list');
                     const search = document.getElementById('completed-report-search').value.toLowerCase();
+                    
+                    // Filtra as tarefas concluídas baseadas na busca
                     const completed = tasks.filter(t => t.statusAnalise === 'Concluída' && (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search)));
                     completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
+                    
+                    // --- CÁLCULOS DO RESUMO (NOVO) ---
+                    const totalAnalises = completed.length;
+                    const uniquePdvs = new Set(completed.map(t => t.condominio.trim())).size;
+                    const totalOcorrencias = completed.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
+
+                    // Atualiza os elementos do DOM
+                    const elAnalises = document.getElementById('report-total-analyses');
+                    const elPdvs = document.getElementById('report-total-pdvs');
+                    const elOcs = document.getElementById('report-total-ocs');
+
+                    if (elAnalises) elAnalises.textContent = totalAnalises;
+                    if (elPdvs) elPdvs.textContent = uniquePdvs;
+                    if (elOcs) elOcs.textContent = totalOcorrencias;
+                    // ---------------------------------
+
                     tbody.innerHTML = '';
                     if (completed.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`; return; }
                     completed.forEach(t => {
@@ -815,6 +964,8 @@
                     document.getElementById('analises-pendentes').textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
                     const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
                     document.getElementById('total-ocorrencias-semana').textContent = totOc;
+                    // Atualiza o novo card
+                    document.getElementById('analises-concluidas').textContent = ct.length;
                     document.getElementById('produtividade-semanal').textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
                 }
 
@@ -1439,6 +1590,11 @@
                 }
 
                 // --- 4. LISTENERS ---
+                document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+                document.getElementById('export-backup-btn').addEventListener('click', exportBackup);
+                document.getElementById('restore-backup-btn').addEventListener('click', () => document.getElementById('restore-input').click());
+                document.getElementById('restore-input').addEventListener('change', handleRestore);
+
                 document.getElementById('filtro-condominio').addEventListener('input', refreshUI);
                 document.getElementById('filtro-data').addEventListener('change', refreshUI); 
                 document.getElementById('filtro-semana').addEventListener('input', refreshUI);
@@ -1522,6 +1678,8 @@
                 // Setup
                 const ctxOc = document.getElementById('ocorrenciasChart');
                 if(ctxOc) ocorrenciasChart = new Chart(ctxOc.getContext('2d'), { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+                
+                initTheme(); // Inicializa o tema salvo
                 refreshUI();
 
             } catch (error) { console.error("Erro crítico:", error); alert("Erro ao carregar o painel: " + error.message); }
