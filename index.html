@@ -1643,12 +1643,12 @@
                 document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
                     const unarchiveBtn = e.target.closest('.unarchive-btn'); const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
                     if (unarchiveBtn) showConfirm('Desarquivar', 'Restaurar esta análise?', () => { const index = archivedTasks.findIndex(t => t.id == unarchiveBtn.dataset.id); if (index > -1) { tasks.unshift(archivedTasks.splice(index, 1)[0]); saveTasks(); refreshUI(); renderArchivedList(); showNotification('Análise restaurada.'); } });
-                    else if (deleteArchiveBtn) showConfirm('Excluir do Arquivo', 'Excluir permanentemente?', () => { archivedTasks = archivedTasks.filter(t => t.id != deleteArchiveBtn.dataset.id); saveTasks(); renderArchivedList(); });
+                    else if (deleteArchiveBtn) { archivedTasks = archivedTasks.filter(t => t.id != deleteArchiveBtn.dataset.id); saveTasks(); renderArchivedList(); }
                 });
 
                 document.getElementById('task-list').addEventListener('click', (e) => {
                     const delBtn = e.target.closest('.delete-task-btn'); const archBtn = e.target.closest('.archive-single-btn'); const toggleBtn = e.target.closest('.toggle-details-btn'); const editOcBtn = e.target.closest('.edit-ocorrencia-btn');
-                    if (delBtn) showConfirm('Excluir Análise', 'Tem certeza?', () => { tasks = tasks.filter(t => t.id != delBtn.dataset.id); refreshUI(); showNotification('Análise excluída.'); });
+                    if (delBtn) { tasks = tasks.filter(t => t.id != delBtn.dataset.id); refreshUI(); showNotification('Análise excluída.'); }
                     else if (archBtn) showConfirm('Arquivar Análise', 'Mover para arquivo?', () => { const idx = tasks.findIndex(t => t.id == archBtn.dataset.id); if(idx > -1) { archivedTasks.push(tasks.splice(idx, 1)[0]); refreshUI(); showNotification('Análise arquivada.'); } });
                     else if (toggleBtn) { const t = tasks.find(x => x.id == toggleBtn.dataset.id); if(t) { t.isExpanded = !t.isExpanded; refreshUI(); } }
                     else if (editOcBtn) { const t = tasks.find(x => x.id == editOcBtn.dataset.id); if(t) { document.getElementById('ocorrencia-task-id').value = t.id; currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || [])); renderModalOcorrenciasList(); populateCategorySelect(document.getElementById('add-ocorrencia-categoria')); document.getElementById('add-ocorrencia-desc').value = ''; document.getElementById('ocorrencia-modal').classList.remove('hidden'); } }
