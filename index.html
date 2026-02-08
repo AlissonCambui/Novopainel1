@@ -77,15 +77,48 @@
         </svg>
     </button>
 
-    <div class="container mx-auto p-4 md:p-6 lg:p-8 flex-grow">
+    <!-- [NOVO] TELA DE LOGIN -->
+    <div id="login-container" class="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 rounded-full bg-brand-light mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Acesso Restrito</h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Identifique-se para acessar o monitoramento.</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">E-mail</label>
+                    <input type="email" id="login-email" class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand focus:border-brand dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="seu@email.com" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
+                    <input type="password" id="login-password" class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand focus:border-brand dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="••••••••" required>
+                </div>
+                <div id="login-error" class="text-red-500 text-sm text-center hidden">E-mail ou senha incorretos.</div>
+                <button type="submit" id="login-btn" class="w-full bg-brand text-white font-bold py-3 rounded-lg hover:bg-brand-hover transition-colors shadow-lg">
+                    Entrar no Sistema
+                </button>
+            </form>
+            <p class="mt-6 text-xs text-center text-slate-400 dark:text-slate-500">
+                Apenas pessoal autorizado.
+            </p>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO DO APP (Escondido até login) -->
+    <div id="app-content" class="hidden container mx-auto p-4 md:p-6 lg:p-8 flex-grow flex flex-col min-h-screen">
         
         <header class="mb-8 text-center relative">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Painel de Monitoramento</h1>
-            <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências de minimercados.</p>
+            <p class="text-slate-600 dark:text-slate-400 mt-2">Controle de backups, análises e ocorrências (Cloud Firebase).</p>
         </header>
 
         <!-- Resumo do Dashboard -->
-        <!-- Alterado lg:grid-cols-5 para xl:grid-cols-6 para acomodar o novo card -->
         <section id="dashboard-resumo" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Solicitações Ativas</h3>
@@ -103,7 +136,6 @@
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Análises Pendentes</h3>
                 <p id="analises-pendentes" class="text-3xl font-bold text-red-500 mt-1">0</p>
             </div>
-            <!-- NOVO CARD: Análises Concluídas -->
             <div class="bg-white p-4 rounded-xl shadow-md text-center dark:bg-slate-800 dark:shadow-xl">
                 <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Análises Concluídas</h3>
                 <p id="analises-concluidas" class="text-3xl font-bold text-emerald-500 mt-1">0</p>
@@ -173,6 +205,9 @@
                                 <button id="restore-backup-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600 text-amber-600 dark:text-amber-400 font-medium">⬆️ Restaurar Backup</button>
                                 <div class="border-t border-slate-100 dark:border-slate-600 my-1"></div>
                                 <button id="archive-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-600">Arquivar</button>
+                                <div class="border-t border-slate-100 dark:border-slate-600 my-1"></div>
+                                <!-- BOTÃO SAIR -->
+                                <button id="logout-btn" class="w-full text-left block px-4 py-2 text-sm hover:bg-red-50 text-red-600 font-bold dark:hover:bg-red-900/20 dark:text-red-400">🚪 Sair do Sistema</button>
                             </div>
                         </div>
                     </div>
@@ -183,6 +218,13 @@
         <!-- Lista de Tarefas -->
         <main id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <!-- Cards Renderizados via JS -->
+            <div class="col-span-full text-center py-10 text-slate-400">
+                <svg class="animate-spin h-8 w-8 text-brand mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Carregando dados do Firebase...
+            </div>
         </main>
         
         <!-- Gráficos -->
@@ -207,7 +249,7 @@
 
     <!-- Indicador de Versão no Rodapé -->
     <footer class="p-4 text-center text-xs text-slate-400 dark:text-slate-600">
-        v3.9.5 (Exclusão Rápida)
+        v4.1.1 (Correção Relatório)
     </footer>
 
     <!-- MODAIS EXISTENTES -->
@@ -682,37 +724,113 @@
 
     <input type="file" id="restore-input" class="hidden" accept=".json">
 
-    <script>
+    <!-- Script tipo módulo para usar importações modernas do Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5wgXYIstkmAc3nLSN6B54ZJhM9YsW-JI",
+            authDomain: "novo-painel-de-monitoramento.firebaseapp.com",
+            projectId: "novo-painel-de-monitoramento",
+            storageBucket: "novo-painel-de-monitoramento.firebasestorage.app",
+            messagingSenderId: "792021984515",
+            appId: "1:792021984515:web:fd601c4ff7f2650cb6f536",
+            measurementId: "G-RQ13TB6JBW"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // -- VARIÁVEIS DE CONTROLE DE SESSÃO --
+        let unsubscribeTasks = null;
+        let unsubscribeArchived = null;
+
+        // -- ELEMENTOS DO LOGIN --
+        const loginContainer = document.getElementById('login-container');
+        const appContent = document.getElementById('app-content');
+        const loginForm = document.getElementById('login-form');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // -- LÓGICA DE AUTENTICAÇÃO --
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuário Logado: Esconde login, mostra app, inicia listeners
+                loginContainer.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                startDataListeners();
+                console.log("Usuário autenticado:", user.email);
+            } else {
+                // Usuário Deslogado: Mostra login, esconde app, para listeners
+                loginContainer.classList.remove('hidden');
+                appContent.classList.add('hidden');
+                stopDataListeners();
+                console.log("Usuário não autenticado");
+            }
+        });
+
+        // Função de Login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorMsg = document.getElementById('login-error');
+
+            errorMsg.classList.add('hidden');
+            document.getElementById('login-btn').textContent = "Entrando...";
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    // Sucesso: onAuthStateChanged lidará com a UI
+                    document.getElementById('login-btn').textContent = "Entrar no Sistema";
+                })
+                .catch((error) => {
+                    console.error("Erro login:", error);
+                    document.getElementById('login-btn').textContent = "Entrar no Sistema";
+                    errorMsg.textContent = "E-mail ou senha inválidos.";
+                    errorMsg.classList.remove('hidden');
+                });
+        });
+
+        // Função de Logout
+        if(logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    showNotification("Você saiu do sistema.");
+                });
+            });
+        }
+
         // Função para troca de abas no analytics (Escopo Global)
-        function switchAnalyticsTab(tabId) {
-            // Remove active class from buttons
+        window.switchAnalyticsTab = function(tabId) {
             document.querySelectorAll('.analytics-tab-btn').forEach(btn => btn.classList.remove('active'));
-            // Hide all contents
             document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-            
-            // Activate selected
             document.getElementById(`tab-btn-${tabId}`).classList.add('active');
             document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                console.log("Painel de Monitoramento v3.9.2 - Card Concluídas"); 
+                console.log("Painel de Monitoramento v4.1.0 - Login Seguro"); 
 
                 // --- 1. VARIÁVEIS GLOBAIS ---
                 let ocorrenciasChart;
                 let pdvAnalysisChart;
                 let chartTopPdvs, chartDaysWeek, chartOperators, chartIndividualActivity;
-                let analyticsData = []; // Inicializado como array vazio
+                let analyticsData = []; 
 
-                // CONFIGURAÇÃO GLOBAL DE CORES DO CHART.JS PARA DARK MODE VISÍVEL
-                Chart.defaults.color = '#cbd5e1'; // Slate 300 (Texto claro)
-                Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)'; // Linhas de grade sutis
+                Chart.defaults.color = '#cbd5e1'; 
+                Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
-                let tasks = JSON.parse(localStorage.getItem('monitoramentoTasks')) || [];
-                let archivedTasks = JSON.parse(localStorage.getItem('archivedTasks')) || [];
+                // Escopo global para uso nas funções
+                window.tasks = []; 
+                window.archivedTasks = [];
                 let categories = JSON.parse(localStorage.getItem('monitoramentoCategorias')) || ['Furto', 'Fraude Pagamento', 'Consumo Indevido', 'Vandalismo', 'Outros'];
-                let currentEditingTaskOcorrencias = [];
+                window.currentEditingTaskOcorrencias = [];
 
                 const statusClasses = {
                     'Pendente': 'bg-amber-100 text-amber-600',
@@ -730,22 +848,49 @@
 29/03/2025\t30/04/2025\t275\tMUNDI GUARULHOS\t1\t1\t2\tMarcelo\t
 28/03/2025\t29/04/2025\t245\tFLORESTA CAMPO LIMPO\t1\t1\t3\tMarcelo\tCamera 2 corrompeu às 09h00`;
 
+                // --- FUNÇÕES DE LISTENER DE DADOS ---
+                window.startDataListeners = function() {
+                    // Evita duplicar listeners
+                    if (unsubscribeTasks || unsubscribeArchived) return;
+
+                    const qTasks = query(collection(db, "monitoramento_tasks"));
+                    unsubscribeTasks = onSnapshot(qTasks, (snapshot) => {
+                        window.tasks = [];
+                        snapshot.forEach((doc) => {
+                            window.tasks.push({ ...doc.data(), id: doc.id });
+                        });
+                        window.tasks.sort((a, b) => b.id - a.id);
+                        refreshUI();
+                    }, (error) => {
+                        console.error("Erro ao ler tarefas:", error);
+                        // Se der erro de permissão, é porque as regras do Firestore estão funcionando!
+                    });
+
+                    const qArchived = query(collection(db, "monitoramento_archived"));
+                    unsubscribeArchived = onSnapshot(qArchived, (snapshot) => {
+                        window.archivedTasks = [];
+                        snapshot.forEach((doc) => {
+                            window.archivedTasks.push({ ...doc.data(), id: doc.id });
+                        });
+                        renderArchivedList();
+                    });
+                };
+
+                window.stopDataListeners = function() {
+                    if (unsubscribeTasks) { unsubscribeTasks(); unsubscribeTasks = null; }
+                    if (unsubscribeArchived) { unsubscribeArchived(); unsubscribeArchived = null; }
+                    window.tasks = [];
+                    window.archivedTasks = [];
+                }
 
                 // --- 2. FUNÇÕES DO SISTEMA PRINCIPAL ---
 
-                function saveTasks() {
-                    localStorage.setItem('monitoramentoTasks', JSON.stringify(tasks));
-                    localStorage.setItem('archivedTasks', JSON.stringify(archivedTasks));
-                }
-
-                // --- GESTÃO DE TEMA (DARK MODE) ---
                 function initTheme() {
                     const savedTheme = localStorage.getItem('theme');
                     const html = document.documentElement;
                     const sunIcon = document.getElementById('icon-sun');
                     const moonIcon = document.getElementById('icon-moon');
 
-                    // Lógica: Se estiver salvo como 'light', remove a classe dark. Caso contrário (dark ou null), mantém dark.
                     if (savedTheme === 'light') {
                         html.classList.remove('dark');
                         sunIcon.classList.remove('hidden');
@@ -778,17 +923,17 @@
                 // --- FUNÇÕES DE BACKUP E RESTAURO ---
                 function exportBackup() {
                     const data = {
-                        version: "3.9.1",
+                        version: "4.1.0",
                         exportDate: new Date().toISOString(),
-                        tasks: tasks,
-                        archivedTasks: archivedTasks,
+                        tasks: window.tasks,
+                        archivedTasks: window.archivedTasks,
                         categories: categories
                     };
                     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
                     const downloadAnchorNode = document.createElement('a');
                     const dateStr = new Date().toISOString().split('T')[0];
                     downloadAnchorNode.setAttribute("href", dataStr);
-                    downloadAnchorNode.setAttribute("download", `monitoramento_backup_${dateStr}.json`);
+                    downloadAnchorNode.setAttribute("download", `monitoramento_backup_secure_${dateStr}.json`);
                     document.body.appendChild(downloadAnchorNode);
                     downloadAnchorNode.click();
                     downloadAnchorNode.remove();
@@ -804,30 +949,40 @@
                         try {
                             const data = JSON.parse(e.target.result);
                             if (data.tasks && Array.isArray(data.tasks)) {
-                                showConfirm('Restaurar Backup', `Isso substituirá seus dados atuais por ${data.tasks.length} tarefas do arquivo. Continuar?`, () => {
-                                    tasks = data.tasks;
-                                    archivedTasks = data.archivedTasks || [];
+                                showConfirm('Restaurar Backup no Firebase', `Isso adicionará ${data.tasks.length} tarefas ao banco de dados. Continuar?`, async () => {
+                                    showNotification('Restaurando dados...');
+                                    const batch = writeBatch(db);
+                                    let count = 0;
+                                    data.tasks.forEach(t => {
+                                        const ref = doc(db, "monitoramento_tasks", t.id.toString());
+                                        batch.set(ref, t);
+                                        count++;
+                                    });
+                                    if (data.archivedTasks) {
+                                        data.archivedTasks.forEach(t => {
+                                            const ref = doc(db, "monitoramento_archived", t.id.toString());
+                                            batch.set(ref, t);
+                                            count++;
+                                        });
+                                    }
                                     if(data.categories) {
                                         categories = data.categories;
                                         localStorage.setItem('monitoramentoCategorias', JSON.stringify(categories));
                                     }
-                                    saveTasks();
-                                    refreshUI();
-                                    showNotification('Dados restaurados com sucesso!');
+                                    await batch.commit();
+                                    showNotification(`Sucesso! ${count} registros restaurados.`);
                                 });
                             } else {
                                 showNotification('Arquivo de backup inválido.');
                             }
                         } catch (err) {
                             console.error(err);
-                            showNotification('Erro ao ler arquivo.');
+                            showNotification('Erro ao ler arquivo: ' + err.message);
                         }
-                        // Reset input para permitir selecionar o mesmo arquivo novamente
                         event.target.value = '';
                     };
                     reader.readAsText(file);
                 }
-
 
                 function showNotification(message) {
                     const elMsg = document.getElementById('notification-message');
@@ -876,7 +1031,7 @@
                     const select = document.getElementById('pdv-analysis-select');
                     if (!select) return;
                     select.innerHTML = '<option value="">Escolha um PDV...</option>';
-                    const allCondos = [...tasks, ...archivedTasks].map(t => t.condominio.trim());
+                    const allCondos = [...window.tasks, ...window.archivedTasks].map(t => t.condominio.trim());
                     const uniqueCondos = [...new Set(allCondos)].sort();
                     uniqueCondos.forEach(name => {
                         if(name) {
@@ -889,7 +1044,7 @@
                 }
 
                 function getCondoHighRiskCount(name) {
-                    const all = [...tasks, ...archivedTasks];
+                    const all = [...window.tasks, ...window.archivedTasks];
                     return all.filter(t => t.condominio.trim().toLowerCase() === name.trim().toLowerCase()).reduce((count, t) => {
                         if (t.ocorrencias && t.ocorrencias.length >= 3) return count + 1;
                         return count;
@@ -897,7 +1052,7 @@
                 }
 
                 function exportCompletedReport() {
-                    const completed = tasks.filter(t => t.statusAnalise === 'Concluída');
+                    const completed = window.tasks.filter(t => t.statusAnalise === 'Concluída');
                     completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
                     if (completed.length === 0) { showNotification('Não há análises concluídas para exportar.'); return; }
                     let report = `*RELATÓRIO DE ANÁLISES CONCLUÍDAS - ${new Date().toLocaleDateString('pt-BR')}*\n--------------------------------------------------\n\n`;
@@ -913,37 +1068,31 @@
                         if (task.observacoes) { report += `📝 *Obs:* ${task.observacoes}\n`; }
                         report += `\n--------------------------------------------------\n\n`;
                     });
+                    
+                    // Copy to clipboard
                     const el = document.createElement('textarea');
                     el.value = report;
                     document.body.appendChild(el);
                     el.select();
-                    document.execCommand('copy');
+                    document.execCommand('copy'); 
                     document.body.removeChild(el);
+                    
                     showNotification('Relatório completo copiado para a área de transferência!');
                 }
 
                 function renderCompletedReport() {
                     const tbody = document.getElementById('completed-report-list');
                     const search = document.getElementById('completed-report-search').value.toLowerCase();
-                    
-                    // Filtra as tarefas concluídas baseadas na busca
-                    const completed = tasks.filter(t => t.statusAnalise === 'Concluída' && (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search)));
+                    const completed = window.tasks.filter(t => t.statusAnalise === 'Concluída' && (t.condominio.toLowerCase().includes(search) || t.dataAnalise.includes(search)));
                     completed.sort((a, b) => a.condominio.localeCompare(b.condominio));
                     
-                    // --- CÁLCULOS DO RESUMO (NOVO) ---
                     const totalAnalises = completed.length;
                     const uniquePdvs = new Set(completed.map(t => t.condominio.trim())).size;
                     const totalOcorrencias = completed.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
 
-                    // Atualiza os elementos do DOM
-                    const elAnalises = document.getElementById('report-total-analyses');
-                    const elPdvs = document.getElementById('report-total-pdvs');
-                    const elOcs = document.getElementById('report-total-ocs');
-
-                    if (elAnalises) elAnalises.textContent = totalAnalises;
-                    if (elPdvs) elPdvs.textContent = uniquePdvs;
-                    if (elOcs) elOcs.textContent = totalOcorrencias;
-                    // ---------------------------------
+                    document.getElementById('report-total-analyses').textContent = totalAnalises;
+                    document.getElementById('report-total-pdvs').textContent = uniquePdvs;
+                    document.getElementById('report-total-ocs').textContent = totalOcorrencias;
 
                     tbody.innerHTML = '';
                     if (completed.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center">Nenhuma análise concluída encontrada.</td></tr>`; return; }
@@ -955,7 +1104,7 @@
                 }
 
                 function updateDashboard() {
-                    const ft = tasks.filter(t => t.statusAnalise !== 'Arquivado');
+                    const ft = window.tasks.filter(t => t.statusAnalise !== 'Arquivado');
                     document.getElementById('total-solicitacoes').textContent = ft.length;
                     const ct = ft.filter(t => t.statusAnalise === 'Concluída');
                     const uniquePdvs = new Set(ct.map(t => t.condominio.trim())).size;
@@ -964,13 +1113,12 @@
                     document.getElementById('analises-pendentes').textContent = ft.filter(t => t.statusAnalise === 'Pendente').length;
                     const totOc = ct.reduce((acc, t) => acc + (t.ocorrencias ? t.ocorrencias.length : 0), 0);
                     document.getElementById('total-ocorrencias-semana').textContent = totOc;
-                    // Atualiza o novo card
                     document.getElementById('analises-concluidas').textContent = ct.length;
                     document.getElementById('produtividade-semanal').textContent = ct.length > 0 ? (totOc / ct.length).toFixed(1) : '0.0';
                 }
 
                 function updateCharts() {
-                    const dataByCondo = tasks.reduce((acc, task) => {
+                    const dataByCondo = window.tasks.reduce((acc, task) => {
                         if (task.ocorrencia === 'Sim' && task.ocorrencias) {
                             if (!acc[task.condominio]) acc[task.condominio] = 0;
                             acc[task.condominio] += task.ocorrencias.length;
@@ -1015,7 +1163,6 @@
                 }
 
                 function refreshUI() {
-                    saveTasks();
                     renderTasks();
                     updateDashboard();
                     updateCharts();
@@ -1031,7 +1178,7 @@
                     const filtroSemana = document.getElementById('filtro-semana').value;
                     const filtroDiaSemana = document.getElementById('filtro-dia-semana').value;
 
-                    let filtered = tasks.filter(t => t.condominio.toLowerCase().includes(filtroCond));
+                    let filtered = window.tasks.filter(t => t.condominio.toLowerCase().includes(filtroCond));
                     if (filtroBackup) filtered = filtered.filter(t => t.statusBackup === filtroBackup);
                     if (filtroAnalise) filtered = filtered.filter(t => t.statusAnalise === filtroAnalise);
                     if (filtroData) filtered = filtered.filter(t => t.dataAnalise === filtroData);
@@ -1056,7 +1203,7 @@
                         const badge = ocCount > 0 ? `<div class="mt-1"><span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded-lg border border-red-300 dark:bg-red-900 dark:text-red-100 dark:border-red-700">OCs: ${ocCount}</span></div>` : '';
                         const highRiskDays = getCondoHighRiskCount(task.condominio);
                         let riskBadge = highRiskDays > 0 ? `<span class="ml-2 text-lg" title="PDV Crítico">🔥</span>` : '';
-                        const isCollapsed = !task.isExpanded;
+                        const isCollapsed = !task.isExpanded; 
                         let editBtnHTML = (task.statusAnalise !== 'Arquivado') ? `<button data-id="${task.id}" class="edit-ocorrencia-btn mt-4 w-full bg-slate-200 text-slate-800 font-bold py-2 rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600">${task.statusAnalise === 'Concluída' ? 'Ver/Editar Ocorrências' : 'Registrar Ocorrências'}</button>` : '';
                         let obsHTML = task.observacoes ? `<div class="mt-4 border-t pt-2 space-y-2 dark:border-slate-700"><p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Obs:</p><p class="text-sm text-slate-500 dark:text-slate-400">${task.observacoes}</p></div>` : '';
 
@@ -1089,14 +1236,11 @@
                     const container = document.getElementById('view-archive-list-container');
                     const filterInput = document.getElementById('archive-search-input');
                     const filter = filterInput ? filterInput.value.toLowerCase() : '';
-                    
-                    const filtered = archivedTasks.filter(t => t.condominio.toLowerCase().includes(filter) || (t.dataAnalise && t.dataAnalise.includes(filter)));
-                    
+                    const filtered = window.archivedTasks.filter(t => t.condominio.toLowerCase().includes(filter) || (t.dataAnalise && t.dataAnalise.includes(filter)));
                     if (filtered.length === 0) { 
                         container.innerHTML = '<p class="text-center text-slate-500 mt-4">Nenhuma análise arquivada.</p>'; 
                         return; 
                     }
-                    
                     container.innerHTML = filtered.map(t => `
                         <div class="flex justify-between items-center p-3 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                             <div>
@@ -1114,8 +1258,8 @@
                 function renderModalOcorrenciasList() {
                     const list = document.getElementById('ocorrencia-list');
                     list.innerHTML = '';
-                    if (currentEditingTaskOcorrencias.length === 0) { list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>'; return; }
-                    currentEditingTaskOcorrencias.forEach((ocor, index) => {
+                    if (window.currentEditingTaskOcorrencias.length === 0) { list.innerHTML = '<p class="text-center text-sm text-slate-500 py-4">Nenhuma ocorrência registrada.</p>'; return; }
+                    window.currentEditingTaskOcorrencias.forEach((ocor, index) => {
                         const div = document.createElement('div');
                         div.className = 'ocorrencia-item-row p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center group dark:bg-slate-800 dark:border-slate-700';
                         const inconclusivaBadge = ocor.inconclusiva ? `<span class="ml-2 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-800">INCONCLUSIVA</span>` : '';
@@ -1124,27 +1268,37 @@
                     });
                 }
 
-                function handleTaskSubmit(e) {
+                async function handleTaskSubmit(e) {
                     e.preventDefault();
                     const condominio = document.getElementById('form-condominio').value;
                     const dataAnalise = document.getElementById('form-data-analise').value;
-                    if (tasks.some(t => t.condominio === condominio && t.dataAnalise === dataAnalise)) {
+                    if (window.tasks.some(t => t.condominio === condominio && t.dataAnalise === dataAnalise)) {
                         showNotification('Análise já existe.'); return; 
                     }
-                    tasks.unshift({
-                        id: Date.now(),
-                        condominio: condominio,
-                        dataAnalise: dataAnalise,
-                        semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || 0,
-                        observacoes: document.getElementById('form-observacoes').value,
-                        statusBackup: 'Pendente', statusAnalise: 'Pendente', ocorrencia: 'Pendente', isExpanded: true, ocorrencias: []
-                    });
-                    refreshUI();
-                    document.getElementById('task-modal').classList.add('hidden');
-                    showNotification('Nova análise adicionada.');
+                    try {
+                        const newId = Date.now().toString();
+                        const newTask = {
+                            id: newId,
+                            condominio: condominio,
+                            dataAnalise: dataAnalise,
+                            semanaDeTrabalho: parseInt(document.getElementById('form-semana-trabalho').value) || 0,
+                            observacoes: document.getElementById('form-observacoes').value,
+                            statusBackup: 'Pendente', 
+                            statusAnalise: 'Pendente', 
+                            ocorrencia: 'Pendente', 
+                            isExpanded: true, 
+                            ocorrencias: []
+                        };
+                        await setDoc(doc(db, "monitoramento_tasks", newId), newTask);
+                        document.getElementById('task-modal').classList.add('hidden');
+                        showNotification('Nova análise adicionada.');
+                    } catch (error) {
+                        console.error(error);
+                        showNotification('Erro ao salvar no Firebase.');
+                    }
                 }
 
-                function handleBulkAddSubmit(e) {
+                async function handleBulkAddSubmit(e) {
                     e.preventDefault();
                     const inputArea = document.getElementById('bulk-input-area').value.trim();
                     if (!inputArea) { showNotification('Cole os dados.'); return; }
@@ -1155,10 +1309,8 @@
                     lines.forEach((line, index) => {
                         const lineLower = line.toLowerCase();
                         if ((lineLower.includes('semana') || lineLower.includes('data')) && (lineLower.includes('unidade') || lineLower.includes('status'))) return;
-
                         let parts = line.split(/\s{2,}|\t/).map(p => p.trim()).filter(p => p.length > 0);
                         if (parts.length < 5) { ignoredCount++; return; }
-                        
                         let unidadeRaw = parts[2] || '';
                         let statusRaw = parts[parts.length - 1] || 'Pendente';
                         let isoDate = '';
@@ -1168,14 +1320,11 @@
                         } else {
                             isoDate = new Date().toISOString().split('T')[0];
                         }
-
-                        const existsInDb = tasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
+                        const existsInDb = window.tasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
                         const existsInBatch = newTasks.some(t => t.condominio.toLowerCase().trim() === unidadeRaw.toLowerCase().trim() && t.dataAnalise === isoDate);
-
                         if (existsInDb || existsInBatch) { ignoredCount++; return; }
-
                         newTasks.push({
-                            id: Date.now() + index,
+                            id: (Date.now() + index).toString(),
                             condominio: unidadeRaw,
                             dataAnalise: isoDate,
                             semanaDeTrabalho: parseInt(parts[0].replace(/\D/g,'')) || 0,
@@ -1187,10 +1336,20 @@
                     });
 
                     if (newTasks.length > 0) { 
-                        tasks.unshift(...newTasks); refreshUI(); 
-                        document.getElementById('bulk-add-modal').classList.add('hidden'); 
-                        document.getElementById('bulk-input-area').value = ''; 
-                        showNotification(`${newTasks.length} análises importadas. (${ignoredCount} duplicadas/ignoradas)`); 
+                        try {
+                            const batch = writeBatch(db);
+                            newTasks.forEach(t => {
+                                const ref = doc(db, "monitoramento_tasks", t.id);
+                                batch.set(ref, t);
+                            });
+                            await batch.commit();
+                            document.getElementById('bulk-add-modal').classList.add('hidden'); 
+                            document.getElementById('bulk-input-area').value = ''; 
+                            showNotification(`${newTasks.length} análises importadas. (${ignoredCount} ignoradas)`); 
+                        } catch (err) {
+                            console.error(err);
+                            showNotification('Erro ao importar em lote.');
+                        }
                     } else {
                         showNotification('Nenhum dado importado.');
                     }
@@ -1198,14 +1357,10 @@
 
                 function generatePdvReport(pdvName) {
                     if (!pdvName) return;
-
-                    const allTasks = [...tasks, ...archivedTasks].filter(t => t.condominio.trim() === pdvName);
-                    
+                    const allTasks = [...window.tasks, ...window.archivedTasks].filter(t => t.condominio.trim() === pdvName);
                     if (allTasks.length === 0) return;
-
                     const daysCount = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0}; 
                     const hoursCount = {};
-
                     allTasks.forEach(t => {
                         if (t.ocorrencias && t.ocorrencias.length > 0) {
                             if (t.dataAnalise) {
@@ -1213,7 +1368,6 @@
                                 const dayIndex = d.getDay();
                                 daysCount[dayIndex] += t.ocorrencias.length; 
                             }
-
                             t.ocorrencias.forEach(oc => {
                                 if (oc.horarioInicial) {
                                     const hour = parseInt(oc.horarioInicial.split(':')[0]);
@@ -1224,59 +1378,28 @@
                             });
                         }
                     });
-
                     let maxDay = -1;
                     let maxDayCount = -1;
                     for (let d = 0; d <= 6; d++) {
-                        if (daysCount[d] > maxDayCount) {
-                            maxDayCount = daysCount[d];
-                            maxDay = d;
-                        }
+                        if (daysCount[d] > maxDayCount) { maxDayCount = daysCount[d]; maxDay = d; }
                     }
                     const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
                     document.getElementById('pdv-critical-day').textContent = maxDayCount > 0 ? dayNames[maxDay] : "N/A";
-
                     let maxHour = -1;
                     let maxHourCount = -1;
-                    Object.keys(hoursCount).forEach(h => {
-                        if (hoursCount[h] > maxHourCount) {
-                            maxHourCount = hoursCount[h];
-                            maxHour = h;
-                        }
-                    });
+                    Object.keys(hoursCount).forEach(h => { if (hoursCount[h] > maxHourCount) { maxHourCount = hoursCount[h]; maxHour = h; } });
                     document.getElementById('pdv-critical-time').textContent = maxHourCount > 0 ? `${maxHour}h - ${parseInt(maxHour)+1}h` : "N/A";
-
                     const ctx = document.getElementById('pdvAnalysisChart').getContext('2d');
-                    
-                    if (pdvAnalysisChart) {
-                        pdvAnalysisChart.destroy();
-                    }
-
+                    if (pdvAnalysisChart) pdvAnalysisChart.destroy();
                     pdvAnalysisChart = new Chart(ctx, {
                         type: 'bar',
-                        data: {
-                            labels: dayNames,
-                            datasets: [{
-                                label: 'Total de Ocorrências',
-                                data: [0, 1, 2, 3, 4, 5, 6].map(d => daysCount[d]),
-                                backgroundColor: 'rgba(55, 192, 160, 0.6)',
-                                borderColor: '#37c0a0',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                            }
-                        }
+                        data: { labels: dayNames, datasets: [{ label: 'Total de Ocorrências', data: [0, 1, 2, 3, 4, 5, 6].map(d => daysCount[d]), backgroundColor: 'rgba(55, 192, 160, 0.6)', borderColor: '#37c0a0', borderWidth: 1 }] },
+                        options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
                     });
-
                     document.getElementById('pdv-analysis-results').classList.remove('hidden');
                 }
 
                 // --- 3. ANALYTICS LOGIC (OTIMIZADO) ---
-
                 function getWeekInfo(dateStr) {
                     if (!dateStr) return null;
                     const parts = dateStr.split('/');
@@ -1305,60 +1428,34 @@
                             if (!pdvNome || pdvNome.toLowerCase().includes('unidade')) return null;
                             const dataProdutividade = cols[1]?.trim();
                             const weekInfo = getWeekInfo(dataProdutividade);
-                            return {
-                                id: index,
-                                weekKey: weekInfo ? weekInfo.key : 0,
-                                weekLabel: weekInfo ? weekInfo.label : 'Data Inválida',
-                                pdv: pdvNome,
-                                oc: parseInt(cols[6]?.trim()) || 0,
-                                operador: (cols[7]?.trim() || '').toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-                                hasIssue: (cols[8]?.trim() || '').toLowerCase().match(/(corrompido|sem gravação|cortes|travando|off|desconectad|problema)/),
-                                dataProd: dataProdutividade
-                            };
+                            return { id: index, weekKey: weekInfo ? weekInfo.key : 0, weekLabel: weekInfo ? weekInfo.label : 'Data Inválida', pdv: pdvNome, oc: parseInt(cols[6]?.trim()) || 0, operador: (cols[7]?.trim() || '').toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '), hasIssue: (cols[8]?.trim() || '').toLowerCase().match(/(corrompido|sem gravação|cortes|travando|off|desconectad|problema)/), dataProd: dataProdutividade };
                         }).filter(i => i !== null);
-
                         if (parsed.length === 0) { showNotification("Nenhum dado válido identificado."); return; }
                         analyticsData = parsed;
                         updateAnalyticsUI('all');
-                        
                         document.getElementById('analytics-input-view').classList.add('hidden');
-                        
-                        // CORREÇÃO: Separar as operações de classList
                         const dashboard = document.getElementById('analytics-dashboard-view');
                         dashboard.classList.remove('hidden');
                         dashboard.classList.add('flex');
-                        
                         document.getElementById('analytics-back-to-input-btn').classList.remove('hidden');
-                        switchAnalyticsTab('general'); // Reset to first tab
+                        window.switchAnalyticsTab('general');
                     } catch (err) { console.error(err); showNotification("Erro ao processar dados."); }
                 }
 
                 function updateAnalyticsUI(selectedWeekKey) {
                     if (!analyticsData) return;
-                    
-                    // Filter Logic
                     const weeksMap = new Map();
                     analyticsData.forEach(item => { if (item.weekKey !== 0) weeksMap.set(item.weekKey, item.weekLabel); });
                     const select = document.getElementById('analytics-week-filter');
                     const currentVal = select.value;
                     select.innerHTML = '<option value="all">Todas as Semanas</option>';
-                    Array.from(weeksMap.entries()).sort((a,b) => a[0] - b[0]).forEach(([key, label]) => {
-                        const opt = document.createElement('option'); opt.value = key; opt.textContent = label; select.appendChild(opt);
-                    });
+                    Array.from(weeksMap.entries()).sort((a,b) => a[0] - b[0]).forEach(([key, label]) => { const opt = document.createElement('option'); opt.value = key; opt.textContent = label; select.appendChild(opt); });
                     select.value = selectedWeekKey !== undefined ? selectedWeekKey : (currentVal || 'all');
-
                     const filtered = select.value === 'all' ? analyticsData : analyticsData.filter(i => i.weekKey == select.value);
-
-                    // KPIs
                     document.getElementById('kpi-visitas').textContent = filtered.length;
                     document.getElementById('kpi-ocs').textContent = filtered.reduce((acc, c) => acc + c.oc, 0);
                     document.getElementById('kpi-issues').textContent = filtered.filter(i => i.hasIssue).length;
-
-                    // Stats Aggregation
-                    const pdvStats = {};
-                    const opStats = {};
-                    const dayStats = { 'Domingo':0, 'Segunda-feira':0, 'Terça-feira':0, 'Quarta-feira':0, 'Quinta-feira':0, 'Sexta-feira':0, 'Sábado':0 };
-
+                    const pdvStats = {}; const opStats = {}; const dayStats = { 'Domingo':0, 'Segunda-feira':0, 'Terça-feira':0, 'Quarta-feira':0, 'Quinta-feira':0, 'Sexta-feira':0, 'Sábado':0 };
                     filtered.forEach(item => {
                         pdvStats[item.pdv] = (pdvStats[item.pdv] || 0) + item.oc;
                         if(item.operador) opStats[item.operador] = (opStats[item.operador] || 0) + item.oc;
@@ -1366,22 +1463,14 @@
                             const parts = item.dataProd.split('/');
                             if(parts.length===3) {
                                 const dt = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-                                if(!isNaN(dt)) {
-                                    const dCap = dt.toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase());
-                                    if(dayStats[dCap] !== undefined) dayStats[dCap] += item.oc;
-                                }
+                                if(!isNaN(dt)) { const dCap = dt.toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase()); if(dayStats[dCap] !== undefined) dayStats[dCap] += item.oc; }
                             }
                         }
                     });
-
-                    // Update Top PDV KPI
                     const sortedPdvs = Object.entries(pdvStats).sort((a,b) => b[1] - a[1]);
                     document.getElementById('kpi-critical-pdv').textContent = sortedPdvs.length > 0 ? sortedPdvs[0][0] : 'N/A';
                     document.getElementById('kpi-critical-count').textContent = sortedPdvs.length > 0 ? sortedPdvs[0][1] + ' OCs' : '0 OCs';
-
-                    // Update Spam Section (Always based on ALL data to detect trends)
-                    let maxTs = 0;
-                    const pdvRiskMap = {};
+                    let maxTs = 0; const pdvRiskMap = {};
                     analyticsData.forEach(item => {
                          if (item.dataProd) {
                             const parts = item.dataProd.split('/');
@@ -1393,21 +1482,14 @@
                         }
                     });
                     const spamList = Object.values(pdvRiskMap).map(p => ({ ...p, daysInactive: Math.floor((maxTs - p.lastTs) / (86400000)) })).filter(p => p.total >= 3 && p.daysInactive >= 5).sort((a,b) => b.total - a.total);
-                    
                     const spamContainer = document.getElementById('spam-list-container');
                     spamContainer.innerHTML = '';
                     if (spamList.length > 0) {
                         document.getElementById('analytics-spam-section').classList.remove('hidden');
                         document.getElementById('spam-count-badge').textContent = spamList.length;
-                        spamList.forEach(p => {
-                            spamContainer.innerHTML += `<div class="bg-white dark:bg-slate-700 border-l-4 border-red-500 p-2 rounded shadow-sm text-xs flex justify-between items-center text-slate-800 dark:text-slate-100"><div><strong>${p.name}</strong><br><span class="text-slate-500 dark:text-slate-400">Inativo há ${p.daysInactive} dias</span></div><div class="text-right font-bold text-red-600 dark:text-red-400">${p.total} OCs</div></div>`;
-                        });
+                        spamList.forEach(p => { spamContainer.innerHTML += `<div class="bg-white dark:bg-slate-700 border-l-4 border-red-500 p-2 rounded shadow-sm text-xs flex justify-between items-center text-slate-800 dark:text-slate-100"><div><strong>${p.name}</strong><br><span class="text-slate-500 dark:text-slate-400">Inativo há ${p.daysInactive} dias</span></div><div class="text-right font-bold text-red-600 dark:text-red-400">${p.total} OCs</div></div>`; });
                     } else { document.getElementById('analytics-spam-section').classList.add('hidden'); }
-
-                    // Update Charts
                     updateAnalyticsCharts(sortedPdvs.slice(0, 10), dayStats, opStats);
-
-                    // Update Peaks Table
                     const pdvMonths = {};
                     analyticsData.forEach(item => {
                          if (item.oc > 0 && item.dataProd) {
@@ -1427,166 +1509,64 @@
                         const peak = months.reduce((max, c) => c.count > max.count ? c : max, months[0]);
                         return { name: pdv, month: peak.name, count: peak.count };
                     }).filter(i => i!==null).sort((a,b) => b.count - a.count).slice(0,10);
-                    
                     const peakBody = document.getElementById('table-peaks-body');
                     peakBody.innerHTML = '';
                     peaks.forEach(p => peakBody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50"><td class="px-4 py-2 font-medium">${p.name}</td><td class="px-4 py-2 text-blue-600 font-bold uppercase">${p.month}</td><td class="px-4 py-2 text-center"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">${p.count}</span></td></tr>`));
-
-                    // --- POPULAR SELETOR DE COLABORADOR (NOVO) ---
                     const individualSelect = document.getElementById('individual-operator-select');
                     if (individualSelect) {
                         individualSelect.innerHTML = '<option value="">Escolha um operador...</option>';
-                        // Extrair lista única de operadores
                         const uniqueOperators = [...new Set(analyticsData.map(i => i.operador).filter(op => op))].sort();
-                        uniqueOperators.forEach(op => {
-                            const option = document.createElement('option');
-                            option.value = op;
-                            option.textContent = op;
-                            individualSelect.appendChild(option);
-                        });
-                        // Listener para mudança
+                        uniqueOperators.forEach(op => { const option = document.createElement('option'); option.value = op; option.textContent = op; individualSelect.appendChild(option); });
                         individualSelect.onchange = (e) => updateIndividualStats(e.target.value);
                     }
                 }
 
                 function updateIndividualStats(operatorName) {
                     const container = document.getElementById('individual-dashboard-container');
-                    if (!operatorName) {
-                        container.classList.add('hidden');
-                        return;
-                    }
+                    if (!operatorName) { container.classList.add('hidden'); return; }
                     container.classList.remove('hidden');
-
-                    // 1. Filtrar dados do operador
                     const opData = analyticsData.filter(i => i.operador === operatorName);
-                    
-                    // 2. Calcular KPIs
                     const totalVolume = opData.length;
                     const totalOcs = opData.reduce((acc, curr) => acc + curr.oc, 0);
                     const efficiency = totalVolume > 0 ? ((totalOcs / totalVolume) * 100).toFixed(1) : "0.0";
-
-                    // Calcular médias da equipe para comparação
                     const allOps = [...new Set(analyticsData.map(i => i.operador).filter(op => op))];
                     const avgVolume = analyticsData.length / allOps.length;
                     const totalGlobalOcs = analyticsData.reduce((a,b) => a+b.oc, 0);
                     const avgEfficiency = (totalGlobalOcs / analyticsData.length * 100);
-
-                    // Atualizar UI dos KPIs
                     document.getElementById('ind-profile-name').textContent = operatorName;
                     document.getElementById('ind-kpi-volume').textContent = totalVolume;
                     document.getElementById('ind-kpi-ocs').textContent = totalOcs;
                     document.getElementById('ind-kpi-efficiency').textContent = efficiency + '%';
-
-                    // 3. Gerar Pontos Fortes e a Melhorar
                     const strengthsList = document.getElementById('ind-list-strengths');
                     const improvementsList = document.getElementById('ind-list-improvements');
-                    strengthsList.innerHTML = '';
-                    improvementsList.innerHTML = '';
-
-                    // Lógica de Feedback
+                    strengthsList.innerHTML = ''; improvementsList.innerHTML = '';
                     if (totalVolume > avgVolume * 1.1) strengthsList.innerHTML += `<li>Alto volume de monitoramento (acima da média).</li>`;
                     else if (totalVolume < avgVolume * 0.8) improvementsList.innerHTML += `<li>Aumentar o volume de análises diárias.</li>`;
-
                     if (parseFloat(efficiency) > avgEfficiency * 1.2) strengthsList.innerHTML += `<li>Excelente taxa de detecção de ocorrências.</li>`;
                     else if (parseFloat(efficiency) < avgEfficiency * 0.8 && totalVolume > 10) improvementsList.innerHTML += `<li>Atenção aos detalhes: taxa de conversão abaixo da média.</li>`;
-
-                    // Verificar constância (dias distintos trabalhados)
                     const uniqueDays = new Set(opData.map(i => i.dataProd)).size;
                     if (uniqueDays >= 5) strengthsList.innerHTML += `<li>Boa constância e presença nas escalas.</li>`;
-
-                    // Verificar qualidade técnica (reportou issues?)
                     const issuesReported = opData.filter(i => i.hasIssue).length;
                     if (issuesReported > 2) strengthsList.innerHTML += `<li>Proativo no reporte de falhas técnicas.</li>`;
-
-                    // Fallback se listas vazias
                     if (strengthsList.innerHTML === '') strengthsList.innerHTML = `<li>Performance consistente dentro do esperado.</li>`;
                     if (improvementsList.innerHTML === '') improvementsList.innerHTML = `<li>Manter a constância atual.</li>`;
-
-                    // 4. Gráfico de Atividade Diária
                     const dailyActivity = {};
-                    opData.forEach(item => {
-                        if (item.dataProd) {
-                            dailyActivity[item.dataProd] = (dailyActivity[item.dataProd] || 0) + 1; // Contar volume
-                        }
-                    });
-                    
-                    // Ordenar datas
-                    const sortedDates = Object.keys(dailyActivity).sort((a, b) => {
-                        const partsA = a.split('/'); const partsB = b.split('/');
-                        return new Date(partsA[2], partsA[1]-1, partsA[0]) - new Date(partsB[2], partsB[1]-1, partsB[0]);
-                    });
-
+                    opData.forEach(item => { if (item.dataProd) { dailyActivity[item.dataProd] = (dailyActivity[item.dataProd] || 0) + 1; } });
+                    const sortedDates = Object.keys(dailyActivity).sort((a, b) => { const partsA = a.split('/'); const partsB = b.split('/'); return new Date(partsA[2], partsA[1]-1, partsA[0]) - new Date(partsB[2], partsB[1]-1, partsB[0]); });
                     if (chartIndividualActivity) chartIndividualActivity.destroy();
                     const ctxInd = document.getElementById('chart-individual-activity').getContext('2d');
-                    
-                    chartIndividualActivity = new Chart(ctxInd, {
-                        type: 'line',
-                        data: {
-                            labels: sortedDates,
-                            datasets: [{
-                                label: 'Análises por Dia',
-                                data: sortedDates.map(d => dailyActivity[d]),
-                                borderColor: '#3b82f6',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                tension: 0.3,
-                                fill: true
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { stepSize: 1, color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
-                                x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
-                            }
-                        }
-                    });
+                    chartIndividualActivity = new Chart(ctxInd, { type: 'line', data: { labels: sortedDates, datasets: [{ label: 'Análises por Dia', data: sortedDates.map(d => dailyActivity[d]), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.3, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }, x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } } } } });
                 }
 
                 function updateAnalyticsCharts(topPdvs, dayStats, opStats) {
                     if(chartTopPdvs) chartTopPdvs.destroy();
                     if(chartDaysWeek) chartDaysWeek.destroy();
                     if(chartOperators) chartOperators.destroy();
-
-                    // CORREÇÃO: Configuração explícita de cores para eixos X e Y
-                    const commonOptions = {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: {
-                                ticks: { color: '#cbd5e1' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                            },
-                            y: {
-                                ticks: { color: '#cbd5e1' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                            }
-                        }
-                    };
-
-                    chartTopPdvs = new Chart(document.getElementById('chart-top-pdvs').getContext('2d'), {
-                        type: 'bar',
-                        data: { labels: topPdvs.map(i => i[0]), datasets: [{ label: 'Ocorrências', data: topPdvs.map(i => i[1]), backgroundColor: '#ef4444', borderRadius: 4 }] },
-                        options: { 
-                            indexAxis: 'y', 
-                            ...commonOptions
-                        }
-                    });
-
-                    chartDaysWeek = new Chart(document.getElementById('chart-days-week').getContext('2d'), {
-                        type: 'bar',
-                        data: { labels: Object.keys(dayStats), datasets: [{ label: 'Volume', data: Object.values(dayStats), backgroundColor: '#3b82f6', borderRadius: 4 }] },
-                        options: commonOptions
-                    });
-
+                    const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }, y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } } } };
+                    chartTopPdvs = new Chart(document.getElementById('chart-top-pdvs').getContext('2d'), { type: 'bar', data: { labels: topPdvs.map(i => i[0]), datasets: [{ label: 'Ocorrências', data: topPdvs.map(i => i[1]), backgroundColor: '#ef4444', borderRadius: 4 }] }, options: { indexAxis: 'y', ...commonOptions } });
+                    chartDaysWeek = new Chart(document.getElementById('chart-days-week').getContext('2d'), { type: 'bar', data: { labels: Object.keys(dayStats), datasets: [{ label: 'Volume', data: Object.values(dayStats), backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: commonOptions });
                     const sortedOps = Object.entries(opStats).sort((a,b) => b[1] - a[1]).slice(0, 15);
-                    chartOperators = new Chart(document.getElementById('chart-operators').getContext('2d'), {
-                        type: 'bar',
-                        data: { labels: sortedOps.map(i => i[0]), datasets: [{ label: 'OCs', data: sortedOps.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 4 }] },
-                        options: commonOptions
-                    });
+                    chartOperators = new Chart(document.getElementById('chart-operators').getContext('2d'), { type: 'bar', data: { labels: sortedOps.map(i => i[0]), datasets: [{ label: 'OCs', data: sortedOps.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 4 }] }, options: commonOptions });
                 }
 
                 // --- 4. LISTENERS ---
@@ -1601,8 +1581,16 @@
                 document.getElementById('filtro-dia-semana').addEventListener('change', refreshUI); 
                 document.getElementById('filtro-backup').addEventListener('change', refreshUI); 
                 document.getElementById('filtro-analise').addEventListener('change', refreshUI); 
-                document.getElementById('expand-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = true); refreshUI(); });
-                document.getElementById('collapse-all-btn').addEventListener('click', () => { tasks.forEach(t => t.isExpanded = false); refreshUI(); });
+                document.getElementById('expand-all-btn').addEventListener('click', async () => { 
+                    const batch = writeBatch(db);
+                    window.tasks.forEach(t => { if(!t.isExpanded) { batch.update(doc(db, "monitoramento_tasks", t.id), { isExpanded: true }); } });
+                    try { await batch.commit(); } catch(e) { console.error(e); }
+                });
+                document.getElementById('collapse-all-btn').addEventListener('click', async () => { 
+                    const batch = writeBatch(db);
+                    window.tasks.forEach(t => { if(t.isExpanded) { batch.update(doc(db, "monitoramento_tasks", t.id), { isExpanded: false }); } });
+                    try { await batch.commit(); } catch(e) { console.error(e); }
+                });
                 document.getElementById('add-task-btn').addEventListener('click', () => { document.getElementById('task-form').reset(); document.getElementById('form-data-analise').value = formatDateForInput(new Date()); document.getElementById('task-modal').classList.remove('hidden'); });
                 document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('task-modal').classList.add('hidden'));
                 document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
@@ -1640,42 +1628,127 @@
 
                 document.getElementById('view-archive-btn').addEventListener('click', () => { document.getElementById('archive-modal').classList.add('hidden'); document.getElementById('view-archive-modal').classList.remove('hidden'); document.getElementById('archive-search-input').value = ''; renderArchivedList(); });
                 document.getElementById('archive-search-input').addEventListener('input', renderArchivedList);
+                
                 document.getElementById('view-archive-list-container').addEventListener('click', (e) => {
-                    const unarchiveBtn = e.target.closest('.unarchive-btn'); const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
-                    if (unarchiveBtn) showConfirm('Desarquivar', 'Restaurar esta análise?', () => { const index = archivedTasks.findIndex(t => t.id == unarchiveBtn.dataset.id); if (index > -1) { tasks.unshift(archivedTasks.splice(index, 1)[0]); saveTasks(); refreshUI(); renderArchivedList(); showNotification('Análise restaurada.'); } });
-                    else if (deleteArchiveBtn) { archivedTasks = archivedTasks.filter(t => t.id != deleteArchiveBtn.dataset.id); saveTasks(); renderArchivedList(); }
+                    const unarchiveBtn = e.target.closest('.unarchive-btn'); 
+                    const deleteArchiveBtn = e.target.closest('.delete-archive-btn');
+                    if (unarchiveBtn) {
+                        showConfirm('Desarquivar', 'Restaurar esta análise?', async () => { 
+                            const id = unarchiveBtn.dataset.id;
+                            const taskToRestore = window.archivedTasks.find(t => t.id === id);
+                            if(taskToRestore) {
+                                try {
+                                    await setDoc(doc(db, "monitoramento_tasks", id), taskToRestore);
+                                    await deleteDoc(doc(db, "monitoramento_archived", id));
+                                    showNotification('Análise restaurada.');
+                                } catch(err) { console.error(err); showNotification('Erro ao restaurar.'); }
+                            }
+                        });
+                    }
+                    else if (deleteArchiveBtn) { 
+                        showConfirm('Excluir Permanentemente', 'Isso apagará o registro.', async () => {
+                            try {
+                                await deleteDoc(doc(db, "monitoramento_archived", deleteArchiveBtn.dataset.id));
+                                showNotification('Registro excluído.');
+                            } catch(err) { console.error(err); showNotification('Erro ao excluir.'); }
+                        });
+                    }
                 });
 
-                document.getElementById('task-list').addEventListener('click', (e) => {
-                    const delBtn = e.target.closest('.delete-task-btn'); const archBtn = e.target.closest('.archive-single-btn'); const toggleBtn = e.target.closest('.toggle-details-btn'); const editOcBtn = e.target.closest('.edit-ocorrencia-btn');
-                    if (delBtn) { tasks = tasks.filter(t => t.id != delBtn.dataset.id); refreshUI(); }
-                    else if (archBtn) showConfirm('Arquivar Análise', 'Mover para arquivo?', () => { const idx = tasks.findIndex(t => t.id == archBtn.dataset.id); if(idx > -1) { archivedTasks.push(tasks.splice(idx, 1)[0]); refreshUI(); showNotification('Análise arquivada.'); } });
-                    else if (toggleBtn) { const t = tasks.find(x => x.id == toggleBtn.dataset.id); if(t) { t.isExpanded = !t.isExpanded; refreshUI(); } }
-                    else if (editOcBtn) { const t = tasks.find(x => x.id == editOcBtn.dataset.id); if(t) { document.getElementById('ocorrencia-task-id').value = t.id; currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || [])); renderModalOcorrenciasList(); populateCategorySelect(document.getElementById('add-ocorrencia-categoria')); document.getElementById('add-ocorrencia-desc').value = ''; document.getElementById('ocorrencia-modal').classList.remove('hidden'); } }
+                document.getElementById('task-list').addEventListener('click', async (e) => {
+                    const delBtn = e.target.closest('.delete-task-btn'); 
+                    const archBtn = e.target.closest('.archive-single-btn'); 
+                    const toggleBtn = e.target.closest('.toggle-details-btn'); 
+                    const editOcBtn = e.target.closest('.edit-ocorrencia-btn');
+                    if (delBtn) { 
+                        showConfirm('Excluir Análise', 'Tem certeza?', async () => {
+                            try {
+                                await deleteDoc(doc(db, "monitoramento_tasks", delBtn.dataset.id));
+                                showNotification('Análise excluída.');
+                            } catch(err) { console.error(err); showNotification('Erro ao excluir.'); }
+                        });
+                    }
+                    else if (archBtn) {
+                        showConfirm('Arquivar Análise', 'Mover para arquivo?', async () => { 
+                            const id = archBtn.dataset.id;
+                            const taskToArchive = window.tasks.find(t => t.id === id);
+                            if(taskToArchive) {
+                                try {
+                                    await setDoc(doc(db, "monitoramento_archived", id), { ...taskToArchive, statusAnalise: 'Arquivado' });
+                                    await deleteDoc(doc(db, "monitoramento_tasks", id));
+                                    showNotification('Análise arquivada.');
+                                } catch(err) { console.error(err); showNotification('Erro ao arquivar.'); }
+                            }
+                        });
+                    }
+                    else if (toggleBtn) { 
+                        const id = toggleBtn.dataset.id;
+                        const t = window.tasks.find(x => x.id == id);
+                        if(t) { 
+                            updateDoc(doc(db, "monitoramento_tasks", id), { isExpanded: !t.isExpanded }).catch(console.error);
+                        } 
+                    }
+                    else if (editOcBtn) { 
+                        const t = window.tasks.find(x => x.id == editOcBtn.dataset.id); 
+                        if(t) { 
+                            document.getElementById('ocorrencia-task-id').value = t.id; 
+                            window.currentEditingTaskOcorrencias = JSON.parse(JSON.stringify(t.ocorrencias || [])); 
+                            renderModalOcorrenciasList(); 
+                            populateCategorySelect(document.getElementById('add-ocorrencia-categoria')); 
+                            document.getElementById('add-ocorrencia-desc').value = ''; 
+                            document.getElementById('ocorrencia-modal').classList.remove('hidden'); 
+                        } 
+                    }
                 });
 
-                document.getElementById('task-list').addEventListener('change', (e) => { if (e.target.classList.contains('status-select')) { const t = tasks.find(x => x.id == e.target.dataset.id); if (t) { if (e.target.dataset.type === 'backup') t.statusBackup = e.target.value; if (e.target.dataset.type === 'analise') t.statusAnalise = e.target.value; refreshUI(); } } });
-                document.getElementById('add-ocorrencia-btn').addEventListener('click', () => { const desc = document.getElementById('add-ocorrencia-desc').value; if (desc) { currentEditingTaskOcorrencias.push({ categoria: document.getElementById('add-ocorrencia-categoria').value, desc: desc, horarioInicial: document.getElementById('add-horario-inicial').value, horarioFinal: document.getElementById('add-horario-final').value, inconclusiva: document.getElementById('add-ocorrencia-inconclusiva').checked }); renderModalOcorrenciasList(); document.getElementById('add-ocorrencia-desc').value = ''; document.getElementById('add-horario-inicial').value = ''; document.getElementById('add-horario-final').value = ''; document.getElementById('add-ocorrencia-inconclusiva').checked = false; } });
-                document.getElementById('ocorrencia-form').addEventListener('submit', (e) => { e.preventDefault(); const task = tasks.find(t => t.id == document.getElementById('ocorrencia-task-id').value); if (task) { task.ocorrencias = [...currentEditingTaskOcorrencias]; task.ocorrencia = task.ocorrencias.length > 0 ? 'Sim' : 'Não'; refreshUI(); document.getElementById('ocorrencia-modal').classList.add('hidden'); showNotification('Ocorrências atualizadas.'); } });
+                document.getElementById('task-list').addEventListener('change', async (e) => { 
+                    if (e.target.classList.contains('status-select')) { 
+                        const id = e.target.dataset.id;
+                        const type = e.target.dataset.type;
+                        const value = e.target.value;
+                        try {
+                            if (type === 'backup') await updateDoc(doc(db, "monitoramento_tasks", id), { statusBackup: value });
+                            if (type === 'analise') await updateDoc(doc(db, "monitoramento_tasks", id), { statusAnalise: value });
+                        } catch(err) { console.error(err); showNotification('Erro ao atualizar status.'); }
+                    } 
+                });
+                
+                document.getElementById('add-ocorrencia-btn').addEventListener('click', () => { const desc = document.getElementById('add-ocorrencia-desc').value; if (desc) { window.currentEditingTaskOcorrencias.push({ categoria: document.getElementById('add-ocorrencia-categoria').value, desc: desc, horarioInicial: document.getElementById('add-horario-inicial').value, horarioFinal: document.getElementById('add-horario-final').value, inconclusiva: document.getElementById('add-ocorrencia-inconclusiva').checked }); renderModalOcorrenciasList(); document.getElementById('add-ocorrencia-desc').value = ''; document.getElementById('add-horario-inicial').value = ''; document.getElementById('add-horario-final').value = ''; document.getElementById('add-ocorrencia-inconclusiva').checked = false; } });
+                
+                document.getElementById('ocorrencia-form').addEventListener('submit', async (e) => { 
+                    e.preventDefault(); 
+                    const id = document.getElementById('ocorrencia-task-id').value;
+                    const task = window.tasks.find(t => t.id == id); 
+                    if (task) { 
+                        try {
+                            const newOcorrencias = [...window.currentEditingTaskOcorrencias];
+                            await updateDoc(doc(db, "monitoramento_tasks", id), {
+                                ocorrencias: newOcorrencias,
+                                ocorrencia: newOcorrencias.length > 0 ? 'Sim' : 'Não'
+                            });
+                            document.getElementById('ocorrencia-modal').classList.add('hidden'); 
+                            showNotification('Ocorrências atualizadas no Firebase.'); 
+                        } catch(err) { console.error(err); showNotification('Erro ao salvar ocorrências.'); }
+                    } 
+                });
+                
                 document.getElementById('ocorrencia-cancel-btn').addEventListener('click', () => document.getElementById('ocorrencia-modal').classList.add('hidden'));
                 document.getElementById('ocorrencia-list').addEventListener('click', (e) => {
                     const delBtn = e.target.closest('.delete-item-btn'); const editBtn = e.target.closest('.edit-item-btn');
-                    if (delBtn) { currentEditingTaskOcorrencias.splice(parseInt(delBtn.dataset.index), 1); renderModalOcorrenciasList(); }
-                    else if (editBtn) { const item = currentEditingTaskOcorrencias[parseInt(editBtn.dataset.index)]; document.getElementById('add-ocorrencia-categoria').value = item.categoria; document.getElementById('add-ocorrencia-desc').value = item.desc; document.getElementById('add-horario-inicial').value = item.horarioInicial; document.getElementById('add-horario-final').value = item.horarioFinal; document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false; currentEditingTaskOcorrencias.splice(parseInt(editBtn.dataset.index), 1); renderModalOcorrenciasList(); }
+                    if (delBtn) { window.currentEditingTaskOcorrencias.splice(parseInt(delBtn.dataset.index), 1); renderModalOcorrenciasList(); }
+                    else if (editBtn) { const item = window.currentEditingTaskOcorrencias[parseInt(editBtn.dataset.index)]; document.getElementById('add-ocorrencia-categoria').value = item.categoria; document.getElementById('add-ocorrencia-desc').value = item.desc; document.getElementById('add-horario-inicial').value = item.horarioInicial; document.getElementById('add-horario-final').value = item.horarioFinal; document.getElementById('add-ocorrencia-inconclusiva').checked = item.inconclusiva || false; window.currentEditingTaskOcorrencias.splice(parseInt(editBtn.dataset.index), 1); renderModalOcorrenciasList(); }
                 });
 
-                // Autocomplete
                 const condoInput = document.getElementById('form-condominio'); const autoList = document.getElementById('autocomplete-list');
                 if (condoInput && autoList) {
                     condoInput.addEventListener('input', function() {
                         const val = this.value.toLowerCase(); autoList.innerHTML = ''; if (!val) { autoList.classList.add('hidden'); return; }
-                        const matches = [...new Set([...tasks, ...archivedTasks].map(t => t.condominio))].filter(h => h.toLowerCase().includes(val));
+                        const matches = [...new Set([...window.tasks, ...window.archivedTasks].map(t => t.condominio))].filter(h => h.toLowerCase().includes(val));
                         if (matches.length > 0) { autoList.classList.remove('hidden'); matches.forEach(m => { const div = document.createElement('div'); div.className = "p-2 hover:bg-slate-100 cursor-pointer text-sm dark:hover:bg-slate-600 dark:text-slate-100"; div.textContent = m; div.addEventListener('click', () => { condoInput.value = m; autoList.classList.add('hidden'); }); autoList.appendChild(div); }); } else { autoList.classList.add('hidden'); }
                     });
                     document.addEventListener('click', (e) => { if (e.target !== condoInput) autoList.classList.add('hidden'); });
                 }
 
-                // Setup
                 const ctxOc = document.getElementById('ocorrenciasChart');
                 if(ctxOc) ocorrenciasChart = new Chart(ctxOc.getContext('2d'), { type: 'bar', data: { labels: [], datasets: [{ label: '# de Ocorrências', data: [], backgroundColor: 'rgba(55, 192, 160, 0.6)' }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
                 
